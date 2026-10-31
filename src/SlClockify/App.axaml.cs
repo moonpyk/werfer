@@ -4,7 +4,7 @@ using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using SlClockify.Core;
 
-namespace SlClockify.Gui;
+namespace SlClockify;
 
 public partial class App : Application
 {
@@ -19,6 +19,8 @@ public partial class App : Application
         // API key is entered in the UI after startup
         services.RegisterClockifyClient(_ => { });
         services.AddTransient<MainWindowViewModel>();
+        
+        
         var provider = services.BuildServiceProvider();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

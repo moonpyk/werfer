@@ -1,7 +1,6 @@
 ﻿using Avalonia;
-using System;
 
-namespace SlClockify.Gui;
+namespace SlClockify;
 
 class Program
 {

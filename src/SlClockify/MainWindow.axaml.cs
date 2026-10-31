@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace SlClockify.Gui;
+namespace SlClockify;
 
 public partial class MainWindow : Window
 {

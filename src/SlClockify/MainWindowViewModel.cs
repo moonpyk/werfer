@@ -6,7 +6,7 @@ using Refit;
 using SlClockify.Core;
 using SlClockify.Core.Models;
 
-namespace SlClockify.Gui;
+namespace SlClockify;
 
 public class MainWindowViewModel(
     IClockifyApi api, 
