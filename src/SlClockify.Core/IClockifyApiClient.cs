@@ -9,7 +9,7 @@ namespace SlClockify.Core;
 ///     Client interface for interacting with the Clockify REST API.
 /// </summary>
 [PublicAPI]
-public interface IClockifyApi
+public interface IClockifyApiClient
 {
     /// <summary>
     ///     Gets information about the currently authenticated user.
@@ -73,6 +73,7 @@ public interface IClockifyApi
     /// <param name="archived">Optional filter for archived status.</param>
     /// <param name="billable">Optional filter for billable status.</param>
     /// <param name="clients">Optional list of client IDs to filter projects by.</param>
+    /// <param name="hydrated">Optional flag to include the tasks of each project.</param>
     /// <param name="page">Page number for pagination (1-based).</param>
     /// <param name="pageSize">Number of items per page.</param>
     /// <param name="sortColumn">Column to sort by.</param>
@@ -86,6 +87,7 @@ public interface IClockifyApi
         [Query] bool? archived = null,
         [Query] bool? billable = null,
         [Query(CollectionFormat.Multi)] string[]? clients = null,
+        [Query] bool? hydrated = null,
         [Query] int? page = null,
         [Query("page-size")] int? pageSize = null,
         [Query("sort-column")] string? sortColumn = null,
@@ -177,6 +179,22 @@ public interface IClockifyApi
         [Query] bool? hydrated = null,
         [Query] int? page = null,
         [Query("page-size")] int? pageSize = null,
+        CancellationToken ctk = default
+    );
+
+    /// <summary>
+    ///     Replaces a specific time entry by ID within a workspace, omitted fields are cleared.
+    /// </summary>
+    /// <param name="workspaceId">The ID of the workspace.</param>
+    /// <param name="id">The ID of the time entry to update.</param>
+    /// <param name="request">The full time entry payload, same shape as the creation one.</param>
+    /// <param name="ctk">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+    /// <returns>The updated time entry.</returns>
+    [Put("/workspaces/{workspaceId}/time-entries/{id}")]
+    Task<TimeEntry> UpdateTimeEntryAsync(
+        string workspaceId,
+        string id,
+        [Body] CreateTimeEntryRequest request,
         CancellationToken ctk = default
     );
 

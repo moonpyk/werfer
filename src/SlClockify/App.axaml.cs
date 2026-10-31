@@ -3,10 +3,11 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using SlClockify.Core;
+using SlClockify.ViewModels;
 
 namespace SlClockify;
 
-public partial class App : Application
+public class App : Application
 {
     public override void Initialize()
     {
@@ -16,10 +17,12 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         var services = new ServiceCollection();
-        // API key is entered in the UI after startup
-        services.RegisterClockifyClient(_ => { });
-        services.AddTransient<MainWindowViewModel>();
         
+        services
+            .RegisterClockifyClient()
+            .RegisterServices()
+            .AddTransient<MainWindowViewModel>()
+            ;
         
         var provider = services.BuildServiceProvider();
 

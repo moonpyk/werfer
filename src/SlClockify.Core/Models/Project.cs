@@ -44,4 +44,8 @@ public class Project
 
     [JsonPropertyName("public")]
     public bool? Public { get; set; }
+
+    // Only filled when requested with hydrated=true
+    [JsonPropertyName("tasks")]
+    public List<ProjectTask>? Tasks { get; set; }
 }
