@@ -1,0 +1,15 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SlClockify.Gui"
+        x:Class="SlClockify.Gui.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="SlClockify"
+        Width="420"
+        SizeToContent="Height">
+    <StackPanel Margin="16" Spacing="8">
+        <TextBlock Text="Clockify API key" />
+        <TextBox Text="{Binding ApiKey}" PasswordChar="•" Watermark="Paste your API key" />
+        <Button Content="Connect" Command="{Binding ConnectAsync}" IsEnabled="{Binding !IsBusy}" IsDefault="True" />
+        <TextBlock Text="{Binding Status}" TextWrapping="Wrap" />
+    </StackPanel>
+</Window>
