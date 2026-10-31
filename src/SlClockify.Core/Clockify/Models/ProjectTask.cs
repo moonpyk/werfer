@@ -1,10 +1,10 @@
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 
-namespace SlClockify.Core.Models;
+namespace SlClockify.Core.Clockify.Models;
 
 [PublicAPI]
-public class Workspace
+public class ProjectTask
 {
     [JsonPropertyName("id")]
     public string Id { get; set; } = string.Empty;
@@ -12,6 +12,9 @@ public class Workspace
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 
-    [JsonPropertyName("memberships")]
-    public List<Membership>? Memberships { get; set; }
+    [JsonPropertyName("projectId")]
+    public string? ProjectId { get; set; }
+
+    [JsonPropertyName("status")]
+    public string? Status { get; set; }
 }

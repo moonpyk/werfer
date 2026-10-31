@@ -1,9 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using SlClockify.Core.Models;
-using SlClockify.Core.Requests;
+using SlClockify.Core.Clockify.Models;
+using SlClockify.Core.Clockify.Requests;
 
-namespace SlClockify.Core;
+namespace SlClockify.Core.Clockify;
 
 [JsonSourceGenerationOptions(JsonSerializerDefaults.Web)]
 [JsonSerializable(typeof(User))]

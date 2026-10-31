@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 
-namespace SlClockify.Core.Models;
+namespace SlClockify.Core.Clockify.Models;
 
 [PublicAPI]
 public class Client

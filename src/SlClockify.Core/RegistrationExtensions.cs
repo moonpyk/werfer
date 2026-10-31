@@ -2,7 +2,8 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Refit;
-using SlClockify.Core.Models;
+using SlClockify.Core.Clockify;
+using SlClockify.Core.Clockify.Models;
 using SlClockify.Core.Services;
 
 namespace SlClockify.Core;
@@ -18,10 +19,10 @@ public static class RegistrationExtensions
         }
 
         public IServiceCollection RegisterClockifyClient(
-            Action<ClockifyOptions> configureOptions
+            Action<ClockifyOptions> configure
         )
         {
-            services.Configure(configureOptions);
+            services.Configure(configure);
 
             services.AddTransient<ClockifyAuthHeaderHandler>();
 
@@ -44,21 +45,7 @@ public static class RegistrationExtensions
 
             return services;
         }
-
-        public IServiceCollection RegisterClockifyClient(string apiKey,
-            string? baseUrl = null
-        )
-        {
-            return services.RegisterClockifyClient(options =>
-            {
-                options.ApiKey = apiKey;
-                if (!string.IsNullOrWhiteSpace(baseUrl))
-                {
-                    options.BaseUrl = baseUrl;
-                }
-            });
-        }
-
+        
         public IServiceCollection RegisterServices()
         {
             services.AddSingleton<TimeTrackingService>();

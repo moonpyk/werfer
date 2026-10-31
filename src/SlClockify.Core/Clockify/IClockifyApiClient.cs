@@ -1,9 +1,9 @@
 using JetBrains.Annotations;
 using Refit;
-using SlClockify.Core.Models;
-using SlClockify.Core.Requests;
+using SlClockify.Core.Clockify.Models;
+using SlClockify.Core.Clockify.Requests;
 
-namespace SlClockify.Core;
+namespace SlClockify.Core.Clockify;
 
 /// <summary>
 ///     Client interface for interacting with the Clockify REST API.

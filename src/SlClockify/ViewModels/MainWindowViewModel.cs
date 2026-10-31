@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using JetBrains.Annotations;
 using Refit;
 using SlClockify.Core.Services;
+using SlClockify.Utils;
 
 namespace SlClockify.ViewModels;
 
@@ -46,16 +47,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
         private set => Set(ref field, value);
     }
 
-    // Every typed word must appear, in any order, ignoring case, accents and punctuation: "securite pole" finds "Pôle sécurité"
-    public AutoCompleteFilterPredicate<object?> ChoiceFilter { get; } = (search, item) =>
-        (search ?? string.Empty)
-        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-        .All(word => CultureInfo.InvariantCulture.CompareInfo.IndexOf(
-            item?.ToString() ?? string.Empty,
-            word,
-            CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace | CompareOptions.IgnoreSymbols
-        ) >= 0);
-
+    public AutoCompleteFilterPredicate<object?> ChoiceFilter { get; } = AutoComplete.ProjectAutoCompleteFilterPredicate;
+    
     public ProjectTaskChoice? SelectedChoice
     {
         get;
@@ -78,7 +71,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
             // Skips values coming from the running entry itself, a nested RunAsync would reset IsBusy mid-operation
             if (TimeTracking.RunningEntry is { } running && running.Description != value)
             {
-                _ = RunAsync(() => TimeTracking.UpdateDescriptionAsync(value));
+                RunAsync(() => TimeTracking.UpdateDescriptionAsync(value))
+                    .ContinueWith(t => t.Exception?.Handle(_ => true));
             }
         }
     }
@@ -127,7 +121,11 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 return;
             }
 
-            await TimeTracking.StartAsync(SelectedChoice.Project.Id, SelectedChoice.Task.Id, Description);
+            await TimeTracking.StartAsync(
+                SelectedChoice.Project.Id, 
+                SelectedChoice.Task.Id, 
+                Description
+            );
         });
     }
 
@@ -150,7 +148,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
-        SelectedChoice = ProjectChoices?.Find(c => c.Task.Id == running.TaskId) ?? SelectedChoice;
+        SelectedChoice = ProjectChoices?.Find(
+            c => c.Task.Id == running.TaskId
+        ) ?? SelectedChoice;
         Description = running.Description;
 
         var start = running.TimeInterval?.Start ?? DateTimeOffset.UtcNow;

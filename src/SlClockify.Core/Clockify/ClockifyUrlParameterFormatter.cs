@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Reflection;
 using Refit;
 
-namespace SlClockify.Core;
+namespace SlClockify.Core.Clockify;
 
 /// <inheritdoc />
 public class ClockifyUrlParameterFormatter : DefaultUrlParameterFormatter

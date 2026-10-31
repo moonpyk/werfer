@@ -1,7 +1,10 @@
+using System.Net;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Options;
-using SlClockify.Core.Models;
-using SlClockify.Core.Requests;
+using Refit;
+using SlClockify.Core.Clockify;
+using SlClockify.Core.Clockify.Models;
+using SlClockify.Core.Clockify.Requests;
 
 namespace SlClockify.Core.Services;
 
@@ -69,8 +72,6 @@ public class TimeTrackingService(
         List<(Project Project, ProjectTask Task)>
     > GetProjectTasksAsync(CancellationToken ctk = default)
     {
-        _ = CurrentUser;
-
         // shortcut: single page of 5000 projects (Clockify max), paginate if a workspace ever exceeds it
         var projects = await Client.GetProjectsAsync(
             WorkspaceId,
@@ -82,14 +83,20 @@ public class TimeTrackingService(
 
         // Every entry needs a task in our organization, so only (project, task) pairs are offered
         return projects
-            .SelectMany(p => (p.Tasks ?? []).Where(t => t.Status == "ACTIVE").Select(t => (p, t)))
-            .ToList();
+            .SelectMany(
+                p => (p.Tasks ?? []).Where(t => t.Status == "ACTIVE").Select(t => (p, t))
+            )
+            .ToList()
+            ;
     }
 
-    public async Task StartAsync(string projectId, string taskId, string? description, CancellationToken ctk = default)
+    public async Task StartAsync(
+        string projectId, 
+        string taskId, 
+        string? description, 
+        CancellationToken ctk = default
+    )
     {
-        _ = CurrentUser;
-
         RunningEntry = await Client.CreateTimeEntryAsync(WorkspaceId, new CreateTimeEntryRequest
         {
             Start = DateTimeOffset.UtcNow,
@@ -101,10 +108,17 @@ public class TimeTrackingService(
 
     public async Task StopAsync(CancellationToken ctk = default)
     {
-        await Client.StopActiveTimeEntryAsync(WorkspaceId, CurrentUser.Id, new StopTimeEntryRequest
+        try
         {
-            End = DateTimeOffset.UtcNow
-        }, ctk);
+            await Client.StopActiveTimeEntryAsync(WorkspaceId, CurrentUser.Id, new StopTimeEntryRequest
+            {
+                End = DateTimeOffset.UtcNow
+            }, ctk);
+        }
+        catch (ApiException e) when (e.StatusCode == HttpStatusCode.NotFound)
+        {
+            // Nothing running anymore, already stopped from another client: the goal is reached
+        }
 
         RunningEntry = null;
     }
@@ -117,29 +131,45 @@ public class TimeTrackingService(
         CancellationToken ctk = default
     )
     {
-        var running = RunningEntry;
         description = Normalize(description);
 
+        var running = RunningEntry;
         if (running is null || running.Description == description)
         {
             return;
         }
 
+        // Re-read it: it may have been stopped or edited from another client, and a PUT without end would restart it
+        var current = await Client.GetTimeEntryAsync(
+            WorkspaceId, 
+            running.Id, 
+            ctk
+        );
+
+        if (current.TimeInterval is not { End: null })
+        {
+            RunningEntry = null;
+            throw new InvalidOperationException("The timer was stopped from another client, description not saved");
+        }
+
         // Clockify's update is a full replace, so every field we know about is resent
         // shortcut: custom field values aren't resent, map CustomFieldValues if the workspace starts using them
-        RunningEntry = await Client.UpdateTimeEntryAsync(WorkspaceId, running.Id, new CreateTimeEntryRequest
+        RunningEntry = await Client.UpdateTimeEntryAsync(WorkspaceId, current.Id, new CreateTimeEntryRequest
         {
-            Start = running.TimeInterval!.Start,
-            ProjectId = running.ProjectId,
-            TaskId = running.TaskId,
-            Billable = running.Billable,
-            TagIds = running.TagIds,
+            Start = current.TimeInterval.Start,
+            ProjectId = current.ProjectId,
+            TaskId = current.TaskId,
+            Billable = current.Billable,
+            TagIds = current.TagIds,
             Description = description
         }, ctk);
     }
 
     private static string? Normalize(string? description)
     {
-        return string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        return string.IsNullOrWhiteSpace(description) 
+            ? null 
+            : description.Trim()
+            ;
     }
 }

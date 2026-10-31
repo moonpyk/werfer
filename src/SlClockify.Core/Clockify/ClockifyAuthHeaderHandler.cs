@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Options;
-using SlClockify.Core.Models;
+using SlClockify.Core.Clockify.Models;
 
-namespace SlClockify.Core;
+namespace SlClockify.Core.Clockify;
 
 public class ClockifyAuthHeaderHandler : DelegatingHandler
 {
@@ -22,6 +22,7 @@ public class ClockifyAuthHeaderHandler : DelegatingHandler
         CancellationToken ctk
     )
     {
+        // ReSharper disable once InvertIf : Clutter
         if (!request.Headers.Contains("X-Api-Key"))
         {
             // Checked per call, not at registration: a GUI sets the key after startup
