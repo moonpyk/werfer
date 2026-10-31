@@ -17,19 +17,22 @@ public class ClockifyAuthHeaderHandler : DelegatingHandler
         _options = options;
     }
 
-    protected override async Task<HttpResponseMessage> SendAsync(
+    protected override Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken ctk
     )
     {
-        if (
-            !string.IsNullOrWhiteSpace(_options.ApiKey) &&
-            !request.Headers.Contains("X-Api-Key")
-        )
+        if (!request.Headers.Contains("X-Api-Key"))
         {
+            // Checked per call, not at registration: a GUI sets the key after startup
+            if (string.IsNullOrWhiteSpace(_options.ApiKey))
+            {
+                throw new InvalidOperationException("Clockify ApiKey is not configured");
+            }
+
             request.Headers.Add("X-Api-Key", _options.ApiKey);
         }
 
-        return await base.SendAsync(request, ctk);
+        return base.SendAsync(request, ctk);
     }
 }

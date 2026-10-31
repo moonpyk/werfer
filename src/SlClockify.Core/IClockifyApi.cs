@@ -85,7 +85,7 @@ public interface IClockifyApi
         [Query] string? name = null,
         [Query] bool? archived = null,
         [Query] bool? billable = null,
-        [Query("clients")] string[]? clients = null,
+        [Query(CollectionFormat.Multi)] string[]? clients = null,
         [Query] int? page = null,
         [Query("page-size")] int? pageSize = null,
         [Query("sort-column")] string? sortColumn = null,
@@ -199,14 +199,14 @@ public interface IClockifyApi
     /// </summary>
     /// <param name="workspaceId">The ID of the workspace.</param>
     /// <param name="userId">The ID of the user whose running time entry should be stopped.</param>
-    /// <param name="request">The request payload containing updated details (such as end time).</param>
+    /// <param name="request">The request payload containing the end time.</param>
     /// <param name="ctk">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
     /// <returns>The stopped time entry.</returns>
     [Patch("/workspaces/{workspaceId}/user/{userId}/time-entries")]
     Task<TimeEntry> StopActiveTimeEntryAsync(
         string workspaceId,
         string userId,
-        [Body] CreateTimeEntryRequest request,
+        [Body] StopTimeEntryRequest request,
         CancellationToken ctk = default
     );
 }

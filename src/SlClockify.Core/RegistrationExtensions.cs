@@ -15,9 +15,14 @@ public static class RegistrationExtensions
     )
     {
         services.Configure(configureOptions);
+
         services.AddTransient<ClockifyAuthHeaderHandler>();
 
-        services.AddRefitClient<IClockifyApi>()
+        services.AddRefitClient<IClockifyApi>(new RefitSettings
+            {
+                UrlParameterFormatter = new ClockifyUrlParameterFormatter(),
+                ContentSerializer = new SystemTextJsonContentSerializer(ClockifyJsonContext.Default.Options)
+            })
             .ConfigureHttpClient((sp, client) =>
             {
                 var options = sp.GetRequiredService<IOptions<ClockifyOptions>>().Value;
