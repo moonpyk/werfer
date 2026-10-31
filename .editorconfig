@@ -1,0 +1,14 @@
+root = true
+
+[*]
+insert_final_newline = true
+end_of_line = crlf
+charset = utf-8
+
+[*.json]
+indent_size = 2
+
+[*.cs]
+csharp_prefer_braces = true
+csharp_force_attribute_style = separate
+csharp_place_attribute_on_same_line = never
