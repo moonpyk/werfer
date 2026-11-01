@@ -5,10 +5,11 @@
              xmlns:viewModels="clr-namespace:SlClockify.ViewModels"
              x:Class="SlClockify.Views.TimerView"
              x:DataType="viewModels:TimerViewModel">
-    <!-- Laid out like Clockify's timer bar: what you work on on the left, the big action button on the right -->
+    <!-- Laid out like Clockify's timer bar: what you work on on the left, the big action button on the right.
+         Disabled until connected and the projects are loaded -->
     <Grid
-        Margin="16"
-        IsVisible="{Binding ProjectChoices, Converter={x:Static ObjectConverters.IsNotNull}}">
+        Margin="8"
+        IsEnabled="{Binding ProjectChoices, Converter={x:Static ObjectConverters.IsNotNull}}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
             <ColumnDefinition Width="Auto" />
