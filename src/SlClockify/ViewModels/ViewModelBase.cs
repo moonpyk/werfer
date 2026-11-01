@@ -10,12 +10,18 @@ namespace SlClockify.ViewModels;
 /// </summary>
 public abstract class ViewModelBase : INotifyPropertyChanged
 {
+    /// <summary>
+    ///     Represents the current status message, typically used to display information or error messages.
+    /// </summary>
     public string? Status
     {
         get;
         protected set => Set(ref field, value);
     }
 
+    /// <summary>
+    ///     Indicates whether a background process or operation is currently in progress.
+    /// </summary>
     public bool IsBusy
     {
         get;

@@ -20,6 +20,6 @@ internal static class Program
         return AppBuilder
             .Configure<App>()
             .UsePlatformDetect()
-            .LogToTrace();
+            .LogToTrace(); // Will log to Trace until the real logger is set up.
     }
 }

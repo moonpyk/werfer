@@ -8,7 +8,10 @@ namespace SlClockify.ViewModels;
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public class MainWindowViewModel : ViewModelBase
 {
-    public MainWindowViewModel(TimerViewModel timer, SettingsViewModel settings)
+    public MainWindowViewModel(
+        TimerViewModel timer, 
+        SettingsViewModel settings
+    )
     {
         Timer = timer;
         Settings = settings;
@@ -21,9 +24,14 @@ public class MainWindowViewModel : ViewModelBase
         {
             page.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName == nameof(Status) && page.Status is { } status)
+                switch (e.PropertyName)
                 {
-                    Status = status;
+                    case nameof(Status) when page.Status is { } status:
+                        Status = status;
+                        break;
+                    case nameof(IsBusy):
+                        IsAnyPageBusy = timer.IsBusy || settings.IsBusy;
+                        break;
                 }
             };
         }
@@ -36,8 +44,15 @@ public class MainWindowViewModel : ViewModelBase
     }
 
     public TimerViewModel Timer { get; }
-    
+
     public SettingsViewModel Settings { get; }
+
+    // Drives the status bar's progress ring, whichever page is working
+    public bool IsAnyPageBusy
+    {
+        get;
+        private set => Set(ref field, value);
+    }
 
     // Shown through the DataTemplates declared in MainWindow.axaml
     public ViewModelBase CurrentPage
