@@ -22,6 +22,10 @@ public class TimeTrackingService(
 
     public User? User { get; private set; }
 
+    /// <summary>
+    ///     The unique identifier for the active workspace, representing the context in which
+    ///     time entries and projects are managed.
+    /// </summary>
     public string WorkspaceId { get; private set; } = string.Empty;
 
     /// <summary>
@@ -57,7 +61,12 @@ public class TimeTrackingService(
 
         // Latest entry first, it's the running one when it has no end
         var last = (
-            await Client.GetTimeEntriesForUserAsync(WorkspaceId, User.Id, pageSize: 1, ctk: ctk)
+            await Client.GetTimeEntriesForUserAsync(
+                WorkspaceId,
+                User.Id,
+                pageSize: 1,
+                ctk: ctk
+            )
         ).FirstOrDefault();
 
         RunningEntry = last?.TimeInterval is { End: null } ? last : null;
@@ -83,17 +92,34 @@ public class TimeTrackingService(
 
         // Every entry needs a task in our organization, so only (project, task) pairs are offered
         return projects
-            .SelectMany(
-                p => (p.Tasks ?? []).Where(t => t.Status == "ACTIVE").Select(t => (p, t))
-            )
-            .ToList()
+                .SelectMany(p => (p.Tasks ?? []).Where(t => t.Status == "ACTIVE").Select(t => (p, t))
+                )
+                .ToList()
             ;
     }
 
+    /// <summary>
+    ///     Starts tracking time for the specified project and task in Clockify.
+    /// </summary>
+    /// <param name="projectId">
+    ///     The ID of the project for which time tracking is being started.
+    /// </param>
+    /// <param name="taskId">
+    ///     The ID of the task within the project for which time tracking is being started.
+    /// </param>
+    /// <param name="description">
+    ///     An optional description for the time entry.
+    /// </param>
+    /// <param name="ctk">
+    ///     A CancellationToken to observe during the operation.
+    /// </param>
+    /// <returns>
+    ///     A task representing the asynchronous operation.
+    /// </returns>
     public async Task StartAsync(
-        string projectId, 
-        string taskId, 
-        string? description, 
+        string projectId,
+        string taskId,
+        string? description,
         CancellationToken ctk = default
     )
     {
@@ -127,7 +153,7 @@ public class TimeTrackingService(
     ///     Changes the description of the running entry, does nothing when stopped or unchanged.
     /// </summary>
     public async Task UpdateDescriptionAsync(
-        string? description, 
+        string? description,
         CancellationToken ctk = default
     )
     {
@@ -141,8 +167,8 @@ public class TimeTrackingService(
 
         // Re-read it: it may have been stopped or edited from another client, and a PUT without end would restart it
         var current = await Client.GetTimeEntryAsync(
-            WorkspaceId, 
-            running.Id, 
+            WorkspaceId,
+            running.Id,
             ctk
         );
 
@@ -167,9 +193,9 @@ public class TimeTrackingService(
 
     private static string? Normalize(string? description)
     {
-        return string.IsNullOrWhiteSpace(description) 
-            ? null 
-            : description.Trim()
+        return string.IsNullOrWhiteSpace(description)
+                ? null
+                : description.Trim()
             ;
     }
 }

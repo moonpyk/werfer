@@ -1,9 +1,12 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Logging;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SlClockify.Core;
 using SlClockify.Settings;
+using SlClockify.Utils;
 using SlClockify.ViewModels;
 
 namespace SlClockify;
@@ -19,16 +22,22 @@ public class App : Application
     {
         var services = new ServiceCollection();
 
-        var sts = ApplicationSettings.Current;
-
         services
             .RegisterClockifyClient()
-            .AddSingleton<IApplicationSettings>(sts)
+            .AddSingleton<IApplicationSettings>(sp =>
+                ApplicationSettings.Current
+                    .WithLogger(sp.GetRequiredService<ILogger<ApplicationSettings>>())
+                    .Load()
+            )
             .RegisterServices()
             .AddTransient<MainWindowViewModel>()
             ;
 
         var provider = services.BuildServiceProvider();
+
+        Logger.Sink = new AvaloniaLogSink(
+            provider.GetRequiredService<ILoggerFactory>()
+        );
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
