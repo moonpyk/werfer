@@ -1,11 +1,11 @@
 using System.ComponentModel;
-using System.Globalization;
 using System.Net;
 using System.Runtime.CompilerServices;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using JetBrains.Annotations;
 using Refit;
+using SlClockify.Core;
 using SlClockify.Core.Services;
 using SlClockify.Utils;
 
@@ -16,13 +16,23 @@ public class MainWindowViewModel : INotifyPropertyChanged
 {
     private IDisposable? _ticker;
 
-    public MainWindowViewModel(TimeTrackingService timeTracking)
+    public MainWindowViewModel(
+        IApplicationSettings? applicationSettings,
+        TimeTrackingService timeTracking
+    )
     {
+        if (!string.IsNullOrWhiteSpace(applicationSettings?.ApiKey))
+        {
+            ApiKey = applicationSettings.ApiKey;
+        }
+
+        ApplicationSettings = applicationSettings;
         TimeTracking = timeTracking;
         // The running entry may change from another screen, the timer display follows it
         TimeTracking.RunningEntryChanged += (_, _) => OnRunningEntryChanged();
     }
 
+    private IApplicationSettings? ApplicationSettings { get; }
     private TimeTrackingService TimeTracking { get; }
 
     // Only written by the TextBox, so no change notification needed
@@ -48,7 +58,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     }
 
     public AutoCompleteFilterPredicate<object?> ChoiceFilter { get; } = AutoComplete.ProjectAutoCompleteFilterPredicate;
-    
+
     public ProjectTaskChoice? SelectedChoice
     {
         get;
@@ -97,6 +107,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             var user = await TimeTracking.ConnectAsync(ApiKey);
 
+            if (ApplicationSettings != null)
+            {
+                ApplicationSettings.ApiKey = ApiKey;
+                ApplicationSettings.Save();
+            }
+
             Status = $"Connected as {user.Name} ({user.Email})";
 
             ProjectChoices = (await TimeTracking.GetProjectTasksAsync())
@@ -122,8 +138,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
             }
 
             await TimeTracking.StartAsync(
-                SelectedChoice.Project.Id, 
-                SelectedChoice.Task.Id, 
+                SelectedChoice.Project.Id,
+                SelectedChoice.Task.Id,
                 Description
             );
         });
@@ -136,10 +152,11 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
     private void OnRunningEntryChanged()
     {
-        var running = TimeTracking.RunningEntry;
-
         _ticker?.Dispose();
         _ticker = null;
+
+        var running = TimeTracking.RunningEntry;
+
         IsRunning = running is not null;
 
         if (running is null)
@@ -148,8 +165,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
-        SelectedChoice = ProjectChoices?.Find(
-            c => c.Task.Id == running.TaskId
+        SelectedChoice = ProjectChoices?.Find(c => c.Task.Id == running.TaskId
         ) ?? SelectedChoice;
         Description = running.Description;
 
@@ -162,6 +178,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             UpdateElapsed();
             return true;
         }, TimeSpan.FromSeconds(1));
+        return;
 
         void UpdateElapsed()
         {

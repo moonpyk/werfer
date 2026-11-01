@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using SlClockify.Core;
+using SlClockify.Settings;
 using SlClockify.ViewModels;
 
 namespace SlClockify;
@@ -17,13 +18,16 @@ public class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         var services = new ServiceCollection();
-        
+
+        var sts = ApplicationSettings.Current;
+
         services
             .RegisterClockifyClient()
+            .AddSingleton<IApplicationSettings>(sts)
             .RegisterServices()
             .AddTransient<MainWindowViewModel>()
             ;
-        
+
         var provider = services.BuildServiceProvider();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

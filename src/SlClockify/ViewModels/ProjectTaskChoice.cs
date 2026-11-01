@@ -4,7 +4,7 @@ using SlClockify.Core.Clockify.Models;
 namespace SlClockify.ViewModels;
 
 public record ProjectTaskChoice(
-    Project Project, 
+    Project Project,
     ProjectTask Task
 )
 {
@@ -13,5 +13,8 @@ public record ProjectTaskChoice(
     );
 
     // Text shown and matched by the autocomplete
-    public override string ToString() => $"{Project.Name} / {Task.Name}";
+    public override string ToString()
+    {
+        return $"{Project.Name} / {Task.Name}";
+    }
 }
