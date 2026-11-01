@@ -157,9 +157,11 @@ public class TimeTrackingService(
     }
 
     /// <summary>
-    ///     Changes the description of the running entry, does nothing when stopped or unchanged.
+    ///     Changes the project, task and description of the running entry, does nothing when stopped or unchanged.
     /// </summary>
-    public async Task UpdateDescriptionAsync(
+    public async Task UpdateRunningEntryAsync(
+        string projectId,
+        string taskId,
         string? description,
         CancellationToken ctk = default
     )
@@ -167,7 +169,8 @@ public class TimeTrackingService(
         description = Normalize(description);
 
         var running = RunningEntry;
-        if (running is null || running.Description == description)
+        if (running is null
+            || (running.ProjectId == projectId && running.TaskId == taskId && running.Description == description))
         {
             return;
         }
@@ -182,7 +185,7 @@ public class TimeTrackingService(
         if (current.TimeInterval is not { End: null })
         {
             RunningEntry = null;
-            throw new InvalidOperationException("The timer was stopped from another client, description not saved");
+            throw new InvalidOperationException("The timer was stopped from another client, changes not saved");
         }
 
         // Clockify's update is a full replace, so every field we know about is resent
@@ -190,8 +193,8 @@ public class TimeTrackingService(
         RunningEntry = await Client.UpdateTimeEntryAsync(WorkspaceId, current.Id, new CreateTimeEntryRequest
         {
             Start = current.TimeInterval.Start,
-            ProjectId = current.ProjectId,
-            TaskId = current.TaskId,
+            ProjectId = projectId,
+            TaskId = taskId,
             Billable = current.Billable,
             TagIds = current.TagIds,
             Description = description

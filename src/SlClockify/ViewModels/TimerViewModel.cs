@@ -36,10 +36,21 @@ public class TimerViewModel : ViewModelBase
 
     public AutoCompleteFilterPredicate<object?> ChoiceFilter { get; } = AutoComplete.ProjectAutoCompleteFilterPredicate;
 
+    // Pushed to the running entry when changed
     public ProjectTaskChoice? SelectedChoice
     {
         get;
-        set => Set(ref field, value);
+        set
+        {
+            if (field == value)
+            {
+                return;
+            }
+
+            Set(ref field, value);
+            // Null when the box is cleared, the running task is kept
+            PushToRunningEntry(value);
+        }
     }
 
     // Free text, usually a Jira ticket key, pushed to the running entry when edited (on lost focus)
@@ -54,13 +65,7 @@ public class TimerViewModel : ViewModelBase
             }
 
             Set(ref field, value);
-
-            // Skips values coming from the running entry itself, a nested RunAsync would reset IsBusy mid-operation
-            if (TimeTracking.RunningEntry is { } running && running.Description != value)
-            {
-                RunAsync(() => TimeTracking.UpdateDescriptionAsync(value))
-                    .ContinueWith(t => t.Exception?.Handle(_ => true));
-            }
+            PushToRunningEntry(description: true);
         }
     }
 
@@ -97,6 +102,35 @@ public class TimerViewModel : ViewModelBase
     public Task StopAsync()
     {
         return RunAsync(() => TimeTracking.StopAsync());
+    }
+
+    // Each setter only sends its own field, the others come from the running entry, so the order in which
+    // OnRunningEntryChanged refreshes them can't send a half-updated state
+    private void PushToRunningEntry(ProjectTaskChoice? choice = null, bool description = false)
+    {
+        if (TimeTracking.RunningEntry is not { } running)
+        {
+            return;
+        }
+
+        var projectId = choice?.Project.Id ?? running.ProjectId;
+        var taskId = choice?.Task.Id ?? running.TaskId;
+        var text = description ? Description : running.Description;
+
+        // Skips values coming from the running entry itself, a nested RunAsync would reset IsBusy mid-operation
+        if (
+            projectId is null ||
+            taskId is null ||
+            (projectId == running.ProjectId && taskId == running.TaskId && text == running.Description))
+        {
+            return;
+        }
+
+        RunAsync(() => TimeTracking.UpdateRunningEntryAsync(
+            projectId,
+            taskId,
+            text
+        )).ContinueWith(t => t.Exception?.Handle(_ => true));
     }
 
     private async Task LoadProjectChoicesAsync()
