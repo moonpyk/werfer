@@ -30,6 +30,8 @@ public class App : Application
                     .Load()
             )
             .RegisterServices()
+            .AddTransient<TimerViewModel>()
+            .AddTransient<SettingsViewModel>()
             .AddTransient<MainWindowViewModel>()
             ;
 

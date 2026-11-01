@@ -49,6 +49,11 @@ public class TimeTrackingService(
     public event EventHandler? RunningEntryChanged;
 
     /// <summary>
+    ///     Raised after a successful <see cref="ConnectAsync" />, once the user, workspace and running entry are known.
+    /// </summary>
+    public event EventHandler? Connected;
+
+    /// <summary>
     ///     Applies the API key, loads the user and picks up a time entry already running on Clockify.
     /// </summary>
     public async Task<User> ConnectAsync(string apiKey, CancellationToken ctk = default)
@@ -70,6 +75,8 @@ public class TimeTrackingService(
         ).FirstOrDefault();
 
         RunningEntry = last?.TimeInterval is { End: null } ? last : null;
+
+        Connected?.Invoke(this, EventArgs.Empty);
 
         return User;
     }
