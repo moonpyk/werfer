@@ -8,9 +8,11 @@ public record ProjectTaskChoice(
     ProjectTask Task
 )
 {
-    public IBrush Brush { get; } = new SolidColorBrush(
-        Color.TryParse(Project.Color, out var color) ? color : Colors.Gray
-    );
+    // The project's color as set in Clockify; the view makes it readable as text, see ReadableTextBrushConverter
+    public Color Color { get; } = Color.TryParse(Project.Color, out var color) ? color : Colors.Gray;
+
+    // Kept as is for the dot
+    public IBrush Brush => field ??= new SolidColorBrush(Color);
 
     // Text shown and matched by the autocomplete
     public override string ToString()
