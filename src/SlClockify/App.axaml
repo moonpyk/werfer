@@ -4,6 +4,6 @@
              x:Class="SlClockify.App"
              RequestedThemeVariant="Default">
     <Application.Styles>
-        <sty:FluentAvaloniaTheme />
+        <sty:FluentAvaloniaTheme PreferSystemTheme="True" PreferUserAccentColor="True" />
     </Application.Styles>
 </Application>

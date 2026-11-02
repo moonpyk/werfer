@@ -5,6 +5,7 @@
         xmlns:views="clr-namespace:SlClockify.Views"
         x:Class="SlClockify.MainWindow"
         x:DataType="viewModels:MainWindowViewModel"
+        Icon="/Assets/SLClockify.ico"
         Title="SlClockify"
         Width="420"
         WindowStartupLocation="CenterScreen"
