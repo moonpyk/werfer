@@ -15,10 +15,12 @@ public class TimerViewModel : ViewModelBase
     private IDisposable? _ticker;
 
     public TimerViewModel(
+        IApplicationSettings applicationSettings,
         ILogger<TimerViewModel> logger,
         TimeTrackingService timeTracking
     ) : base(logger)
     {
+        ApplicationSettings = applicationSettings;
         TimeTracking = timeTracking;
         Status = "Not connected, set your Clockify API key in Settings";
 
@@ -29,6 +31,7 @@ public class TimerViewModel : ViewModelBase
         TimeTracking.RunningEntryChanged += (_, _) => OnRunningEntryChanged();
     }
 
+    private IApplicationSettings ApplicationSettings { get; }
     private TimeTrackingService TimeTracking { get; }
 
     // Null until connected, the timer panel is hidden meanwhile
@@ -44,7 +47,7 @@ public class TimerViewModel : ViewModelBase
         [
             .. (ProjectChoices ?? [])
             .Where(c => AutoComplete.ProjectAutoCompleteFilterPredicate(search, c))
-            .Take(10)
+            .Take(ApplicationSettings.MaxProjectChoices)
         ]);
 
     // Pushed to the running entry when changed
