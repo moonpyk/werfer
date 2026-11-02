@@ -64,6 +64,7 @@
                     x:Name="RefreshItem"
                     SelectsOnInvoked="False"
                     ToolTip.Tip="Fetch the running entry from Clockify"
+                    IsVisible="{Binding ShowRefreshButton}"
                     IsEnabled="{Binding Timer.ProjectChoices, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <ui:FANavigationViewItem.IconSource>
                         <ui:FASymbolIconSource Symbol="Refresh" />

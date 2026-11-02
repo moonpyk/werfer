@@ -9,7 +9,7 @@ namespace SlClockify.ViewModels;
 public class MainWindowViewModel : ViewModelBase
 {
     public MainWindowViewModel(
-        TimerViewModel timer, 
+        TimerViewModel timer,
         SettingsViewModel settings
     )
     {
@@ -58,8 +58,14 @@ public class MainWindowViewModel : ViewModelBase
     public ViewModelBase CurrentPage
     {
         get;
-        private set => Set(ref field, value);
+        private set
+        {
+            Set(ref field, value);
+            NotifyPropertyChanged(nameof(ShowRefreshButton));
+        }
     }
+
+    public bool ShowRefreshButton => CurrentPage is TimerViewModel;
 
     public void Navigate(bool toSettings)
     {

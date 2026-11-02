@@ -63,6 +63,11 @@ public abstract class ViewModelBase : INotifyPropertyChanged
         }
 
         field = value;
+        NotifyPropertyChanged(name);
+    }
+    
+    protected void NotifyPropertyChanged([CallerMemberName] string? name = null)
+    {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }
