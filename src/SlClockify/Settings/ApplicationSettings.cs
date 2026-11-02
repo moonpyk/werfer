@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -45,11 +46,7 @@ public partial class ApplicationSettings : IApplicationSettings
         // Intentionally left empty
     }
 
-    /// <summary>
-    ///     Gets or sets the API key used to authenticate with the Clockify service.
-    ///     Kept in memory in clear text; only the copy written to disk is encrypted, with DPAPI for the current Windows user.
-    ///     Assigning a null or empty value clears the stored key.
-    /// </summary>
+    /// <inheritdoc />
     public string? ApiKey
     {
         get;
@@ -75,6 +72,13 @@ public partial class ApplicationSettings : IApplicationSettings
                 );
             }
         }
+    }
+
+    /// <inheritdoc />
+    public int MaxProjectChoices
+    {
+        get => _persisted.MaxProjectChoices;
+        set => _persisted.MaxProjectChoices = value;
     }
 
     /// <summary>
@@ -169,6 +173,10 @@ public partial class ApplicationSettings : IApplicationSettings
     {
         [JsonPropertyName("api_key")]
         public byte[]? CryptedApiKey { get; set; }
+
+        [JsonPropertyName("max_project_choices")]
+        [DefaultValue(10)]
+        public int MaxProjectChoices { get; set; } = 10;
     }
 
     // Nested so it can see the private PersistedSettings; source-generated because reflection-based JSON is off under NativeAOT

@@ -17,12 +17,11 @@
         <StackPanel Grid.Column="0" Spacing="8" Margin="0,0,12,0" VerticalAlignment="Center">
             <!-- Project and task, also editable while the timer runs -->
             <AutoCompleteBox
-                ItemsSource="{Binding ProjectChoices}"
+                AsyncPopulator="{Binding ProjectChoicesPopulator}"
                 SelectedItem="{Binding SelectedChoice}"
-                FilterMode="Custom"
-                ItemFilter="{Binding ChoiceFilter}"
-                MinimumPrefixLength="0"
-                PlaceholderText="Project / task"
+                FilterMode="None"
+                MinimumPrefixLength="3"
+                PlaceholderText="Project / Task"
                 HorizontalAlignment="Stretch">
                 <AutoCompleteBox.InnerLeftContent>
                     <Ellipse
@@ -45,7 +44,7 @@
                                     </MultiBinding>
                                 </TextBlock.Foreground>
                             </TextBlock>
-                            <TextBlock Text="{Binding Task.Name}" Opacity="0.7" />
+                            <TextBlock Text="{Binding Task.Name}" Opacity="0.8" />
                         </StackPanel>
                     </DataTemplate>
                 </AutoCompleteBox.ItemTemplate>

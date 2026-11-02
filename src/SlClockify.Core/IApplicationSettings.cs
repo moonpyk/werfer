@@ -12,6 +12,12 @@ public interface IApplicationSettings
     string? ApiKey { get; set; }
 
     /// <summary>
+    ///     Gets or sets the maximum number of project choices that can be displayed or selected
+    ///     in the timer control.
+    /// </summary>
+    int MaxProjectChoices { get; set; }
+
+    /// <summary>
     ///     Saves the current application settings to a persistent storage medium.
     /// </summary>
     void Save();

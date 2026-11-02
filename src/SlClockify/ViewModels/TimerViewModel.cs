@@ -34,7 +34,14 @@ public class TimerViewModel : ViewModelBase
         private set => Set(ref field, value);
     }
 
-    public AutoCompleteFilterPredicate<object?> ChoiceFilter { get; } = AutoComplete.ProjectAutoCompleteFilterPredicate;
+    // Feeds the project box with at most 10 matches, the full list is too long to scroll
+    public Func<string?, CancellationToken, Task<IEnumerable<object>>> ProjectChoicesPopulator =>
+        (search, _) => Task.FromResult<IEnumerable<object>>(
+        [
+            .. (ProjectChoices ?? [])
+            .Where(c => AutoComplete.ProjectAutoCompleteFilterPredicate(search, c))
+            .Take(10)
+        ]);
 
     // Pushed to the running entry when changed
     public ProjectTaskChoice? SelectedChoice
