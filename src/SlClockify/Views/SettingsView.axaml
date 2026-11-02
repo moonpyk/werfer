@@ -5,7 +5,10 @@
              x:DataType="viewModels:SettingsViewModel">
     <StackPanel Margin="16" Spacing="8">
         <TextBlock Text="Clockify API key" />
-        <TextBox Text="{Binding ApiKey}" PasswordChar="•" PlaceholderText="Paste your API key" />
+        <TextBox 
+            Text="{Binding ApiKey}" 
+            PasswordChar="•" 
+            PlaceholderText="Paste your API key" />
         <Button
             Content="Save and connect"
             Command="{Binding ConnectAsync}"

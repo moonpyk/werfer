@@ -23,6 +23,7 @@ public class TimerViewModel : ViewModelBase
 
         // Connection happens from the settings page, projects are loaded here once it succeeds
         TimeTracking.Connected += (_, _) => _ = RunAsync(LoadProjectChoicesAsync);
+        
         // The running entry may change from another screen, the timer display follows it
         TimeTracking.RunningEntryChanged += (_, _) => OnRunningEntryChanged();
     }
@@ -111,6 +112,19 @@ public class TimerViewModel : ViewModelBase
     public Task StopAsync()
     {
         return RunAsync(() => TimeTracking.StopAsync());
+    }
+
+    // Keyboard shortcut, ignored while busy: a description update still in flight could restart a stopped entry
+    public Task ToggleAsync()
+    {
+        if (IsBusy)
+        {
+            return Task.CompletedTask;
+        }
+
+        return IsRunning 
+            ? StopAsync() 
+            : StartAsync();
     }
 
     public Task RefreshAsync()

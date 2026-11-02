@@ -107,7 +107,10 @@ public class TimeTrackingService(
 
         // Every entry needs a task in our organization, so only (project, task) pairs are offered
         return projects
-                .SelectMany(p => (p.Tasks ?? []).Where(t => t.Status == "ACTIVE").Select(t => (p, t))
+                .SelectMany(p =>
+                    (p.Tasks ?? [])
+                    .Where(t => t.Status == "ACTIVE")
+                    .Select(t => (p, t))
                 )
                 .ToList()
             ;
@@ -116,21 +119,6 @@ public class TimeTrackingService(
     /// <summary>
     ///     Starts tracking time for the specified project and task in Clockify.
     /// </summary>
-    /// <param name="projectId">
-    ///     The ID of the project for which time tracking is being started.
-    /// </param>
-    /// <param name="taskId">
-    ///     The ID of the task within the project for which time tracking is being started.
-    /// </param>
-    /// <param name="description">
-    ///     An optional description for the time entry.
-    /// </param>
-    /// <param name="ctk">
-    ///     A CancellationToken to observe during the operation.
-    /// </param>
-    /// <returns>
-    ///     A task representing the asynchronous operation.
-    /// </returns>
     public async Task StartAsync(
         string projectId,
         string taskId,
