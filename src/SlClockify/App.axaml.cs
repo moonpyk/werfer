@@ -30,9 +30,9 @@ public class App : Application
                     .Load()
             )
             .RegisterServices()
-            .AddTransient<TimerViewModel>()
-            .AddTransient<SettingsViewModel>()
-            .AddTransient<MainWindowViewModel>()
+            .AddSingleton<TimerViewModel>()
+            .AddSingleton<SettingsViewModel>()
+            .AddSingleton<MainWindowViewModel>()
             ;
 
         var provider = services.BuildServiceProvider();
@@ -43,10 +43,7 @@ public class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = provider.GetRequiredService<MainWindowViewModel>()
-            };
+            desktop.MainWindow = new MainWindow(provider.GetRequiredService<MainWindowViewModel>());
         }
 
         base.OnFrameworkInitializationCompleted();
