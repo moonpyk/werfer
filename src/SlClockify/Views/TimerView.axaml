@@ -83,12 +83,14 @@
             HorizontalContentAlignment="Center"
             VerticalContentAlignment="Center">
             <Button.Resources>
+                <!-- ReSharper disable Xaml.RedundantResource -->
                 <SolidColorBrush x:Key="AccentButtonBackground" Color="#F44336" />
                 <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#E53935" />
                 <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#D32F2F" />
                 <SolidColorBrush x:Key="AccentButtonForeground" Color="White" />
                 <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="White" />
                 <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="White" />
+                <!-- ReSharper restore Xaml.RedundantResource -->
             </Button.Resources>
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <ui:FASymbolIcon Symbol="StopFilled" FontSize="18" VerticalAlignment="Center" />
