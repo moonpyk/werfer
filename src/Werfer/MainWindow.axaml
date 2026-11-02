@@ -1,0 +1,83 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:viewModels="clr-namespace:Werfer.ViewModels"
+        xmlns:views1="clr-namespace:Werfer.Views"
+        x:Class="Werfer.MainWindow"
+        x:DataType="viewModels:MainWindowViewModel"
+        Icon="/Assets/Werfer.ico"
+        Title="Werfer"
+        Width="420"
+        WindowStartupLocation="CenterScreen"
+        SizeToContent="Height">
+    <!-- Page view models are mapped to their views here, no reflection-based ViewLocator (NativeAOT) -->
+    <Window.DataTemplates>
+        <DataTemplate DataType="viewModels:TimerViewModel">
+            <views1:TimerView />
+        </DataTemplate>
+        <DataTemplate DataType="viewModels:SettingsViewModel">
+            <views1:SettingsView />
+        </DataTemplate>
+    </Window.DataTemplates>
+
+    <DockPanel>
+        <Border
+            DockPanel.Dock="Bottom"
+            Padding="12,4"
+            Background="{DynamicResource LayerFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Text="{Binding Status}"
+                    TextTrimming="CharacterEllipsis"
+                    ToolTip.Tip="{Binding Status}"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <ui:FAProgressRing
+                    Grid.Column="1"
+                    Width="14"
+                    Height="14"
+                    Margin="8,0,0,0"
+                    IsIndeterminate="True"
+                    IsActive="{Binding IsAnyPageBusy}"
+                    IsVisible="{Binding IsAnyPageBusy}" />
+            </Grid>
+        </Border>
+
+        <ui:FANavigationView
+            x:Name="Navigation"
+            PaneDisplayMode="Top"
+            IsBackButtonVisible="False"
+            IsSettingsVisible="True"
+            Content="{Binding CurrentPage}"
+            SelectionChanged="OnNavigationSelectionChanged"
+            ItemInvoked="OnNavigationItemInvoked">
+            <ui:FANavigationView.FooterMenuItems>
+                <!-- Action, not a page: invoking it doesn't change the selection -->
+                <ui:FANavigationViewItem
+                    x:Name="RefreshItem"
+                    SelectsOnInvoked="False"
+                    ToolTip.Tip="Fetch the running entry from Clockify"
+                    IsVisible="{Binding ShowRefreshButton}"
+                    IsEnabled="{Binding Timer.ProjectChoices, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <ui:FANavigationViewItem.IconSource>
+                        <ui:FASymbolIconSource Symbol="Refresh" />
+                    </ui:FANavigationViewItem.IconSource>
+                </ui:FANavigationViewItem>
+            </ui:FANavigationView.FooterMenuItems>
+            <ui:FANavigationView.MenuItems>
+                <ui:FANavigationViewItem x:Name="TimerItem" Content="Timer">
+                    <ui:FANavigationViewItem.IconSource>
+                        <ui:FASymbolIconSource Symbol="Clock" />
+                    </ui:FANavigationViewItem.IconSource>
+                </ui:FANavigationViewItem>
+            </ui:FANavigationView.MenuItems>
+        </ui:FANavigationView>
+    </DockPanel>
+</Window>
