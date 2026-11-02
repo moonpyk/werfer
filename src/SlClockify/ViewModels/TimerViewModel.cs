@@ -1,6 +1,6 @@
-using Avalonia.Controls;
 using Avalonia.Threading;
 using JetBrains.Annotations;
+using Microsoft.Extensions.Logging;
 using SlClockify.Core.Services;
 using SlClockify.Utils;
 
@@ -15,15 +15,16 @@ public class TimerViewModel : ViewModelBase
     private IDisposable? _ticker;
 
     public TimerViewModel(
+        ILogger<TimerViewModel> logger,
         TimeTrackingService timeTracking
-    )
+    ) : base(logger)
     {
         TimeTracking = timeTracking;
         Status = "Not connected, set your Clockify API key in Settings";
 
         // Connection happens from the settings page, projects are loaded here once it succeeds
-        TimeTracking.Connected += (_, _) => _ = RunAsync(LoadProjectChoicesAsync);
-        
+        TimeTracking.Connected += (_, _) => _ = WithBusyIndicator(LoadProjectChoicesAsync);
+
         // The running entry may change from another screen, the timer display follows it
         TimeTracking.RunningEntryChanged += (_, _) => OnRunningEntryChanged();
     }
@@ -93,7 +94,7 @@ public class TimerViewModel : ViewModelBase
 
     public Task StartAsync()
     {
-        return RunAsync(async () =>
+        return WithBusyIndicator(async () =>
         {
             if (SelectedChoice is null)
             {
@@ -111,7 +112,7 @@ public class TimerViewModel : ViewModelBase
 
     public Task StopAsync()
     {
-        return RunAsync(() => TimeTracking.StopAsync());
+        return WithBusyIndicator(() => TimeTracking.StopAsync());
     }
 
     // Keyboard shortcut, ignored while busy: a description update still in flight could restart a stopped entry
@@ -122,14 +123,14 @@ public class TimerViewModel : ViewModelBase
             return Task.CompletedTask;
         }
 
-        return IsRunning 
-            ? StopAsync() 
+        return IsRunning
+            ? StopAsync()
             : StartAsync();
     }
 
     public Task RefreshAsync()
     {
-        return RunAsync(() => TimeTracking.RefreshRunningEntryAsync());
+        return WithBusyIndicator(() => TimeTracking.RefreshRunningEntryAsync());
     }
 
     // Each setter only sends its own field, the others come from the running entry, so the order in which
@@ -154,7 +155,7 @@ public class TimerViewModel : ViewModelBase
             return;
         }
 
-        RunAsync(() => TimeTracking.UpdateRunningEntryAsync(
+        WithBusyIndicator(() => TimeTracking.UpdateRunningEntryAsync(
             projectId,
             taskId,
             text

@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using Microsoft.Extensions.Logging;
 using SlClockify.Core;
 using SlClockify.Core.Services;
 
@@ -9,9 +10,10 @@ namespace SlClockify.ViewModels;
 /// </summary>
 [UsedImplicitly]
 public class SettingsViewModel(
+    ILogger<SettingsViewModel> logger,
     IApplicationSettings applicationSettings,
     TimeTrackingService timeTracking
-) : ViewModelBase
+) : ViewModelBase(logger)
 {
     private IApplicationSettings ApplicationSettings { get; } = applicationSettings;
     private TimeTrackingService TimeTracking { get; } = timeTracking;
@@ -26,7 +28,7 @@ public class SettingsViewModel(
     /// </summary>
     public Task ConnectAsync()
     {
-        return RunAsync(async () =>
+        return WithBusyIndicator(async () =>
         {
             var user = await TimeTracking.ConnectAsync(ApiKey);
 

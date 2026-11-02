@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using Microsoft.Extensions.Logging;
 
 namespace SlClockify.ViewModels;
 
@@ -9,9 +10,10 @@ namespace SlClockify.ViewModels;
 public class MainWindowViewModel : ViewModelBase
 {
     public MainWindowViewModel(
+        ILogger<MainWindowViewModel> logger,
         TimerViewModel timer,
         SettingsViewModel settings
-    )
+    ) : base(logger)
     {
         Timer = timer;
         Settings = settings;
