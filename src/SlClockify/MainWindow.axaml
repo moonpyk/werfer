@@ -56,7 +56,20 @@
             IsBackButtonVisible="False"
             IsSettingsVisible="True"
             Content="{Binding CurrentPage}"
-            SelectionChanged="OnNavigationSelectionChanged">
+            SelectionChanged="OnNavigationSelectionChanged"
+            ItemInvoked="OnNavigationItemInvoked">
+            <ui:FANavigationView.FooterMenuItems>
+                <!-- Action, not a page: invoking it doesn't change the selection -->
+                <ui:FANavigationViewItem
+                    x:Name="RefreshItem"
+                    SelectsOnInvoked="False"
+                    ToolTip.Tip="Fetch the running entry from Clockify"
+                    IsEnabled="{Binding Timer.ProjectChoices, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <ui:FANavigationViewItem.IconSource>
+                        <ui:FASymbolIconSource Symbol="Refresh" />
+                    </ui:FANavigationViewItem.IconSource>
+                </ui:FANavigationViewItem>
+            </ui:FANavigationView.FooterMenuItems>
             <ui:FANavigationView.MenuItems>
                 <ui:FANavigationViewItem x:Name="TimerItem" Content="Timer">
                     <ui:FANavigationViewItem.IconSource>

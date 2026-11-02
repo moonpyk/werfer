@@ -14,7 +14,9 @@ public class TimerViewModel : ViewModelBase
 {
     private IDisposable? _ticker;
 
-    public TimerViewModel(TimeTrackingService timeTracking)
+    public TimerViewModel(
+        TimeTrackingService timeTracking
+    )
     {
         TimeTracking = timeTracking;
         Status = "Not connected, set your Clockify API key in Settings";
@@ -109,6 +111,11 @@ public class TimerViewModel : ViewModelBase
     public Task StopAsync()
     {
         return RunAsync(() => TimeTracking.StopAsync());
+    }
+
+    public Task RefreshAsync()
+    {
+        return RunAsync(() => TimeTracking.RefreshRunningEntryAsync());
     }
 
     // Each setter only sends its own field, the others come from the running entry, so the order in which

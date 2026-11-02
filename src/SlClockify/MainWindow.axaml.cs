@@ -1,12 +1,33 @@
 using Avalonia.Controls;
 using FluentAvalonia.UI.Controls;
+using JetBrains.Annotations;
 using SlClockify.ViewModels;
 
 namespace SlClockify;
 
 public partial class MainWindow : Window
 {
+    [UsedImplicitly]
+    [Obsolete("Designer only, the running app must go through the view model constructor", true)]
     public MainWindow()
+    {
+        if (!Design.IsDesignMode)
+        {
+            throw new InvalidOperationException($"{nameof(MainWindow)} needs its {nameof(MainWindowViewModel)}");
+        }
+
+        Initialize();
+    }
+
+    public MainWindow(MainWindowViewModel vm)
+    {
+        Initialize();
+        DataContext = ViewModel = vm;
+    }
+
+    private MainWindowViewModel? ViewModel { get; }
+
+    private void Initialize()
     {
         InitializeComponent();
 
@@ -16,6 +37,14 @@ public partial class MainWindow : Window
 
     private void OnNavigationSelectionChanged(object? sender, FANavigationViewSelectionChangedEventArgs e)
     {
-        (DataContext as MainWindowViewModel)?.Navigate(e.IsSettingsSelected);
+        ViewModel?.Navigate(e.IsSettingsSelected);
+    }
+
+    private void OnNavigationItemInvoked(object? sender, FANavigationViewItemInvokedEventArgs e)
+    {
+        if (e.InvokedItemContainer == RefreshItem)
+        {
+            _ = ViewModel?.Timer.RefreshAsync();
+        }
     }
 }

@@ -64,21 +64,29 @@ public class TimeTrackingService(
         User = await Client.GetCurrentUserAsync(ctk);
         WorkspaceId = User.ActiveWorkspace ?? User.DefaultWorkspace ?? string.Empty;
 
+        await RefreshRunningEntryAsync(ctk);
+
+        Connected?.Invoke(this, EventArgs.Empty);
+
+        return User;
+    }
+
+    /// <summary>
+    ///     Picks up the entry running on Clockify, it may have been started or stopped from elsewhere.
+    /// </summary>
+    public async Task RefreshRunningEntryAsync(CancellationToken ctk = default)
+    {
         // Latest entry first, it's the running one when it has no end
         var last = (
             await Client.GetTimeEntriesForUserAsync(
                 WorkspaceId,
-                User.Id,
+                CurrentUser.Id,
                 pageSize: 1,
                 ctk: ctk
             )
         ).FirstOrDefault();
 
         RunningEntry = last?.TimeInterval is { End: null } ? last : null;
-
-        Connected?.Invoke(this, EventArgs.Empty);
-
-        return User;
     }
 
     /// <summary>
