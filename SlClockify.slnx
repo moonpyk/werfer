@@ -4,6 +4,13 @@
         <Platform Name="x64" />
         <Platform Name="x86" />
     </Configurations>
+    <Folder Name="/Miscellaneous/">
+        <File Path=".editorconfig" />
+        <File Path=".gitignore" />
+        <File Path="LICENSE" />
+        <File Path="README.md" />
+        <File Path="Taskfile.dist.yml" />
+    </Folder>
     <Project Path="src/SlClockify.Core/SlClockify.Core.csproj" />
     <Project Path="src/SlClockify/SlClockify.csproj" />
 </Solution>

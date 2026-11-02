@@ -1,0 +1,8 @@
+version: "3"
+vars:
+  DOTNET_RID: win-x64
+tasks:
+  publish-classic:
+    cmd: dotnet publish src/SlClockify -r {{.DOTNET_RID}} -o .publish/{{.DOTNET_RID}}
+  publish-aot:
+    cmd: dotnet publish src/SlClockify -r {{.DOTNET_RID}} -p:PublishAot=true -o .publish/{{.DOTNET_RID}}-aot
