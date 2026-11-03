@@ -40,6 +40,7 @@ public class ReadableTextBrushConverter : IMultiValueConverter
                 ? Colors.Black
                 : Colors.White;
 
+        // ReSharper disable once InvertIf : more readable
         if (!Brushes.TryGetValue((color, background), out var brush))
         {
             brush = new SolidColorBrush(ReadableColor.EnsureContrast(color, background));
