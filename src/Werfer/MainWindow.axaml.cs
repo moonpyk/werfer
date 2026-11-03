@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using FluentAvalonia.UI.Controls;
 using JetBrains.Annotations;
+using Werfer.Utils;
 using Werfer.ViewModels;
 
 namespace Werfer;
@@ -23,7 +24,14 @@ public partial class MainWindow : Window
     public MainWindow(MainWindowViewModel vm)
     {
         Initialize();
+
         DataContext = ViewModel = vm;
+
+        this.RestoreWidth(
+            vm.ApplicationSettings
+        ).RestorePosition(
+            vm.ApplicationSettings
+        );
     }
 
     private MainWindowViewModel? ViewModel { get; }
@@ -36,32 +44,58 @@ public partial class MainWindow : Window
         Navigation.SelectedItem = TimerItem;
     }
 
-    private void OnNavigationSelectionChanged(object? sender, FANavigationViewSelectionChangedEventArgs e)
+    protected override void OnClosing(WindowClosingEventArgs e)
     {
-        ViewModel?.Navigate(e.IsSettingsSelected);
+        // A minimized window reports a fake far off-screen position, keep the last real one instead
+        // (also skips maximized, whose width isn't the one to restore)
+        if (ViewModel is not null && WindowState == WindowState.Normal)
+        {
+            var sts = ViewModel.ApplicationSettings;
+
+            sts.WindowX = Position.X;
+            sts.WindowY = Position.Y;
+            sts.WindowWidth = ClientSize.Width;
+            sts.Save();
+        }
+
+        base.OnClosing(e);
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
-        if (e is { Key: Key.Space, KeyModifiers: KeyModifiers.Control } && ViewModel is not null)
+        switch (e)
         {
-            // Commits the description being typed, it's only pushed on lost focus
-            Focus();
-            _ = ViewModel.Timer.ToggleAsync();
-            e.Handled = true;
-            return;
-        }
+            case
+            {
+                Key: Key.Space,
+                KeyModifiers: KeyModifiers.Control
+            } when ViewModel is not null:
+                // Commits the description being typed, it's only pushed on lost focus
+                Focus();
+                _ = ViewModel.Timer.ToggleAsync();
+                e.Handled = true;
+                return;
 
-        if (e is { Key: Key.F5, KeyModifiers: KeyModifiers.None } && ViewModel is not null)
-        {
-            // Pushes the description being typed first, the refresh would overwrite it otherwise
-            Focus();
-            _ = ViewModel.Timer.RefreshAsync();
-            e.Handled = true;
-            return;
-        }
+            case
+            {
+                Key: Key.F5,
+                KeyModifiers: KeyModifiers.None
+            } when ViewModel is not null:
+                // Pushes the description being typed first, the refresh would overwrite it otherwise
+                Focus();
+                _ = ViewModel.Timer.RefreshAsync();
+                e.Handled = true;
+                return;
 
-        base.OnKeyDown(e);
+            default:
+                base.OnKeyDown(e);
+                break;
+        }
+    }
+
+    private void OnNavigationSelectionChanged(object? sender, FANavigationViewSelectionChangedEventArgs e)
+    {
+        ViewModel?.Navigate(e.IsSettingsSelected);
     }
 
     private void OnNavigationItemInvoked(object? sender, FANavigationViewItemInvokedEventArgs e)

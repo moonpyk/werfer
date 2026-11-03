@@ -23,6 +23,20 @@ public interface IApplicationSettings
     bool Topmost { get; set; }
 
     /// <summary>
+    ///     Gets or sets the window position, in screen pixels, at the last close; null until it has been saved once
+    /// </summary>
+    int? WindowX { get; set; }
+
+    /// <inheritdoc cref="WindowX" />
+    int? WindowY { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the window width, in device-independent pixels, at the last close; null until it has been saved
+    ///     once. The height always fits the content
+    /// </summary>
+    double? WindowWidth { get; set; }
+
+    /// <summary>
     ///     Saves the current application settings to a persistent storage medium.
     /// </summary>
     void Save();

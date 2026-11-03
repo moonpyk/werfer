@@ -87,6 +87,27 @@ public partial class ApplicationSettings : IApplicationSettings
         set => _persisted.Topmost = value;
     }
 
+    /// <inheritdoc />
+    public int? WindowX
+    {
+        get => _persisted.WindowX;
+        set => _persisted.WindowX = value;
+    }
+
+    /// <inheritdoc />
+    public int? WindowY
+    {
+        get => _persisted.WindowY;
+        set => _persisted.WindowY = value;
+    }
+
+    /// <inheritdoc />
+    public double? WindowWidth
+    {
+        get => _persisted.WindowWidth;
+        set => _persisted.WindowWidth = value;
+    }
+
     /// <summary>
     ///     Loads the application settings from the persisted storage. If the settings file
     ///     does not exist, it returns the current instance without any changes. In case of
@@ -187,6 +208,15 @@ public partial class ApplicationSettings : IApplicationSettings
         [JsonPropertyName("window:topmost")]
         [DefaultValue(false)]
         public bool Topmost { get; set; }
+
+        [JsonPropertyName("window:x")]
+        public int? WindowX { get; set; }
+
+        [JsonPropertyName("window:y")]
+        public int? WindowY { get; set; }
+
+        [JsonPropertyName("window:width")]
+        public double? WindowWidth { get; set; }
     }
 
     // Nested so it can see the private PersistedSettings; source-generated because reflection-based JSON is off under NativeAOT
