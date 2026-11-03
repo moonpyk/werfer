@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using FluentAvalonia.UI.Controls;
 using JetBrains.Annotations;
+using Werfer.Services;
 using Werfer.Utils;
 using Werfer.ViewModels;
 
@@ -96,6 +97,14 @@ public partial class MainWindow : Window
     private void OnNavigationSelectionChanged(object? sender, FANavigationViewSelectionChangedEventArgs e)
     {
         ViewModel?.Navigate(e.IsSettingsSelected);
+    }
+
+    private void OnFlashMessageClosed(FAInfoBar sender, FAInfoBarClosedEventArgs e)
+    {
+        if (sender.DataContext is FlashMessage message)
+        {
+            ViewModel?.FlashMessages.Remove(message);
+        }
     }
 
     private void OnNavigationItemInvoked(object? sender, FANavigationViewItemInvokedEventArgs e)

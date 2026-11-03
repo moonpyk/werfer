@@ -11,8 +11,9 @@ namespace Werfer.ViewModels;
 public class SettingsViewModel(
     ILogger<SettingsViewModel> logger,
     IApplicationSettings applicationSettings,
+    FlashMessageService flashMessages,
     TimeTrackingService timeTracking
-) : ViewModelBase(logger)
+) : ViewModelBase(logger, flashMessages)
 {
     private IApplicationSettings ApplicationSettings { get; } = applicationSettings;
     private TimeTrackingService TimeTracking { get; } = timeTracking;
@@ -29,12 +30,10 @@ public class SettingsViewModel(
     {
         return WithBusyIndicator(async () =>
         {
-            var user = await TimeTracking.ConnectAsync(ApiKey);
+            await TimeTracking.ConnectAsync(ApiKey);
 
             ApplicationSettings.ApiKey = ApiKey;
             ApplicationSettings.Save();
-
-            Status = $"{user.Email}";
         });
     }
 }

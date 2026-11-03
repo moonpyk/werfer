@@ -1,5 +1,7 @@
+using FluentAvalonia.UI.Controls;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
+using Werfer.Services;
 
 namespace Werfer.ViewModels;
 
@@ -9,41 +11,54 @@ namespace Werfer.ViewModels;
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public class MainWindowViewModel : ViewModelBase
 {
+    private static readonly FlashMessage NoApiKey = new(
+        "Set your Clockify API key in Settings",
+        "Not connected",
+        FAInfoBarSeverity.Error
+    );
+
     public MainWindowViewModel(
         ILogger<MainWindowViewModel> logger,
+        FlashMessageService flashMessages,
         IApplicationSettings applicationSettings,
+        TimeTrackingService timeTracking,
         TimerViewModel timer,
         SettingsViewModel settings
-    ) : base(logger)
+    ) : base(logger, flashMessages)
     {
+        timeTracking.Connected += (_, _) =>
+        {
+            // The status bar shows who is connected
+            Status = timeTracking.User?.Email;
+            FlashMessages.Remove(NoApiKey);
+            FlashMessages.Remove(InvalidApiKey);
+        };
+
         ApplicationSettings = applicationSettings;
         Timer = timer;
         Settings = settings;
         CurrentPage = timer;
 
-        // The status bar shows the latest message from any page, a page clearing its own doesn't blank it
-        Status = timer.Status;
-
         foreach (var page in new ViewModelBase[] { timer, settings })
         {
             page.PropertyChanged += (_, e) =>
             {
-                switch (e.PropertyName)
+                if (e.PropertyName == nameof(IsBusy))
                 {
-                    case nameof(Status) when page.Status is { } status:
-                        Status = status;
-                        break;
-                    case nameof(IsBusy):
-                        IsAnyPageBusy = timer.IsBusy || settings.IsBusy;
-                        break;
+                    IsAnyPageBusy = timer.IsBusy || settings.IsBusy;
                 }
             };
         }
 
         // A key saved by a previous run connects right away, the timer page fills in once it's done
+        // The only message not caused by a user action: without a valid key the app can't do anything
         if (settings.HasApiKey)
         {
             _ = settings.ConnectAsync();
+        }
+        else
+        {
+            FlashMessages.Push(NoApiKey);
         }
     }
 
@@ -58,7 +73,13 @@ public class MainWindowViewModel : ViewModelBase
 
     public SettingsViewModel Settings { get; }
 
-    // Drives the status bar's progress ring, whichever page is working
+    public string? Status
+    {
+        get;
+        private set => Set(ref field, value);
+    }
+
+    // Drives the progress ring, whichever page is working
     public bool IsAnyPageBusy
     {
         get;

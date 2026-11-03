@@ -1,4 +1,5 @@
 using Avalonia.Threading;
+using FluentAvalonia.UI.Controls;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Werfer.Services;
@@ -17,12 +18,12 @@ public class TimerViewModel : ViewModelBase
     public TimerViewModel(
         IApplicationSettings applicationSettings,
         ILogger<TimerViewModel> logger,
+        FlashMessageService flashMessages,
         TimeTrackingService timeTracking
-    ) : base(logger)
+    ) : base(logger, flashMessages)
     {
         ApplicationSettings = applicationSettings;
         TimeTracking = timeTracking;
-        Status = "Not connected, set your Clockify API key in Settings";
 
         // Connection happens from the settings page, projects are loaded here once it succeeds
         TimeTracking.Connected += (_, _) => _ = WithBusyIndicator(LoadProjectChoicesAsync);
@@ -101,7 +102,10 @@ public class TimerViewModel : ViewModelBase
         {
             if (SelectedChoice is null)
             {
-                Status = "Pick a project and a task first";
+                FlashMessages.Push(new FlashMessage(
+                    "Pick a project and a task first",
+                    Severity: FAInfoBarSeverity.Warning
+                ));
                 return;
             }
 

@@ -4,6 +4,7 @@ using Avalonia.Logging;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Werfer.Services;
 using Werfer.Settings;
 using Werfer.Utils;
 using Werfer.ViewModels;
@@ -29,6 +30,7 @@ public class App : Application
                     .Load()
             )
             .RegisterServices()
+            .AddSingleton<FlashMessageService>()
             .AddSingleton<TimerViewModel>()
             .AddSingleton<SettingsViewModel>()
             .AddSingleton<MainWindowViewModel>()

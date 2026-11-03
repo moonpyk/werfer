@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:services="clr-namespace:Werfer.Services"
         xmlns:viewModels="clr-namespace:Werfer.ViewModels"
         xmlns:views="clr-namespace:Werfer.Views"
         x:Class="Werfer.MainWindow"
@@ -51,6 +52,24 @@
                     IsVisible="{Binding IsAnyPageBusy}" />
             </Grid>
         </Border>
+
+        <!-- Docked after the status bar, so stacked right above it. Closing an info bar removes its message, the same message can then be pushed again -->
+        <ItemsControl
+            DockPanel.Dock="Bottom"
+            Margin="8,0,8,4"
+            ItemsSource="{Binding FlashMessages.Messages}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="services:FlashMessage">
+                    <ui:FAInfoBar
+                        Margin="0,4,0,0"
+                        IsOpen="True"
+                        Title="{Binding Title}"
+                        Message="{Binding Message}"
+                        Severity="{Binding Severity}"
+                        Closed="OnFlashMessageClosed" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
 
         <ui:FANavigationView
             x:Name="Navigation"
