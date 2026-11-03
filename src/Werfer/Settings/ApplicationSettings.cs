@@ -80,6 +80,13 @@ public partial class ApplicationSettings : IApplicationSettings
         set => _persisted.MaxProjectChoices = value;
     }
 
+    /// <inheritdoc />
+    public bool Topmost
+    {
+        get => _persisted.Topmost;
+        set => _persisted.Topmost = value;
+    }
+
     /// <summary>
     ///     Loads the application settings from the persisted storage. If the settings file
     ///     does not exist, it returns the current instance without any changes. In case of
@@ -173,9 +180,13 @@ public partial class ApplicationSettings : IApplicationSettings
         [JsonPropertyName("api_key")]
         public byte[]? CryptedApiKey { get; set; }
 
-        [JsonPropertyName("max_project_choices")]
+        [JsonPropertyName("projects:max_choices")]
         [DefaultValue(10)]
         public int MaxProjectChoices { get; set; } = 10;
+
+        [JsonPropertyName("window:topmost")]
+        [DefaultValue(false)]
+        public bool Topmost { get; set; }
     }
 
     // Nested so it can see the private PersistedSettings; source-generated because reflection-based JSON is off under NativeAOT

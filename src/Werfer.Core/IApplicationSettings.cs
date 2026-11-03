@@ -1,5 +1,3 @@
-using JetBrains.Annotations;
-
 namespace Werfer;
 
 /// <summary>
@@ -18,6 +16,11 @@ public interface IApplicationSettings
     ///     in the timer control.
     /// </summary>
     int MaxProjectChoices { get; set; }
+
+    /// <summary>
+    ///     Gets or sets whether the application window should always be on top
+    /// </summary>
+    bool Topmost { get; set; }
 
     /// <summary>
     ///     Saves the current application settings to a persistent storage medium.

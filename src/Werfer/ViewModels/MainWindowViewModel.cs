@@ -11,10 +11,12 @@ public class MainWindowViewModel : ViewModelBase
 {
     public MainWindowViewModel(
         ILogger<MainWindowViewModel> logger,
+        IApplicationSettings applicationSettings,
         TimerViewModel timer,
         SettingsViewModel settings
     ) : base(logger)
     {
+        ApplicationSettings = applicationSettings;
         Timer = timer;
         Settings = settings;
         CurrentPage = timer;
@@ -44,6 +46,13 @@ public class MainWindowViewModel : ViewModelBase
             _ = settings.ConnectAsync();
         }
     }
+
+    /// <summary>
+    ///     Bound directly by the window (Topmost, ...).
+    ///     shortcut: settings don't raise change notifications, values are read once; implement INotifyPropertyChanged
+    ///     on ApplicationSettings once the settings page can change them
+    /// </summary>
+    public IApplicationSettings ApplicationSettings { get; }
 
     public TimerViewModel Timer { get; }
 

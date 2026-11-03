@@ -2,21 +2,23 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
         xmlns:viewModels="clr-namespace:Werfer.ViewModels"
-        xmlns:views1="clr-namespace:Werfer.Views"
+        xmlns:views="clr-namespace:Werfer.Views"
         x:Class="Werfer.MainWindow"
         x:DataType="viewModels:MainWindowViewModel"
         Icon="/Assets/Werfer.ico"
         Title="Werfer"
         Width="420"
         WindowStartupLocation="CenterScreen"
+        CanMaximize="False"
+        Topmost="{Binding ApplicationSettings.Topmost}"
         SizeToContent="Height">
     <!-- Page view models are mapped to their views here, no reflection-based ViewLocator (NativeAOT) -->
     <Window.DataTemplates>
         <DataTemplate DataType="viewModels:TimerViewModel">
-            <views1:TimerView />
+            <views:TimerView />
         </DataTemplate>
         <DataTemplate DataType="viewModels:SettingsViewModel">
-            <views1:SettingsView />
+            <views:SettingsView />
         </DataTemplate>
     </Window.DataTemplates>
 
