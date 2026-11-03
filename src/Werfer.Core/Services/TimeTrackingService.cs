@@ -17,6 +17,12 @@ public class TimeTrackingService(
     IOptions<ClockifyOptions> options
 )
 {
+    /// <summary>
+    ///     One operation at a time: overlapping calls would act on a stale RunningEntry, e.g. a description
+    ///     update finishing after a stop and restarting the entry. Waiting is async, so queued calls don't block the UI
+    /// </summary>
+    private SemaphoreSlim Operations { get; } = new(1, 1);
+
     private IClockifyApiClient Client { get; } = client;
     private IOptions<ClockifyOptions> Options { get; } = options;
 
@@ -56,25 +62,33 @@ public class TimeTrackingService(
     /// <summary>
     ///     Applies the API key, loads the user and picks up a time entry already running on Clockify.
     /// </summary>
-    public async Task<User> ConnectAsync(string apiKey, CancellationToken ctk = default)
+    public Task<User> ConnectAsync(string apiKey, CancellationToken ctk = default)
     {
-        // Same instance the auth handler reads, so the next call uses the new key
-        Options.Value.ApiKey = apiKey.Trim();
+        return ExclusiveAsync(async () =>
+        {
+            // Same instance the auth handler reads, so the next call uses the new key
+            Options.Value.ApiKey = apiKey.Trim();
 
-        User = await Client.GetCurrentUserAsync(ctk);
-        WorkspaceId = User.ActiveWorkspace ?? User.DefaultWorkspace ?? string.Empty;
+            User = await Client.GetCurrentUserAsync(ctk);
+            WorkspaceId = User.ActiveWorkspace ?? User.DefaultWorkspace ?? string.Empty;
 
-        await RefreshRunningEntryAsync(ctk);
+            await LoadRunningEntryAsync(ctk);
 
-        Connected?.Invoke(this, EventArgs.Empty);
+            Connected?.Invoke(this, EventArgs.Empty);
 
-        return User;
+            return User;
+        }, ctk);
     }
 
     /// <summary>
     ///     Picks up the entry running on Clockify, it may have been started or stopped from elsewhere.
     /// </summary>
-    public async Task RefreshRunningEntryAsync(CancellationToken ctk = default)
+    public Task RefreshRunningEntryAsync(CancellationToken ctk = default)
+    {
+        return ExclusiveAsync(() => LoadRunningEntryAsync(ctk), ctk);
+    }
+
+    private async Task LoadRunningEntryAsync(CancellationToken ctk)
     {
         // Latest entry first, it's the running one when it has no end
         var last = (
@@ -119,51 +133,66 @@ public class TimeTrackingService(
     /// <summary>
     ///     Starts tracking time for the specified project and task in Clockify.
     /// </summary>
-    public async Task StartAsync(
+    public Task StartAsync(
         string projectId,
         string taskId,
         string? description,
         CancellationToken ctk = default
     )
     {
-        RunningEntry = await Client.CreateTimeEntryAsync(WorkspaceId, new CreateTimeEntryRequest
+        return ExclusiveAsync(async () =>
         {
-            Start = DateTimeOffset.UtcNow,
-            ProjectId = projectId,
-            TaskId = taskId,
-            Description = Normalize(description)
+            RunningEntry = await Client.CreateTimeEntryAsync(WorkspaceId, new CreateTimeEntryRequest
+            {
+                Start = DateTimeOffset.UtcNow,
+                ProjectId = projectId,
+                TaskId = taskId,
+                Description = Normalize(description)
+            }, ctk);
         }, ctk);
     }
 
-    public async Task StopAsync(CancellationToken ctk = default)
+    public Task StopAsync(CancellationToken ctk = default)
     {
-        try
+        return ExclusiveAsync(async () =>
         {
-            await Client.StopActiveTimeEntryAsync(WorkspaceId, CurrentUser.Id, new StopTimeEntryRequest
+            try
             {
-                End = DateTimeOffset.UtcNow
-            }, ctk);
-        }
-        catch (ApiException e) when (e.StatusCode == HttpStatusCode.NotFound)
-        {
-            // Nothing running anymore, already stopped from another client: the goal is reached
-        }
+                await Client.StopActiveTimeEntryAsync(WorkspaceId, CurrentUser.Id, new StopTimeEntryRequest
+                {
+                    End = DateTimeOffset.UtcNow
+                }, ctk);
+            }
+            catch (ApiException e) when (e.StatusCode == HttpStatusCode.NotFound)
+            {
+                // Nothing running anymore, already stopped from another client: the goal is reached
+            }
 
-        RunningEntry = null;
+            RunningEntry = null;
+        }, ctk);
     }
 
     /// <summary>
     ///     Changes the project, task and description of the running entry, does nothing when stopped or unchanged.
     /// </summary>
-    public async Task UpdateRunningEntryAsync(
+    public Task UpdateRunningEntryAsync(
         string projectId,
         string taskId,
         string? description,
         CancellationToken ctk = default
     )
     {
-        description = Normalize(description);
+        // Checked once the lock is held, against the entry as the previous operation left it
+        return ExclusiveAsync(() => UpdateRunningEntryCoreAsync(projectId, taskId, Normalize(description), ctk), ctk);
+    }
 
+    private async Task UpdateRunningEntryCoreAsync(
+        string projectId,
+        string taskId,
+        string? description,
+        CancellationToken ctk
+    )
+    {
         var running = RunningEntry;
         if (running is null
             || (running.ProjectId == projectId && running.TaskId == taskId && running.Description == description))
@@ -195,6 +224,34 @@ public class TimeTrackingService(
             TagIds = current.TagIds,
             Description = description
         }, ctk);
+    }
+    
+    private Task ExclusiveAsync(Func<Task> action, CancellationToken ctk)
+    {
+
+        return ExclusiveAsync(async () =>
+        {
+            await action();
+            return true;
+        }, ctk);
+    }
+
+    private async Task<T> ExclusiveAsync<T>(Func<Task<T>> action, CancellationToken ctk)
+    {
+        // No [MethodImpl(MethodImplOptions.AggressiveInlining)] on purpose: every caller then makes an HTTP request
+        // (tens to hundreds of ms), next to which a saved call (~1 ns) is noise. The attribute would only remove that
+        // call anyway, not the real overhead (closure, async state machine, delegate invocation), and ILC already
+        // inlines a method this small on its own when worthwhile.
+        await Operations.WaitAsync(ctk);
+
+        try
+        {
+            return await action();
+        }
+        finally
+        {
+            Operations.Release();
+        }
     }
 
     private static string? Normalize(string? description)
