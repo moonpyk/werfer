@@ -28,7 +28,7 @@ public static class RegistrationExtensions
 
             services.AddTransient<ClockifyAuthHeaderHandler>();
 
-            services.AddRefitClient<IClockifyApiClient>(new RefitSettings
+            services.AddRefitGeneratedClient<IClockifyApiClient>(new RefitSettings
                 {
                     UrlParameterFormatter = new ClockifyUrlParameterFormatter(),
                     ContentSerializer = new SystemTextJsonContentSerializer(ClockifyJsonContext.Default.Options)
