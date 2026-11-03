@@ -11,4 +11,9 @@ tasks:
   
   publish-aot:
     desc: Publishes the AOT version of the application
-    cmd: dotnet publish src/Werfer -c {{.DOTNET_CONFIGURATION}} -r {{.DOTNET_RID}} -p:PublishAot=true -o .publish/{{.DOTNET_RID}}-aot
+    cmd: dotnet publish src/Werfer 
+      -c {{.DOTNET_CONFIGURATION}} 
+      -r {{.DOTNET_RID}} 
+      -p:PublishAot=true 
+      -p:TrimmerSingleWarn=false
+      -o .publish/{{.DOTNET_RID}}-aot
