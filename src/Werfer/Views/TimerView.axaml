@@ -57,7 +57,7 @@
 
         <Button
             Grid.Column="1"
-            ToolTip.Tip="Start (Ctrl+Enter)"
+            ToolTip.Tip="Start (Ctrl+Space)"
             Classes="accent"
             Command="{Binding StartAsync}"
             IsVisible="{Binding !IsRunning}"
@@ -71,7 +71,7 @@
         <!-- Accent button with its brushes overridden to Clockify's red, so hover and pressed states keep working -->
         <Button
             Grid.Column="1"
-            ToolTip.Tip="Stop (Ctrl+Enter)"
+            ToolTip.Tip="Stop (Ctrl+Space)"
             Classes="accent"
             Command="{Binding StopAsync}"
             IsVisible="{Binding IsRunning}"

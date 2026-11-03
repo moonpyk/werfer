@@ -43,7 +43,7 @@ public partial class MainWindow : Window
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
-        if (e is { Key: Key.Enter, KeyModifiers: KeyModifiers.Control } && ViewModel is not null)
+        if (e is { Key: Key.Space, KeyModifiers: KeyModifiers.Control } && ViewModel is not null)
         {
             // Commits the description being typed, it's only pushed on lost focus
             Focus();
