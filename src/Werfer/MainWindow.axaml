@@ -63,7 +63,7 @@
                 <ui:FANavigationViewItem
                     x:Name="RefreshItem"
                     SelectsOnInvoked="False"
-                    ToolTip.Tip="Fetch the running entry from Clockify"
+                    ToolTip.Tip="Fetch the running entry from Clockify (F5)"
                     IsVisible="{Binding ShowRefreshButton}"
                     IsEnabled="{Binding Timer.ProjectChoices, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <ui:FANavigationViewItem.IconSource>

@@ -52,6 +52,15 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (e is { Key: Key.F5, KeyModifiers: KeyModifiers.None } && ViewModel is not null)
+        {
+            // Pushes the description being typed first, the refresh would overwrite it otherwise
+            Focus();
+            _ = ViewModel.Timer.RefreshAsync();
+            e.Handled = true;
+            return;
+        }
+
         base.OnKeyDown(e);
     }
 
