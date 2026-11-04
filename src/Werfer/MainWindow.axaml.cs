@@ -71,10 +71,17 @@ public partial class MainWindow : Window
                 Key: Key.Space,
                 KeyModifiers: KeyModifiers.Control
             } when ViewModel is not null:
+                e.Handled = true;
+
+                // Checked before Focus(): committing the description starts an update, which sets IsBusy
+                if (ViewModel.Timer.IsBusy)
+                {
+                    return;
+                }
+
                 // Commits the description being typed, it's only pushed on lost focus
                 Focus();
                 _ = ViewModel.Timer.ToggleAsync();
-                e.Handled = true;
                 return;
 
             case

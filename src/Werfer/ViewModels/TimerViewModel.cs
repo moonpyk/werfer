@@ -122,14 +122,9 @@ public class TimerViewModel : ViewModelBase
         return WithBusyIndicator(() => TimeTracking.StopAsync());
     }
 
-    // Keyboard shortcut, ignored while busy: a description update still in flight could restart a stopped entry
+    // Keyboard shortcut, the window checks IsBusy before committing the description
     public Task ToggleAsync()
     {
-        if (IsBusy)
-        {
-            return Task.CompletedTask;
-        }
-
         return IsRunning
             ? StopAsync()
             : StartAsync();
