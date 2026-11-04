@@ -42,4 +42,9 @@ public class FlashMessageService
     {
         _messages.Remove(message);
     }
+    
+    public void Clear()
+    {
+        _messages.Clear();
+    }
 }

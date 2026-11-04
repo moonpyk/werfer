@@ -30,8 +30,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             // The status bar shows who is connected
             Status = timeTracking.User?.Email;
-            FlashMessages.Remove(NoApiKey);
-            FlashMessages.Remove(InvalidApiKey);
+            FlashMessages.Clear();
         };
 
         ApplicationSettings = applicationSettings;
