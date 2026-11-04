@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Werfer.Clockify.Models;
 
 namespace Werfer.Clockify.ViewModels;
@@ -13,6 +14,6 @@ namespace Werfer.Clockify.ViewModels;
 /// <param name="Project">The project to which the task belongs.</param>
 /// <param name="Task">The specific task within the project.</param>
 public record ProjectTaskChoice(
-    Project Project,
-    ProjectTask Task
+    [property: JsonPropertyName("p")]Project Project,
+    [property: JsonPropertyName("t")]ProjectTask Task
 );
