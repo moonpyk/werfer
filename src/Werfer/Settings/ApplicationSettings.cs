@@ -1,10 +1,10 @@
 using System.ComponentModel;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Werfer.DataProtection;
 
 namespace Werfer.Settings;
 
@@ -37,6 +37,8 @@ public partial class ApplicationSettings : IApplicationSettings
     /// </summary>
     public static ApplicationSettings Current { get; } = new();
 
+    private IDataProtectionProvider DataProtectionProvider { get; set; } = PassThroughDataProtectionProvider.Instance;
+
     private ILogger _logger = NullLogger.Instance;
     private PersistedSettings _persisted = new();
 
@@ -64,10 +66,9 @@ public partial class ApplicationSettings : IApplicationSettings
             }
             else
             {
-                _persisted.CryptedApiKey = ProtectedData.Protect(
+                _persisted.CryptedApiKey = DataProtectionProvider.Protect(
                     Encoding.UTF8.GetBytes(field),
-                    _dataProtectionEntropy,
-                    DataProtectionScope.CurrentUser
+                    _dataProtectionEntropy
                 );
             }
         }
@@ -165,10 +166,9 @@ public partial class ApplicationSettings : IApplicationSettings
         if (_persisted.CryptedApiKey?.Length > 0 && string.IsNullOrEmpty(ApiKey))
         {
             ApiKey = Encoding.UTF8.GetString(
-                ProtectedData.Unprotect(
+                DataProtectionProvider.Unprotect(
                     _persisted.CryptedApiKey,
-                    _dataProtectionEntropy,
-                    DataProtectionScope.CurrentUser
+                    _dataProtectionEntropy
                 )
             );
         }
@@ -193,6 +193,18 @@ public partial class ApplicationSettings : IApplicationSettings
         {
             _logger.LogError(e, "Could not save settings to {FilePath}", FilePath);
         }
+    }
+
+    /// <summary>
+    ///     Configures the application settings to use the specified data protection provider.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown when the <paramref name="provider" /> parameter is null.
+    /// </exception>
+    public ApplicationSettings WithDataProtectionProvider(IDataProtectionProvider provider)
+    {
+        DataProtectionProvider = provider ?? throw new ArgumentNullException(nameof(provider));
+        return this;
     }
 
     // Everything written to the settings file, and nothing else
