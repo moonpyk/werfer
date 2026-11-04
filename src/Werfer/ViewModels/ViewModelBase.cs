@@ -54,12 +54,12 @@ public abstract class ViewModelBase(
         catch (ApiException e) when (e.StatusCode == HttpStatusCode.Unauthorized)
         {
             Logger.LogWarning(e, "Invalid API key");
-            FlashMessages.Push(InvalidApiKey);
+            FlashMessages.ReplaceWith(InvalidApiKey);
         }
         catch (Exception e)
         {
             Logger.LogError(e, "While running operation");
-            FlashMessages.Push(new FlashMessage(e.Message, Severity: FAInfoBarSeverity.Error));
+            FlashMessages.ReplaceWith(new FlashMessage(e.Message, Severity: FAInfoBarSeverity.Error));
         }
         finally
         {

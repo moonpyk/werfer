@@ -30,21 +30,30 @@ public class FlashMessageService
     /// <summary>
     ///     Shows the message, unless an equal one is already shown.
     /// </summary>
-    public void Push(FlashMessage message)
+    public FlashMessageService Push(FlashMessage message)
     {
         if (!_messages.Contains(message))
         {
             _messages.Add(message);
         }
-    }
 
-    public void Remove(FlashMessage message)
-    {
-        _messages.Remove(message);
+        return this;
     }
     
-    public void Clear()
+    public FlashMessageService ReplaceWith(FlashMessage message)
+    {
+        return Clear().Push(message);
+    }
+
+    public FlashMessageService Remove(FlashMessage message)
+    {
+        _messages.Remove(message);
+        return this;
+    }
+    
+    public FlashMessageService Clear()
     {
         _messages.Clear();
+        return this;
     }
 }

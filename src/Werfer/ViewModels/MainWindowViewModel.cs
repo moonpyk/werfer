@@ -57,7 +57,7 @@ public class MainWindowViewModel : ViewModelBase
         }
         else
         {
-            FlashMessages.Push(NoApiKey);
+            FlashMessages.ReplaceWith(NoApiKey);
         }
     }
 
