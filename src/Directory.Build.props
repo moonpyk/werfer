@@ -1,0 +1,13 @@
+<Project>
+    <PropertyGroup>
+        <MSBuildGitHashCommand>git rev-parse HEAD</MSBuildGitHashCommand>
+        <MSBuildGitHashReplaceInfoVersion>True</MSBuildGitHashReplaceInfoVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MSBuildGitHash" Version="2.0.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+</Project>
