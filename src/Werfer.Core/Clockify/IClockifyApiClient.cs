@@ -163,6 +163,7 @@ public interface IClockifyApiClient
     /// <param name="project">Optional project ID filter.</param>
     /// <param name="task">Optional task ID filter.</param>
     /// <param name="hydrated">Optional flag indicating whether to return hydrated time entry objects.</param>
+    /// <param name="inProgress">Optional flag to return only the running time entry.</param>
     /// <param name="page">Page number for pagination (1-based).</param>
     /// <param name="pageSize">Number of items per page.</param>
     /// <param name="ctk">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -177,6 +178,7 @@ public interface IClockifyApiClient
         [Query] string? project = null,
         [Query] string? task = null,
         [Query] bool? hydrated = null,
+        [Query("in-progress")] bool? inProgress = null,
         [Query] int? page = null,
         [Query("page-size")] int? pageSize = null,
         CancellationToken ctk = default

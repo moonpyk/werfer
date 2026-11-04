@@ -91,11 +91,12 @@ public class TimeTrackingService(
 
     private async Task LoadRunningEntryAsync(CancellationToken ctk)
     {
-        // Latest entry first, it's the running one when it has no end
+        // Filtered on in-progress: the latest entry by start may be a finished one added by hand later in the day
         var last = (
             await Client.GetTimeEntriesForUserAsync(
                 WorkspaceId,
                 CurrentUser.Id,
+                inProgress: true,
                 pageSize: 1,
                 ctk: ctk
             )
