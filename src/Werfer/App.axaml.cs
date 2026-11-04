@@ -13,6 +13,8 @@ namespace Werfer;
 
 public class App : Application
 {
+    public IServiceProvider? Provider { get; private set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -36,15 +38,17 @@ public class App : Application
             .AddSingleton<MainWindowViewModel>()
             ;
 
-        var provider = services.BuildServiceProvider();
+        Provider = services.BuildServiceProvider();
 
         Logger.Sink = new AvaloniaLogSink(
-            provider.GetRequiredService<ILoggerFactory>()
+            Provider.GetRequiredService<ILoggerFactory>()
         );
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow(provider.GetRequiredService<MainWindowViewModel>());
+            desktop.MainWindow = new MainWindow(
+                Provider.GetRequiredService<MainWindowViewModel>()
+            );
         }
 
         base.OnFrameworkInitializationCompleted();
