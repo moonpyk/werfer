@@ -36,7 +36,7 @@ public class TimerViewModel : ViewModelBase
     private TimeTrackingService TimeTracking { get; }
 
     // Null until connected, the timer panel is hidden meanwhile
-    public List<ProjectTaskChoice>? ProjectChoices
+    public List<ProjectTaskViewModel>? ProjectChoices
     {
         get;
         private set => Set(ref field, value);
@@ -52,7 +52,7 @@ public class TimerViewModel : ViewModelBase
         ]);
 
     // Pushed to the running entry when changed
-    public ProjectTaskChoice? SelectedChoice
+    public ProjectTaskViewModel? SelectedChoice
     {
         get;
         set
@@ -142,7 +142,7 @@ public class TimerViewModel : ViewModelBase
 
     // Each setter only sends its own field, the others come from the running entry, so the order in which
     // OnRunningEntryChanged refreshes them can't send a half-updated state
-    private void PushToRunningEntry(ProjectTaskChoice? choice = null, bool description = false)
+    private void PushToRunningEntry(ProjectTaskViewModel? choice = null, bool description = false)
     {
         if (TimeTracking.RunningEntry is not { } running)
         {
@@ -172,7 +172,7 @@ public class TimerViewModel : ViewModelBase
     private async Task LoadProjectChoicesAsync()
     {
         ProjectChoices = (await TimeTracking.GetProjectTasksAsync())
-            .Select(pt => new ProjectTaskChoice(pt.Project, pt.Task))
+            .Select(pt => new ProjectTaskViewModel(pt))
             // Projects sharing a color end up next to each other in the list
             .OrderBy(c => c.Project.Color)
             .ThenBy(c => c.ToString())

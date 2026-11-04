@@ -1,19 +1,23 @@
 using Avalonia.Media;
-using Werfer.Clockify.Models;
+using Werfer.Clockify.ViewModels;
 
 namespace Werfer.ViewModels;
 
-public record ProjectTaskChoice(
-    Project Project,
-    ProjectTask Task
-)
+public record ProjectTaskViewModel : ProjectTaskChoice
 {
+    public ProjectTaskViewModel(
+        ProjectTaskChoice task
+    ) : base(task.Project, task.Task)
+    {
+        Color = Color.TryParse(Project.Color, out var color)
+            ? color
+            : Colors.Gray;
+    }
+
     /// <summary>
     ///     The project's color as set in Clockify; the view makes it readable as text, see ReadableTextBrushConverter
     /// </summary>
-    public Color Color { get; } = Color.TryParse(Project.Color, out var color)
-        ? color
-        : Colors.Gray;
+    public Color Color { get; }
 
     /// <summary>
     ///     Kept as is for the dot

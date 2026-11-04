@@ -5,6 +5,7 @@ using Refit;
 using Werfer.Clockify;
 using Werfer.Clockify.Models;
 using Werfer.Clockify.Requests;
+using Werfer.Clockify.ViewModels;
 
 namespace Werfer.Services;
 
@@ -106,9 +107,7 @@ public class TimeTrackingService(
     /// <summary>
     ///     Lists the (project, task) pairs a time entry can be started on, active tasks of non-archived projects only.
     /// </summary>
-    public async Task<
-        List<(Project Project, ProjectTask Task)>
-    > GetProjectTasksAsync(CancellationToken ctk = default)
+    public async Task<List<ProjectTaskChoice>> GetProjectTasksAsync(CancellationToken ctk = default)
     {
         // shortcut: single page of 5000 projects (Clockify max), paginate if a workspace ever exceeds it
         var projects = await Client.GetProjectsAsync(
@@ -119,15 +118,11 @@ public class TimeTrackingService(
             ctk: ctk
         );
 
-        // Every entry needs a task in our organization, so only (project, task) pairs are offered
-        return projects
-                .SelectMany(p =>
-                    (p.Tasks ?? [])
-                    .Where(t => t.Status == "ACTIVE")
-                    .Select(t => (p, t))
-                )
-                .ToList()
-            ;
+        return (
+            from p in projects
+            from pt in p.Tasks ?? []
+            select new ProjectTaskChoice(p, pt)
+        ).ToList();
     }
 
     /// <summary>
@@ -225,10 +220,9 @@ public class TimeTrackingService(
             Description = description
         }, ctk);
     }
-    
+
     private Task ExclusiveAsync(Func<Task> action, CancellationToken ctk)
     {
-
         return ExclusiveAsync(async () =>
         {
             await action();
