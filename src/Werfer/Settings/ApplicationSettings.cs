@@ -109,6 +109,10 @@ public partial class ApplicationSettings : IApplicationSettings
     {
         try
         {
+            Directory.CreateDirectory(
+                App.ApplicationPath
+            );
+
             File.WriteAllText(
                 FilePath,
                 JsonSerializer.Serialize(
