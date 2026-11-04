@@ -31,7 +31,7 @@ public static class RegistrationExtensions
             services.AddRefitGeneratedClient<IClockifyApiClient>(new RefitSettings
                 {
                     UrlParameterFormatter = new ClockifyUrlParameterFormatter(),
-                    ContentSerializer = new SystemTextJsonContentSerializer(ClockifyJsonContext.Default.Options)
+                    ContentSerializer = new SystemTextJsonContentSerializer(WerferCoreJsonContext.Default.Options)
                 })
                 .ConfigureHttpClient((sp, client) =>
                 {

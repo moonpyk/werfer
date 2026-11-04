@@ -4,7 +4,7 @@ using Werfer.Clockify.Models;
 using Werfer.Clockify.Requests;
 using Werfer.Clockify.ViewModels;
 
-namespace Werfer.Clockify;
+namespace Werfer;
 
 [JsonSourceGenerationOptions(JsonSerializerDefaults.Web)]
 // Raw models
@@ -28,4 +28,4 @@ namespace Werfer.Clockify;
 [JsonSerializable(typeof(double))]
 [JsonSerializable(typeof(decimal))]
 [JsonSerializable(typeof(List<string>))]
-internal partial class ClockifyJsonContext : JsonSerializerContext;
+internal partial class WerferCoreJsonContext : JsonSerializerContext;
