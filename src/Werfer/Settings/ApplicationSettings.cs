@@ -13,21 +13,24 @@ namespace Werfer.Settings;
 /// </summary>
 public partial class ApplicationSettings : IApplicationSettings
 {
+    private const string SaveFileName = "config.json";
+
     private readonly byte[] _dataProtectionEntropy =
     [
         ..
         "ccgbslclockify2026"u8
     ];
 
-    private const string SaveFileName
-#if DEBUG
-        = ".slclockify.dbg.json";
-#else
-        = ".slclockify.json";
-#endif
+    private ILogger _logger = NullLogger.Instance;
+    private PersistedSettings _persisted = new();
+
+    private ApplicationSettings()
+    {
+        // Intentionally left empty
+    }
 
     private static string FilePath { get; } = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+        App.ApplicationPath,
         SaveFileName
     );
 
@@ -38,14 +41,6 @@ public partial class ApplicationSettings : IApplicationSettings
     public static ApplicationSettings Current { get; } = new();
 
     private IDataProtectionProvider DataProtectionProvider { get; set; } = PassThroughDataProtectionProvider.Instance;
-
-    private ILogger _logger = NullLogger.Instance;
-    private PersistedSettings _persisted = new();
-
-    private ApplicationSettings()
-    {
-        // Intentionally left empty
-    }
 
     /// <inheritdoc />
     public string? ApiKey
@@ -107,6 +102,25 @@ public partial class ApplicationSettings : IApplicationSettings
     {
         get => _persisted.WindowWidth;
         set => _persisted.WindowWidth = value;
+    }
+
+    /// <inheritdoc />
+    public void Save()
+    {
+        try
+        {
+            File.WriteAllText(
+                FilePath,
+                JsonSerializer.Serialize(
+                    _persisted,
+                    SettingsJsonContext.Default.PersistedSettings
+                ) + Environment.NewLine
+            );
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Could not save settings to {FilePath}", FilePath);
+        }
     }
 
     /// <summary>
@@ -174,25 +188,6 @@ public partial class ApplicationSettings : IApplicationSettings
         }
 
         return this;
-    }
-
-    /// <inheritdoc />
-    public void Save()
-    {
-        try
-        {
-            File.WriteAllText(
-                FilePath,
-                JsonSerializer.Serialize(
-                    _persisted,
-                    SettingsJsonContext.Default.PersistedSettings
-                ) + Environment.NewLine
-            );
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Could not save settings to {FilePath}", FilePath);
-        }
     }
 
     /// <summary>

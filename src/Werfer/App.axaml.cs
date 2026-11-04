@@ -16,6 +16,14 @@ public class App : Application
 {
     public IServiceProvider? Provider { get; private set; }
 
+    public static string ApplicationPath { get; } = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "werfer"
+#if DEBUG
+        , "debug"
+#endif
+    );
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
