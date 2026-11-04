@@ -121,6 +121,7 @@ public class TimeTrackingService(
         return (
             from p in projects
             from pt in p.Tasks ?? []
+            where pt.Status == "ACTIVE"
             select new ProjectTaskChoice(p, pt)
         ).ToList();
     }
