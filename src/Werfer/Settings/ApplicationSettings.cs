@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -102,6 +103,20 @@ public partial class ApplicationSettings : IApplicationSettings
     {
         get => _persisted.WindowWidth;
         set => _persisted.WindowWidth = value;
+    }
+
+    /// <inheritdoc />
+    public double? WindowHeight
+    {
+        get => _persisted.WindowHeight;
+        set => _persisted.WindowHeight = value;
+    }
+
+    /// <inheritdoc />
+    public DayOfWeek WeekStart
+    {
+        get => _persisted.WeekStart ?? CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek;
+        set => _persisted.WeekStart = value;
     }
 
     /// <inheritdoc />
@@ -232,6 +247,13 @@ public partial class ApplicationSettings : IApplicationSettings
 
         [JsonPropertyName("window:width")]
         public double? WindowWidth { get; set; }
+
+        [JsonPropertyName("window:height")]
+        public double? WindowHeight { get; set; }
+
+        // Null until picked in the settings, so a culture change still applies
+        [JsonPropertyName("history:week_start")]
+        public DayOfWeek? WeekStart { get; set; }
     }
 
     // Nested so it can see the private PersistedSettings; source-generated because reflection-based JSON is off under NativeAOT

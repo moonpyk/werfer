@@ -29,7 +29,7 @@ public partial class MainWindow : FAAppWindow
 
         DataContext = ViewModel = vm;
 
-        this.RestoreWidth(
+        this.RestoreSize(
             vm.ApplicationSettings
         ).RestorePosition(
             vm.ApplicationSettings
@@ -48,7 +48,7 @@ public partial class MainWindow : FAAppWindow
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         // A minimized window reports a fake far off-screen position, keep the last real one instead
-        // (also skips maximized, whose width isn't the one to restore)
+        // (also skips maximized, whose size isn't the one to restore)
         if (ViewModel is not null && WindowState == WindowState.Normal)
         {
             var sts = ViewModel.ApplicationSettings;
@@ -56,6 +56,7 @@ public partial class MainWindow : FAAppWindow
             sts.WindowX = Position.X;
             sts.WindowY = Position.Y;
             sts.WindowWidth = ClientSize.Width;
+            sts.WindowHeight = ClientSize.Height;
             sts.TrySave();
         }
 

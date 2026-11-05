@@ -32,9 +32,17 @@ public interface IApplicationSettings
 
     /// <summary>
     ///     Gets or sets the window width, in device-independent pixels, at the last close; null until it has been saved
-    ///     once. The height always fits the content
+    ///     once
     /// </summary>
     double? WindowWidth { get; set; }
+
+    /// <inheritdoc cref="WindowWidth" />
+    double? WindowHeight { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the first day of the week the history totals start from; the current culture's until set
+    /// </summary>
+    DayOfWeek WeekStart { get; set; }
 
     /// <summary>
     ///     Attempts to persist the current application settings.

@@ -11,13 +11,18 @@ public static class WindowExtensions
     extension<T>(T self) where T : Window
     {
         /// <summary>
-        ///     Restores the width of the window using the value specified in the given application settings.
+        ///     Restores the size of the window using the values specified in the given application settings.
         /// </summary>
-        public T RestoreWidth(IApplicationSettings settings)
+        public T RestoreSize(IApplicationSettings settings)
         {
             if (settings.WindowWidth is { } width)
             {
                 self.Width = width;
+            }
+
+            if (settings.WindowHeight is { } height)
+            {
+                self.Height = height;
             }
 
             return self;
