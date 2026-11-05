@@ -14,5 +14,11 @@
             Command="{Binding ConnectAsync}"
             IsEnabled="{Binding !IsBusy}"
             IsDefault="True" />
+
+        <TextBlock Text="First day of the week" Margin="0,8,0,0" />
+        <ComboBox
+            ItemsSource="{Binding DaysOfWeek}"
+            SelectedItem="{Binding WeekStart}"
+            MinWidth="160" />
     </StackPanel>
 </UserControl>

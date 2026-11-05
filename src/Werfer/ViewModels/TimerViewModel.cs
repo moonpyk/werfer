@@ -13,7 +13,12 @@ namespace Werfer.ViewModels;
 [UsedImplicitly]
 public class TimerViewModel : ViewModelBase
 {
+    // Id of the entry last seen running: when it changes, that entry has finished and joins the history
+    private string? _runningId;
     private IDisposable? _ticker;
+    private TimeSpan _weekFinished;
+    // Day the history was last loaded for
+    private DateOnly _historyDate;
 
     public TimerViewModel(
         IApplicationSettings applicationSettings,
@@ -25,11 +30,27 @@ public class TimerViewModel : ViewModelBase
         ApplicationSettings = applicationSettings;
         TimeTracking = timeTracking;
 
-        // Connection happens from the settings page, projects are loaded here once it succeeds
-        TimeTracking.Connected += (_, _) => _ = WithBusyIndicator(LoadProjectChoicesAsync);
+        // Connection happens from the settings page, projects are loaded here once it succeeds, then the history
+        // which needs their names
+        TimeTracking.Connected += (_, _) => _ = WithBusyIndicator(async () =>
+        {
+            await LoadProjectChoicesAsync();
+            await LoadHistoryCoreAsync();
+        });
 
         // The running entry may change from another screen, the timer display follows it
         TimeTracking.RunningEntryChanged += (_, _) => OnRunningEntryChanged();
+
+        // "Today" and the week move at midnight, the app often stays open across it
+        DispatcherTimer.Run(() =>
+        {
+            if (History is not null && DateOnly.FromDateTime(DateTime.Now) != _historyDate)
+            {
+                _ = LoadHistoryAsync();
+            }
+
+            return true;
+        }, TimeSpan.FromMinutes(1));
     }
 
     private IApplicationSettings ApplicationSettings { get; }
@@ -120,6 +141,33 @@ public class TimerViewModel : ViewModelBase
     } = "00:00:00";
 
     /// <summary>
+    ///     Finished entries of the current week by day, null until loaded
+    /// </summary>
+    public List<TimeEntryDayViewModel>? History
+    {
+        get;
+        private set
+        {
+            Set(ref field, value);
+            NotifyPropertyChanged(nameof(IsHistoryEmpty));
+        }
+    }
+
+    /// <summary>
+    ///     Nothing to list yet: not connected, loading or an empty week; the view shows an icon instead
+    /// </summary>
+    public bool IsHistoryEmpty => History is not { Count: > 0 };
+
+    /// <summary>
+    ///     Finished entries of the week plus the running one, ticks with it
+    /// </summary>
+    public string WeekTotal
+    {
+        get;
+        private set => Set(ref field, value);
+    } = "00:00:00";
+
+    /// <summary>
     ///     Starts a time tracking entry for the selected project and task while displaying the busy indicator.
     /// </summary>
     public Task StartAsync()
@@ -169,7 +217,65 @@ public class TimerViewModel : ViewModelBase
     /// </return>
     public Task RefreshAsync()
     {
-        return WithBusyIndicator(() => TimeTracking.RefreshRunningEntryAsync());
+        return WithBusyIndicator(async () =>
+        {
+            await TimeTracking.RefreshRunningEntryAsync();
+            // Entries may also have been added or edited elsewhere
+            await LoadHistoryCoreAsync();
+        });
+    }
+
+    /// <summary>
+    ///     Reloads the week's history, e.g. once the first day of the week changed. Does nothing until connected.
+    /// </summary>
+    public Task LoadHistoryAsync()
+    {
+        return WithBusyIndicator(LoadHistoryCoreAsync);
+    }
+
+    /// <summary>
+    ///     Deletes history entries, then reloads the history, also after a partial failure, to show what's left.
+    /// </summary>
+    public Task DeleteAsync(IReadOnlyList<string> ids)
+    {
+        return WithBusyIndicator(async () =>
+        {
+            try
+            {
+                await TimeTracking.DeleteTimeEntriesAsync(ids);
+            }
+            finally
+            {
+                await LoadHistoryCoreAsync();
+            }
+        });
+    }
+
+    /// <summary>
+    ///     Starts a new entry on a history line's project, task and description, stopping the running one first.
+    /// </summary>
+    public async Task ContinueAsync(TimeEntryGroupViewModel group)
+    {
+        // Like the start button: a second click while the first start is pending would start a second entry
+        if (group.Choice is null || IsBusy)
+        {
+            return;
+        }
+
+        if (IsRunning)
+        {
+            await StopAsync();
+        }
+
+        // Same as ResetAsync: changing the fields of a still running entry would push them to it
+        if (IsRunning)
+        {
+            return;
+        }
+
+        SelectedChoice = group.Choice;
+        Description = group.Description;
+        await StartAsync();
     }
 
     /// <summary>
@@ -209,7 +315,7 @@ public class TimerViewModel : ViewModelBase
         var taskId = choice?.Task.Id ?? running.TaskId;
         var text = description ? Description : running.Description;
 
-        // Skips values coming from the running entry itself, a nested RunAsync would reset IsBusy mid-operation
+        // Skips values coming from the running entry itself, nothing to send
         if (
             projectId is null ||
             taskId is null ||
@@ -238,6 +344,40 @@ public class TimerViewModel : ViewModelBase
         OnRunningEntryChanged();
     }
 
+    private async Task LoadHistoryCoreAsync()
+    {
+        if (ProjectChoices is null)
+        {
+            return;
+        }
+
+        var zone = TimeZoneInfo.Local;
+        var now = DateTimeOffset.Now;
+        var today = DateOnly.FromDateTime(now.Date);
+
+        // Set before the request: a failed load is reported once, not retried every minute by the date check
+        _historyDate = today;
+
+        var entries = await TimeTracking.GetTimeEntriesSinceAsync(
+            TimeEntryHistory.StartOfWeek(now, ApplicationSettings.WeekStart, zone)
+        );
+
+        History =
+        [
+            .. entries
+                .GroupBy(zone)
+                .Select(d => new TimeEntryDayViewModel(d, today, ProjectChoices, this))
+        ];
+
+        _weekFinished = entries.Sum();
+        UpdateWeekTotal();
+    }
+
+    private void UpdateWeekTotal(TimeSpan running = default)
+    {
+        WeekTotal = TimeEntryHistory.Format(_weekFinished + running);
+    }
+
     private void OnRunningEntryChanged()
     {
         _ticker?.Dispose();
@@ -247,9 +387,18 @@ public class TimerViewModel : ViewModelBase
 
         IsRunning = running is not null;
 
+        // The entry last seen running has finished (stopped here or elsewhere), it now belongs to the history
+        if (_runningId is not null && _runningId != running?.Id)
+        {
+            _ = LoadHistoryAsync();
+        }
+
+        _runningId = running?.Id;
+
         if (running is null)
         {
             Elapsed = "00:00:00";
+            UpdateWeekTotal();
             return;
         }
 
@@ -270,7 +419,10 @@ public class TimerViewModel : ViewModelBase
 
         void UpdateElapsed()
         {
-            Elapsed = (DateTimeOffset.UtcNow - start).ToString(@"hh\:mm\:ss");
+            var elapsed = DateTimeOffset.UtcNow - start;
+            Elapsed = elapsed.ToString(@"hh\:mm\:ss");
+            // shortcut: an entry started before the week counts whole, split it at the week start if that ever matters
+            UpdateWeekTotal(elapsed);
         }
     }
 }

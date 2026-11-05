@@ -5,9 +5,9 @@ Werfer is a Clockify client that sucks less, simply _werfing_ time-tracking entr
 ## Keyboard shortcuts
 
 | Shortcut     | Action                                                                                              |
-| ------------ | --------------------------------------------------------------------------------------------------- |
+|--------------|-----------------------------------------------------------------------------------------------------|
 | `Ctrl+Space` | Start the timer, or stop it when it runs                                                            |
-| `F5`         | Fetch the running entry from Clockify (it may have been started or stopped elsewhere)               |
+| `F5`         | Fetch the running entry and the week's history from Clockify (they may have changed elsewhere)      |
 | `Ctrl+L`     | Clear the description (timer page)                                                                  |
 | `Ctrl+N`     | New blank entry: stop the timer if it runs, clear the description and the project/task (timer page) |
 | `Enter`      | New line in the description                                                                         |

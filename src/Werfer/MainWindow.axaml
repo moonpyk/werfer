@@ -10,10 +10,11 @@
                  Icon="/Assets/Werfer.ico"
                  Title="Werfer"
                  Width="420"
+                 Height="600"
+                 MinHeight="300"
                  WindowStartupLocation="CenterScreen"
                  CanMaximize="False"
-                 Topmost="{Binding ApplicationSettings.Topmost}"
-                 SizeToContent="Height">
+                 Topmost="{Binding ApplicationSettings.Topmost}">
     <!-- Page view models are mapped to their views here, no reflection-based ViewLocator (NativeAOT) -->
     <Window.DataTemplates>
         <DataTemplate DataType="viewModels:TimerViewModel">
@@ -37,10 +38,10 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock
                     Grid.Column="0"
+                    ToolTip.Tip="{Binding Status}"
                     VerticalAlignment="Center"
                     Text="{Binding Status}"
                     TextTrimming="CharacterEllipsis"
-                    ToolTip.Tip="{Binding Status}"
                     Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                 <ui:FAProgressRing
                     Grid.Column="1"
@@ -82,9 +83,9 @@
             <ui:FANavigationView.FooterMenuItems>
                 <!-- Action, not a page: invoking it doesn't change the selection -->
                 <ui:FANavigationViewItem
+                    ToolTip.Tip="Fetch the running entry and the history from Clockify (F5)"
                     x:Name="RefreshItem"
                     SelectsOnInvoked="False"
-                    ToolTip.Tip="Fetch the running entry from Clockify (F5)"
                     IsVisible="{Binding ShowRefreshButton}"
                     IsEnabled="{Binding Timer.ProjectChoices, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <ui:FANavigationViewItem.IconSource>

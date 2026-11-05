@@ -25,6 +25,9 @@ public abstract class ViewModelBase(
         FAInfoBarSeverity.Error
     );
 
+    // Operations can overlap (a history reload during a stop): busy until the last one ends
+    private int _busyCount;
+
     protected ILogger Logger { get; } = logger;
 
     public FlashMessageService FlashMessages { get; } = flashMessages;
@@ -45,7 +48,7 @@ public abstract class ViewModelBase(
     /// </summary>
     protected async Task WithBusyIndicator(Func<Task> action)
     {
-        IsBusy = true;
+        IsBusy = Interlocked.Increment(ref _busyCount) > 0;
 
         try
         {
@@ -63,7 +66,7 @@ public abstract class ViewModelBase(
         }
         finally
         {
-            IsBusy = false;
+            IsBusy = Interlocked.Decrement(ref _busyCount) > 0;
         }
     }
 

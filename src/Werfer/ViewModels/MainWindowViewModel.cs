@@ -38,6 +38,14 @@ public class MainWindowViewModel : ViewModelBase
         Settings = settings;
         CurrentPage = timer;
 
+        settings.PropertyChanged += (sender, e) =>
+        {
+            if (e.PropertyName == nameof(SettingsViewModel.WeekStart))
+            {
+                _ = timer.LoadHistoryAsync();
+            }
+        };
+
         foreach (var page in new ViewModelBase[] { timer, settings })
         {
             page.PropertyChanged += (_, e) =>

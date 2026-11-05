@@ -1,0 +1,110 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:viewModels="clr-namespace:Werfer.ViewModels"
+             xmlns:converters="clr-namespace:Werfer.Converters"
+             x:Class="Werfer.Views.Timer.TimerBarView"
+             x:DataType="viewModels:TimerViewModel">
+    <!-- What you work on on the left, the big action button on the right -->
+    <Grid
+        Margin="8"
+        ColumnDefinitions="*,Auto">
+        <Grid
+            Grid.Column="0"
+            RowDefinitions="Auto,Auto"
+            RowSpacing="8"
+            Margin="0,0,12,0">
+            <!-- Project and task, also editable while the timer runs -->
+            <AutoCompleteBox
+                Grid.Row="0"
+                AsyncPopulator="{Binding ProjectChoicesPopulator}"
+                SelectedItem="{Binding SelectedChoice}"
+                Text="{Binding ProjectSearchText, Mode=TwoWay}"
+                FilterMode="None"
+                MinimumPrefixLength="3"
+                PlaceholderText="Project / Task"
+                HorizontalAlignment="Stretch">
+                <AutoCompleteBox.InnerLeftContent>
+                    <Ellipse
+                        Width="10"
+                        Height="10"
+                        Margin="8,0,0,0"
+                        Fill="{Binding SelectedChoice.Brush}"
+                        IsVisible="{Binding SelectedChoice, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                </AutoCompleteBox.InnerLeftContent>
+                <AutoCompleteBox.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:ProjectTaskViewModel">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Ellipse Width="10" Height="10" Fill="{Binding Brush}" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Project.Name}" FontWeight="SemiBold">
+                                <TextBlock.Foreground>
+                                    <MultiBinding
+                                        Converter="{x:Static converters:ReadableTextBrushConverter.Instance}">
+                                        <Binding Path="Color" />
+                                        <Binding RelativeSource="{RelativeSource Self}" />
+                                        <Binding Path="ActualThemeVariant" RelativeSource="{RelativeSource Self}" />
+                                    </MultiBinding>
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                            <TextBlock Text="{Binding Task.Name}" Opacity="0.8" />
+                        </StackPanel>
+                    </DataTemplate>
+                </AutoCompleteBox.ItemTemplate>
+            </AutoCompleteBox>
+
+            <!-- Enter adds a line; \n rather than Windows' \r\n, so the text compares equal to what Clockify sends back.
+                 Grows with its lines, about 6 at most, then scrolls so the history below keeps its room -->
+            <TextBox
+                Grid.Row="1"
+                Text="{Binding Description, UpdateSourceTrigger=LostFocus}"
+                PlaceholderText="What are you working on?"
+                AcceptsReturn="True"
+                NewLine="&#10;"
+                TextWrapping="Wrap"
+                MaxHeight="140"
+                VerticalContentAlignment="Top" />
+        </Grid>
+
+        <Button
+            Grid.Column="1"
+            ToolTip.Tip="Start (Ctrl+Space)"
+            Classes="accent"
+            Command="{Binding StartAsync}"
+            IsVisible="{Binding !IsRunning}"
+            IsEnabled="{Binding !IsBusy}"
+            MinWidth="120"
+            VerticalAlignment="Stretch"
+            HorizontalContentAlignment="Center"
+            VerticalContentAlignment="Center">
+            <ui:FASymbolIcon Symbol="PlayFilled" FontSize="20" />
+        </Button>
+        <!-- Accent button with its brushes overridden to red, so hover and pressed states keep working -->
+        <Button
+            Grid.Column="1"
+            ToolTip.Tip="Stop (Ctrl+Space)"
+            Classes="accent"
+            Command="{Binding StopAsync}"
+            IsVisible="{Binding IsRunning}"
+            IsEnabled="{Binding !IsBusy}"
+            FontSize="16"
+            MinWidth="120"
+            VerticalAlignment="Stretch"
+            HorizontalContentAlignment="Center"
+            VerticalContentAlignment="Center">
+            <Button.Resources>
+                <!-- ReSharper disable Xaml.RedundantResource -->
+                <SolidColorBrush x:Key="AccentButtonBackground" Color="#F44336" />
+                <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#E53935" />
+                <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#D32F2F" />
+                <SolidColorBrush x:Key="AccentButtonForeground" Color="White" />
+                <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="White" />
+                <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="White" />
+                <!-- ReSharper restore Xaml.RedundantResource -->
+            </Button.Resources>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <ui:FASymbolIcon Symbol="StopFilled" FontSize="18" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Elapsed}" VerticalAlignment="Center" />
+            </StackPanel>
+        </Button>
+    </Grid>
+</UserControl>

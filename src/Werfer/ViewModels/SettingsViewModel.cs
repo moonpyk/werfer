@@ -43,6 +43,31 @@ public class SettingsViewModel : ViewModelBase
 
     public bool HasApiKey => !string.IsNullOrWhiteSpace(ApiKey);
 
+    public DayOfWeek[] DaysOfWeek { get; } = Enum.GetValues<DayOfWeek>();
+
+    /// <summary>
+    ///     First day of the history's week, saved as soon as picked; the timer page reloads its history on change
+    /// </summary>
+    public DayOfWeek WeekStart
+    {
+        get => ApplicationSettings.WeekStart;
+        set
+        {
+            if (value == ApplicationSettings.WeekStart)
+            {
+                return;
+            }
+
+            ApplicationSettings.WeekStart = value;
+            NotifyPropertyChanged();
+
+            if (!ApplicationSettings.TrySave())
+            {
+                FlashMessages.Push(new FlashMessage("Unable to persist settings", Severity: FAInfoBarSeverity.Warning));
+            }
+        }
+    }
+
     /// <summary>
     ///     Shows a badge on the settings item: no key, or the last connection failed.
     /// </summary>

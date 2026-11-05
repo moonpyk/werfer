@@ -7,7 +7,7 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>Assets\Werfer.ico</ApplicationIcon>
-        <Version>0.1.0</Version>
+        <Version>0.2.0</Version>
         <IsPackable>false</IsPackable>
         <RootNamespace>Werfer</RootNamespace>
     </PropertyGroup>
@@ -33,4 +33,5 @@
     <ItemGroup>
         <AvaloniaResource Include="Assets\**"/>
     </ItemGroup>
+
 </Project>

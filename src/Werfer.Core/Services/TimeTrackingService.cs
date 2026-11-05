@@ -106,6 +106,33 @@ public class TimeTrackingService(
     }
 
     /// <summary>
+    ///     The user's entries started since <paramref name="start" />, running one included.
+    /// </summary>
+    public Task<List<TimeEntry>> GetTimeEntriesSinceAsync(DateTimeOffset start, CancellationToken ctk = default)
+    {
+        // Read only, no lock: it would queue behind (and delay) a start or stop for nothing
+        // shortcut: single page of 1000 entries, about 20 weeks of a busy user; paginate if history ever spans longer
+        return Client.GetTimeEntriesForUserAsync(
+            WorkspaceId,
+            CurrentUser.Id,
+            start: start,
+            pageSize: 1000,
+            ctk: ctk
+        );
+    }
+
+    /// <summary>
+    ///     Deletes finished entries, one by one: a failure leaves the earlier ones deleted.
+    /// </summary>
+    public async Task DeleteTimeEntriesAsync(IEnumerable<string> ids, CancellationToken ctk = default)
+    {
+        foreach (var id in ids)
+        {
+            await Client.DeleteTimeEntryAsync(WorkspaceId, id, ctk);
+        }
+    }
+
+    /// <summary>
     ///     Lists the (project, task) pairs a time entry can be started on, active tasks of non-archived projects only.
     /// </summary>
     public async Task<List<ProjectTaskChoice>> GetProjectTasksAsync(CancellationToken ctk = default)
@@ -180,7 +207,15 @@ public class TimeTrackingService(
     )
     {
         // Checked once the lock is held, against the entry as the previous operation left it
-        return ExclusiveAsync(() => UpdateRunningEntryCoreAsync(projectId, taskId, Normalize(description), ctk), ctk);
+        return ExclusiveAsync(
+            () => UpdateRunningEntryCoreAsync(
+                projectId,
+                taskId,
+                Normalize(description),
+                ctk
+            ),
+            ctk
+        );
     }
 
     private async Task UpdateRunningEntryCoreAsync(

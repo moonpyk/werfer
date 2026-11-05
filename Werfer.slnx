@@ -13,4 +13,5 @@
     </Folder>
     <Project Path="src/Werfer.Core/Werfer.Core.csproj"/>
     <Project Path="src/Werfer/Werfer.csproj"/>
+    <Project Path="src/Werfer.Core.Tests/Werfer.Core.Tests.csproj"/>
 </Solution>
