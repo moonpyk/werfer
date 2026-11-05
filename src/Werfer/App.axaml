@@ -5,5 +5,9 @@
              RequestedThemeVariant="Default">
     <Application.Styles>
         <sty:FluentAvaloniaTheme PreferSystemTheme="True" PreferUserAccentColor="True" />
+        <!-- No focus rectangle: ugly, and Avalonia's Control.OnGotFocus crashes re-adding one still attached ("already has a visual parent AdornerLayer") -->
+        <Style Selector=":is(Control)">
+            <Setter Property="FocusAdorner" Value="{x:Null}" />
+        </Style>
     </Application.Styles>
 </Application>
