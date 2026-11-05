@@ -39,18 +39,29 @@ public class FlashMessageService
 
         return this;
     }
-    
+
+    /// <summary>
+    ///     Clears all current messages and shows the specified message.
+    /// </summary>
+    /// <param name="message">The message to show after clearing existing messages.</param>
     public FlashMessageService ReplaceWith(FlashMessage message)
     {
         return Clear().Push(message);
     }
 
+    /// <summary>
+    ///     Removes the specified message from the current messages.
+    /// </summary>
+    /// <param name="message">The message to remove.</param>
     public FlashMessageService Remove(FlashMessage message)
     {
         _messages.Remove(message);
         return this;
     }
-    
+
+    /// <summary>
+    ///     Removes all currently shown flash messages.
+    /// </summary>
     public FlashMessageService Clear()
     {
         _messages.Clear();
