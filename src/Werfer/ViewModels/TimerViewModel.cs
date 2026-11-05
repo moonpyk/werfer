@@ -137,7 +137,10 @@ public class TimerViewModel : ViewModelBase
 
     // Each setter only sends its own field, the others come from the running entry, so the order in which
     // OnRunningEntryChanged refreshes them can't send a half-updated state
-    private void PushToRunningEntry(ProjectTaskViewModel? choice = null, bool description = false)
+    private void PushToRunningEntry(
+        ProjectTaskViewModel? choice = null,
+        bool description = false
+    )
     {
         if (TimeTracking.RunningEntry is not { } running)
         {
