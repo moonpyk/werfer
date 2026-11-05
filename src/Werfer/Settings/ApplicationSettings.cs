@@ -105,7 +105,7 @@ public partial class ApplicationSettings : IApplicationSettings
     }
 
     /// <inheritdoc />
-    public void Save()
+    public bool TrySave()
     {
         try
         {
@@ -120,11 +120,15 @@ public partial class ApplicationSettings : IApplicationSettings
                     SettingsJsonContext.Default.PersistedSettings
                 ) + Environment.NewLine
             );
+
+            return true;
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Could not save settings to {FilePath}", FilePath);
         }
+
+        return false;
     }
 
     /// <summary>

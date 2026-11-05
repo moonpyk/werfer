@@ -37,7 +37,13 @@ public interface IApplicationSettings
     double? WindowWidth { get; set; }
 
     /// <summary>
-    ///     Saves the current application settings to a persistent storage medium.
+    ///     Attempts to persist the current application settings.
     /// </summary>
-    void Save();
+    /// <remarks>
+    ///     Implementations should handle persistence failures without propagating them to the caller.
+    /// </remarks>
+    /// <return>
+    ///     <c>true</c> if the settings were saved successfully; otherwise, <c>false</c>.
+    /// </return>
+    bool TrySave();
 }

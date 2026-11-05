@@ -56,7 +56,7 @@ public partial class MainWindow : FAAppWindow
             sts.WindowX = Position.X;
             sts.WindowY = Position.Y;
             sts.WindowWidth = ClientSize.Width;
-            sts.Save();
+            sts.TrySave();
         }
 
         base.OnClosing(e);
@@ -104,7 +104,7 @@ public partial class MainWindow : FAAppWindow
 
     private void OnNavigationSelectionChanged(object? sender, FANavigationViewSelectionChangedEventArgs e)
     {
-        ViewModel?.Navigate(e.IsSettingsSelected);
+        ViewModel?.Navigate(ReferenceEquals(e.SelectedItem, SettingsItem));
     }
 
     private void OnFlashMessageClosed(FAInfoBar sender, FAInfoBarClosedEventArgs e)
