@@ -2,7 +2,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using FluentAvalonia.UI.Controls;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Logging;
 using Werfer.Services;
 using Werfer.Utils;
 using Werfer.ViewModels;
@@ -23,14 +22,10 @@ public partial class MainWindow : Window
         Initialize();
     }
 
-    public MainWindow(
-        MainWindowViewModel vm,
-        ILogger<MainWindow> logger
-    )
+    public MainWindow(MainWindowViewModel vm)
     {
         Initialize();
 
-        Logger = logger;
         DataContext = ViewModel = vm;
 
         this.RestoreWidth(
@@ -39,8 +34,6 @@ public partial class MainWindow : Window
             vm.ApplicationSettings
         );
     }
-
-    private ILogger<MainWindow>? Logger { get; }
 
     private MainWindowViewModel? ViewModel { get; }
 
@@ -88,15 +81,8 @@ public partial class MainWindow : Window
 
                 // Commits the description being typed, it's only pushed on lost focus
                 Focus();
-                try
-                {
-                    ViewModel.Timer.ToggleAsync();
-                }
-                catch (Exception ex)
-                {
-                    Logger?.LogError(ex, "While toggling");
-                }
-
+                // Failures are reported by the view model's WithBusyIndicator
+                _ = ViewModel.Timer.ToggleAsync();
                 return;
 
             case
@@ -106,15 +92,7 @@ public partial class MainWindow : Window
             } when ViewModel is not null:
                 // Pushes the description being typed first, the refresh would overwrite it otherwise
                 Focus();
-                try
-                {
-                    ViewModel.Timer.RefreshAsync();
-                }
-                catch (Exception ex)
-                {
-                    Logger?.LogError(ex, "While refreshing");
-                }
-
+                _ = ViewModel.Timer.RefreshAsync();
                 e.Handled = true;
                 return;
 
@@ -139,18 +117,9 @@ public partial class MainWindow : Window
 
     private void OnNavigationItemInvoked(object? sender, FANavigationViewItemInvokedEventArgs e)
     {
-        if (e.InvokedItemContainer != RefreshItem)
+        if (e.InvokedItemContainer == RefreshItem)
         {
-            return;
-        }
-
-        try
-        {
-            ViewModel?.Timer.RefreshAsync();
-        }
-        catch (Exception ex)
-        {
-            Logger?.LogError(ex, "While refreshing");
+            _ = ViewModel?.Timer.RefreshAsync();
         }
     }
 }
