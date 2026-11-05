@@ -54,10 +54,14 @@ public class App : Application
             )
             .RegisterServices()
             .AddLogging(ConfigureLogging)
+            // Services
             .AddSingleton<FlashMessageService>()
+            // ViewModels
             .AddSingleton<TimerViewModel>()
             .AddSingleton<SettingsViewModel>()
             .AddSingleton<MainWindowViewModel>()
+            // Windows
+            .AddSingleton<MainWindow>()
             ;
 
         Provider = services.BuildServiceProvider();
@@ -87,9 +91,7 @@ public class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow(
-                Provider.GetRequiredService<MainWindowViewModel>()
-            );
+            desktop.MainWindow = Provider.GetRequiredService<MainWindow>();
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -119,7 +121,7 @@ public class App : Application
                         retainedFileCountLimit: 2
                     )
                     .CreateLogger(),
-                /* dispose: */true 
+                /* dispose: */true
             );
     }
 }

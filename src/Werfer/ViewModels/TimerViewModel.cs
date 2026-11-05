@@ -96,6 +96,9 @@ public class TimerViewModel : ViewModelBase
         private set => Set(ref field, value);
     } = "00:00:00";
 
+    /// <summary>
+    ///     Starts a time tracking entry for the selected project and task while displaying the busy indicator.
+    /// </summary>
     public Task StartAsync()
     {
         return WithBusyIndicator(async () =>
@@ -117,12 +120,17 @@ public class TimerViewModel : ViewModelBase
         });
     }
 
+    /// <summary>
+    ///     Stops the currently running time tracking entry while displaying the busy indicator.
+    /// </summary>
     public Task StopAsync()
     {
         return WithBusyIndicator(() => TimeTracking.StopAsync());
     }
 
-    // Keyboard shortcut, the window checks IsBusy before committing the description
+    /// <summary>
+    ///     Starts the timer when it is stopped, or stops the currently running timer when it is active.
+    /// </summary>
     public Task ToggleAsync()
     {
         return IsRunning
