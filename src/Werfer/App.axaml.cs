@@ -1,9 +1,12 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Logging;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using Werfer.DataProtection;
 using Werfer.Services;
 using Werfer.Settings;
@@ -50,6 +53,7 @@ public class App : Application
                     .Load()
             )
             .RegisterServices()
+            .AddLogging(ConfigureLogging)
             .AddSingleton<FlashMessageService>()
             .AddSingleton<TimerViewModel>()
             .AddSingleton<SettingsViewModel>()
@@ -66,17 +70,17 @@ public class App : Application
 
         // Without these an exception on the UI thread kills the app with nothing logged
         // Qualified: inside an AvaloniaObject, Dispatcher is the instance property
-        Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) =>
+        Dispatcher.UIThread.UnhandledException += (_, e) =>
         {
             crashLogger.LogCritical(
-                e.Exception, 
+                e.Exception,
                 "Unhandled UI exception"
             );
         };
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
             crashLogger.LogCritical(
-                e.ExceptionObject as Exception, 
+                e.ExceptionObject as Exception,
                 "Unhandled exception"
             );
         };
@@ -89,5 +93,33 @@ public class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static void ConfigureLogging(ILoggingBuilder builder)
+    {
+        builder.ClearProviders()
+            // A switch created by name only defaults to Off and lets nothing through
+            .AddTraceSource(new SourceSwitch("slclockify")
+            {
+                Level = SourceLevels.Warning
+            })
+#if DEBUG
+            .AddDebug()
+#endif
+            .AddSerilog(
+                new LoggerConfiguration()
+#if DEBUG
+                    .MinimumLevel.Information()
+#else
+                    .MinimumLevel.Warning()
+#endif
+                    .WriteTo.File(
+                        Path.Combine(ApplicationPath, "logs", "werfer-.log"),
+                        rollingInterval: RollingInterval.Day,
+                        retainedFileCountLimit: 2
+                    )
+                    .CreateLogger(),
+                /* dispose: */true 
+            );
     }
 }

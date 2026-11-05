@@ -1,7 +1,5 @@
-using System.Diagnostics;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Refit;
 using Werfer.Clockify;
@@ -50,19 +48,6 @@ public static class RegistrationExtensions
 
         public IServiceCollection RegisterServices()
         {
-            services.AddLogging(builder =>
-            {
-                builder.ClearProviders()
-                    // A switch created by name only defaults to Off and lets nothing through
-                    .AddTraceSource(new SourceSwitch("slclockify")
-                    {
-                        Level = SourceLevels.Warning
-                    })
-#if DEBUG
-                    .AddDebug()
-#endif
-                    ;
-            });
             services.AddSingleton<TimeTrackingService>();
 
             return services;
