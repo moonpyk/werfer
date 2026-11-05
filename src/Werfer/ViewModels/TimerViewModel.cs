@@ -68,6 +68,13 @@ public class TimerViewModel : ViewModelBase
         }
     }
 
+    // Text of the project box: a null SelectedItem doesn't clear what was typed, ResetAsync empties it here
+    public string? ProjectSearchText
+    {
+        get;
+        set => Set(ref field, value);
+    }
+
     // Free text, usually a Jira ticket key, pushed to the running entry when edited (on lost focus)
     public string? Description
     {
@@ -141,6 +148,27 @@ public class TimerViewModel : ViewModelBase
     public Task RefreshAsync()
     {
         return WithBusyIndicator(() => TimeTracking.RefreshRunningEntryAsync());
+    }
+
+    /// <summary>
+    ///     Back to a blank, stopped timer: stops the running entry, then clears the description and the task.
+    /// </summary>
+    public async Task ResetAsync()
+    {
+        if (IsRunning)
+        {
+            await StopAsync();
+        }
+
+        // The stop failed (already reported): clearing now would push blank fields to the still running entry
+        if (IsRunning)
+        {
+            return;
+        }
+
+        Description = null;
+        SelectedChoice = null;
+        ProjectSearchText = string.Empty;
     }
 
     // Each setter only sends its own field, the others come from the running entry, so the order in which

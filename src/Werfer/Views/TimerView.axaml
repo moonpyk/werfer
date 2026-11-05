@@ -21,6 +21,7 @@
                 Grid.Row="0"
                 AsyncPopulator="{Binding ProjectChoicesPopulator}"
                 SelectedItem="{Binding SelectedChoice}"
+                Text="{Binding ProjectSearchText, Mode=TwoWay}"
                 FilterMode="None"
                 MinimumPrefixLength="3"
                 PlaceholderText="Project / Task"

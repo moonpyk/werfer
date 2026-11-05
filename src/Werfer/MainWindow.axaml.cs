@@ -66,10 +66,11 @@ public partial class MainWindow : FAAppWindow
     {
         switch (e)
         {
+            // Ctrl+space Start/Stop counter
             case
             {
-                Key: Key.Space,
-                KeyModifiers: KeyModifiers.Control
+                KeyModifiers: KeyModifiers.Control,
+                Key: Key.Space
             } when ViewModel is not null:
                 e.Handled = true;
 
@@ -85,14 +86,38 @@ public partial class MainWindow : FAAppWindow
                 _ = ViewModel.Timer.ToggleAsync();
                 return;
 
+            // Refresh
             case
             {
-                Key: Key.F5,
-                KeyModifiers: KeyModifiers.None
+                KeyModifiers: KeyModifiers.None,
+                Key: Key.F5
             } when ViewModel is not null:
                 // Pushes the description being typed first, the refresh would overwrite it otherwise
                 Focus();
                 _ = ViewModel.Timer.RefreshAsync();
+                e.Handled = true;
+                return;
+
+            // "cLear", timer page only: the cleared field must be on screen
+            case
+            {
+                KeyModifiers: KeyModifiers.Control,
+                Key: Key.L
+            } when ViewModel is { CurrentPage: TimerViewModel timer }:
+                // Commits the text being typed first: clearing an unchanged value wouldn't reach the TextBox
+                Focus();
+                timer.Description = null;
+                e.Handled = true;
+                return;
+
+            // "New": a blank, stopped timer
+            case
+            {
+                KeyModifiers: KeyModifiers.Control,
+                Key: Key.N
+            } when ViewModel is { CurrentPage: TimerViewModel timer }:
+                Focus();
+                _ = timer.ResetAsync();
                 e.Handled = true;
                 return;
 
