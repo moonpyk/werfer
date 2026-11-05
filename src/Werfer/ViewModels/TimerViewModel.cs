@@ -35,14 +35,18 @@ public class TimerViewModel : ViewModelBase
     private IApplicationSettings ApplicationSettings { get; }
     private TimeTrackingService TimeTracking { get; }
 
-    // Null until connected, the timer panel is hidden meanwhile
+    /// <summary>
+    ///     Null until connected, the timer panel is hidden meanwhile
+    /// </summary>
     public List<ProjectTaskViewModel>? ProjectChoices
     {
         get;
         private set => Set(ref field, value);
     }
 
-    // Feeds the project box with at most 10 matches, the full list is too long to scroll
+    /// <summary>
+    ///     Feeds the project box with at most 10 matches, the full list is too long to scroll
+    /// </summary>
     public Func<string?, CancellationToken, Task<IEnumerable<object>>> ProjectChoicesPopulator =>
         (search, _) => Task.FromResult<IEnumerable<object>>(
         [
@@ -51,7 +55,9 @@ public class TimerViewModel : ViewModelBase
             .Take(ApplicationSettings.MaxProjectChoices)
         ]);
 
-    // Pushed to the running entry when changed
+    /// <summary>
+    ///     Pushed to the running entry when changed
+    /// </summary>
     public ProjectTaskViewModel? SelectedChoice
     {
         get;
@@ -68,14 +74,18 @@ public class TimerViewModel : ViewModelBase
         }
     }
 
-    // Text of the project box: a null SelectedItem doesn't clear what was typed, ResetAsync empties it here
+    /// <summary>
+    ///     Text of the project box: a null SelectedItem doesn't clear what was typed, ResetAsync empties it here
+    /// </summary>
     public string? ProjectSearchText
     {
         get;
         set => Set(ref field, value);
     }
 
-    // Free text, usually a Jira ticket key, pushed to the running entry when edited (on lost focus)
+    /// <summary>
+    ///     Free text, usually a Jira ticket key, pushed to the running entry when edited (on lost focus)
+    /// </summary>
     public string? Description
     {
         get;
@@ -91,12 +101,18 @@ public class TimerViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    ///     Indicates whether a time tracking entry is currently running.
+    /// </summary>
     public bool IsRunning
     {
         get;
         private set => Set(ref field, value);
     }
 
+    /// <summary>
+    ///     Formatted elapsed time for the current running entry, or 00:00:00 when the timer is stopped.
+    /// </summary>
     public string Elapsed
     {
         get;
@@ -145,6 +161,12 @@ public class TimerViewModel : ViewModelBase
             : StartAsync();
     }
 
+    /// <summary>
+    ///     Refreshes the currently running time tracking entry while displaying the busy indicator.
+    /// </summary>
+    /// <return>
+    ///     A task that represents the asynchronous refresh operation.
+    /// </return>
     public Task RefreshAsync()
     {
         return WithBusyIndicator(() => TimeTracking.RefreshRunningEntryAsync());
