@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Windowing;
 using JetBrains.Annotations;
 using Werfer.Services;
 using Werfer.Utils;
@@ -8,7 +9,7 @@ using Werfer.ViewModels;
 
 namespace Werfer;
 
-public partial class MainWindow : Window
+public partial class MainWindow : FAAppWindow
 {
     [UsedImplicitly]
     [Obsolete("Designer only, the running app must go through the view model constructor", true)]
@@ -40,7 +41,6 @@ public partial class MainWindow : Window
     private void Initialize()
     {
         InitializeComponent();
-
         // Matches the page MainWindowViewModel opens on
         Navigation.SelectedItem = TimerItem;
     }

@@ -1,6 +1,7 @@
-<Window xmlns="https://github.com/avaloniaui"
+<wnd:FAAppWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:wnd="using:FluentAvalonia.UI.Windowing"
         xmlns:services="clr-namespace:Werfer.Services"
         xmlns:viewModels="clr-namespace:Werfer.ViewModels"
         xmlns:views="clr-namespace:Werfer.Views"
@@ -12,7 +13,8 @@
         WindowStartupLocation="CenterScreen"
         CanMaximize="False"
         Topmost="{Binding ApplicationSettings.Topmost}"
-        SizeToContent="Height">
+        SizeToContent="Height"
+        >
     <!-- Page view models are mapped to their views here, no reflection-based ViewLocator (NativeAOT) -->
     <Window.DataTemplates>
         <DataTemplate DataType="viewModels:TimerViewModel">
@@ -22,7 +24,6 @@
             <views:SettingsView />
         </DataTemplate>
     </Window.DataTemplates>
-
     <DockPanel>
         <Border
             DockPanel.Dock="Bottom"
@@ -101,4 +102,4 @@
             </ui:FANavigationView.MenuItems>
         </ui:FANavigationView>
     </DockPanel>
-</Window>
+</wnd:FAAppWindow>
