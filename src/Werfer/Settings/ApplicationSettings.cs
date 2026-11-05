@@ -18,7 +18,7 @@ public partial class ApplicationSettings : IApplicationSettings
     private readonly byte[] _dataProtectionEntropy =
     [
         ..
-        "ccgbslclockify2026"u8
+        "ccgbwerfer2026"u8
     ];
 
     private ILogger _logger = NullLogger.Instance;
