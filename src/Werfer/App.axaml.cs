@@ -62,6 +62,25 @@ public class App : Application
             Provider.GetRequiredService<ILoggerFactory>()
         );
 
+        var crashLogger = Provider.GetRequiredService<ILogger<App>>();
+
+        // Without these an exception on the UI thread kills the app with nothing logged
+        // Qualified: inside an AvaloniaObject, Dispatcher is the instance property
+        Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) =>
+        {
+            crashLogger.LogCritical(
+                e.Exception, 
+                "Unhandled UI exception"
+            );
+        };
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            crashLogger.LogCritical(
+                e.ExceptionObject as Exception, 
+                "Unhandled exception"
+            );
+        };
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = new MainWindow(
