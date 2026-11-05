@@ -417,7 +417,8 @@ public class TimerViewModel : ViewModelBase
         void UpdateElapsed()
         {
             var elapsed = DateTimeOffset.UtcNow - start;
-            Elapsed = elapsed.ToString(@"hh\:mm\:ss");
+            // Not TimeSpan's "hh", which drops whole days: a timer forgotten over a weekend would look short
+            Elapsed = TimeEntryHistory.Format(elapsed);
             // shortcut: an entry started before the week counts whole, split it at the week start if that ever matters
             UpdateWeekTotal(elapsed);
         }

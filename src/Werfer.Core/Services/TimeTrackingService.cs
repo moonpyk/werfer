@@ -68,9 +68,20 @@ public class TimeTrackingService(
         return ExclusiveAsync(async () =>
         {
             // Same instance the auth handler reads, so the next call uses the new key
+            var previousKey = Options.Value.ApiKey;
             Options.Value.ApiKey = apiKey.Trim();
 
-            User = await Client.GetCurrentUserAsync(ctk);
+            try
+            {
+                User = await Client.GetCurrentUserAsync(ctk);
+            }
+            catch
+            {
+                // A rejected key mustn't replace the one the current session (and its running timer) works with
+                Options.Value.ApiKey = previousKey;
+                throw;
+            }
+
             WorkspaceId = User.ActiveWorkspace ?? User.DefaultWorkspace ?? string.Empty;
 
             await LoadRunningEntryAsync(ctk);

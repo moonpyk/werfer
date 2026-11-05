@@ -110,18 +110,46 @@ public class TimeTrackingServiceTests
     {
         var (client, service) = await ConnectedWithRunningEntryAsync();
 
-        client.StopException = await ApiException.Create(
-            new HttpRequestMessage(HttpMethod.Patch, "https://api.clockify.me/"),
-            HttpMethod.Patch,
-            new HttpResponseMessage(HttpStatusCode.NotFound),
-            new RefitSettings()
-        );
+        client.StopException = await ApiErrorAsync(HttpStatusCode.NotFound);
 
         await service.StopAsync(
             TestContext.Current.CancellationToken
         );
 
         Assert.Null(service.RunningEntry);
+    }
+
+    [Fact]
+    public async Task Connect_RejectedKey_KeepsTheWorkingOne()
+    {
+        var client = new FakeClockifyApiClient();
+        var options = Options.Create(new ClockifyOptions());
+        var service = new TimeTrackingService(client, options);
+
+        await service.ConnectAsync(
+            "good-key",
+            TestContext.Current.CancellationToken
+        );
+
+        // A typo in Settings: the running timer must still be stoppable with the key that works
+        client.UserException = await ApiErrorAsync(HttpStatusCode.Unauthorized);
+
+        await Assert.ThrowsAsync<ApiException>(() => service.ConnectAsync(
+            "bad-key",
+            TestContext.Current.CancellationToken
+        ));
+
+        Assert.Equal("good-key", options.Value.ApiKey);
+    }
+
+    private static Task<ApiException> ApiErrorAsync(HttpStatusCode status)
+    {
+        return ApiException.Create(
+            new HttpRequestMessage(HttpMethod.Get, "https://api.clockify.me/"),
+            HttpMethod.Get,
+            new HttpResponseMessage(status),
+            new RefitSettings()
+        );
     }
 
     private static async Task<(FakeClockifyApiClient Client, TimeTrackingService Service)>

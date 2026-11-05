@@ -3,19 +3,11 @@ using Werfer.Clockify.Models;
 
 namespace Werfer.Clockify;
 
-public class ClockifyAuthHeaderHandler : DelegatingHandler
+public class ClockifyAuthHeaderHandler(
+    IOptions<ClockifyOptions> options
+) : DelegatingHandler
 {
-    private readonly ClockifyOptions _options;
-
-    public ClockifyAuthHeaderHandler(IOptions<ClockifyOptions> options)
-    {
-        _options = options.Value;
-    }
-
-    public ClockifyAuthHeaderHandler(ClockifyOptions options)
-    {
-        _options = options;
-    }
+    private ClockifyOptions Options { get; } = options.Value;
 
     protected override Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
@@ -26,12 +18,12 @@ public class ClockifyAuthHeaderHandler : DelegatingHandler
         if (!request.Headers.Contains("X-Api-Key"))
         {
             // Checked per call, not at registration: a GUI sets the key after startup
-            if (string.IsNullOrWhiteSpace(_options.ApiKey))
+            if (string.IsNullOrWhiteSpace(Options.ApiKey))
             {
                 throw new InvalidOperationException("Clockify ApiKey is not configured");
             }
 
-            request.Headers.Add("X-Api-Key", _options.ApiKey);
+            request.Headers.Add("X-Api-Key", Options.ApiKey);
         }
 
         return base.SendAsync(request, ctk);

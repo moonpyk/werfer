@@ -20,52 +20,6 @@ public interface IClockifyApiClient
     Task<User> GetCurrentUserAsync(CancellationToken ctk = default);
 
     /// <summary>
-    ///     Gets all workspaces accessible to the currently authenticated user.
-    /// </summary>
-    /// <param name="ctk">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-    /// <returns>A list of workspaces.</returns>
-    [Get("/workspaces")]
-    Task<List<Workspace>> GetWorkspacesAsync(CancellationToken ctk = default);
-
-    /// <summary>
-    ///     Gets clients for a workspace based on optional filtering and pagination criteria.
-    /// </summary>
-    /// <param name="workspaceId">The ID of the workspace.</param>
-    /// <param name="name">Optional client name filter.</param>
-    /// <param name="archived">Optional filter for archived status.</param>
-    /// <param name="page">Page number for pagination (1-based).</param>
-    /// <param name="pageSize">Number of items per page.</param>
-    /// <param name="sortColumn">Column to sort by.</param>
-    /// <param name="sortOrder">Sort order (e.g. "ASCENDING" or "DESCENDING").</param>
-    /// <param name="ctk">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-    /// <returns>A list of clients matching the criteria.</returns>
-    [Get("/workspaces/{workspaceId}/clients")]
-    Task<List<Client>> GetClientsAsync(
-        string workspaceId,
-        [Query] string? name = null,
-        [Query] bool? archived = null,
-        [Query] int? page = null,
-        [Query("page-size")] int? pageSize = null,
-        [Query("sort-column")] string? sortColumn = null,
-        [Query("sort-order")] string? sortOrder = null,
-        CancellationToken ctk = default
-    );
-
-    /// <summary>
-    ///     Gets a specific client by ID within a workspace.
-    /// </summary>
-    /// <param name="workspaceId">The ID of the workspace.</param>
-    /// <param name="clientId">The ID of the client to retrieve.</param>
-    /// <param name="ctk">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-    /// <returns>The client details.</returns>
-    [Get("/workspaces/{workspaceId}/clients/{clientId}")]
-    Task<Client> GetClientAsync(
-        string workspaceId,
-        string clientId,
-        CancellationToken ctk = default
-    );
-
-    /// <summary>
     ///     Gets projects for a workspace based on optional filtering and pagination criteria.
     /// </summary>
     /// <param name="workspaceId">The ID of the workspace.</param>
@@ -95,20 +49,6 @@ public interface IClockifyApiClient
         CancellationToken ctk = default);
 
     /// <summary>
-    ///     Gets a specific project by ID within a workspace.
-    /// </summary>
-    /// <param name="workspaceId">The ID of the workspace.</param>
-    /// <param name="projectId">The ID of the project to retrieve.</param>
-    /// <param name="ctk">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-    /// <returns>The project details.</returns>
-    [Get("/workspaces/{workspaceId}/projects/{projectId}")]
-    Task<Project> GetProjectAsync(
-        string workspaceId,
-        string projectId,
-        CancellationToken ctk = default
-    );
-
-    /// <summary>
     ///     Creates a new time entry in a workspace for the currently authenticated user.
     /// </summary>
     /// <param name="workspaceId">The ID of the workspace.</param>
@@ -118,22 +58,6 @@ public interface IClockifyApiClient
     [Post("/workspaces/{workspaceId}/time-entries")]
     Task<TimeEntry> CreateTimeEntryAsync(
         string workspaceId,
-        [Body] CreateTimeEntryRequest request,
-        CancellationToken ctk = default
-    );
-
-    /// <summary>
-    ///     Creates a new time entry in a workspace for a specific user.
-    /// </summary>
-    /// <param name="workspaceId">The ID of the workspace.</param>
-    /// <param name="userId">The ID of the user for whom the time entry is created.</param>
-    /// <param name="request">The time entry creation payload.</param>
-    /// <param name="ctk">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-    /// <returns>The created time entry.</returns>
-    [Post("/workspaces/{workspaceId}/user/{userId}/time-entries")]
-    Task<TimeEntry> CreateTimeEntryForUserAsync(
-        string workspaceId,
-        string userId,
         [Body] CreateTimeEntryRequest request,
         CancellationToken ctk = default
     );

@@ -32,9 +32,16 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
 
     public int TimeEntryReads { get; private set; }
 
+    /// <summary>
+    ///     When set, loading the user fails with it, e.g. a 401 for a rejected API key
+    /// </summary>
+    public Exception? UserException { get; set; }
+
     public Task<User> GetCurrentUserAsync(CancellationToken ctk = default)
     {
-        return Task.FromResult(User);
+        return UserException is null
+            ? Task.FromResult(User)
+            : Task.FromException<User>(UserException);
     }
 
     public Task<List<TimeEntry>> GetTimeEntriesForUserAsync(
@@ -102,30 +109,6 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
         return Running ?? new TimeEntry();
     }
 
-    public Task<List<Workspace>> GetWorkspacesAsync(CancellationToken ctk = default)
-    {
-        throw new NotSupportedException();
-    }
-
-    public Task<List<Client>> GetClientsAsync(
-        string workspaceId,
-        string? name = null,
-        bool? archived = null,
-        int? page = null,
-        int? pageSize = null,
-        string? sortColumn = null,
-        string? sortOrder = null,
-        CancellationToken ctk = default
-    )
-    {
-        throw new NotSupportedException();
-    }
-
-    public Task<Client> GetClientAsync(string workspaceId, string clientId, CancellationToken ctk = default)
-    {
-        throw new NotSupportedException();
-    }
-
     public Task<List<Project>> GetProjectsAsync(
         string workspaceId,
         string? name = null,
@@ -143,23 +126,8 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
         throw new NotSupportedException();
     }
 
-    public Task<Project> GetProjectAsync(string workspaceId, string projectId, CancellationToken ctk = default)
-    {
-        throw new NotSupportedException();
-    }
-
     public Task<TimeEntry> CreateTimeEntryAsync(
         string workspaceId,
-        CreateTimeEntryRequest request,
-        CancellationToken ctk = default
-    )
-    {
-        throw new NotSupportedException();
-    }
-
-    public Task<TimeEntry> CreateTimeEntryForUserAsync(
-        string workspaceId,
-        string userId,
         CreateTimeEntryRequest request,
         CancellationToken ctk = default
     )
