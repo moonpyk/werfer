@@ -1,4 +1,3 @@
-using FluentAvalonia.UI.Controls;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Werfer.Services;
@@ -11,12 +10,6 @@ namespace Werfer.ViewModels;
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public class MainWindowViewModel : ViewModelBase
 {
-    private static readonly FlashMessage NoApiKey = new(
-        "Set your Clockify API key in Settings",
-        "Not connected",
-        FAInfoBarSeverity.Error
-    );
-
     public MainWindowViewModel(
         ILogger<MainWindowViewModel> logger,
         FlashMessageService flashMessages,
@@ -65,7 +58,7 @@ public class MainWindowViewModel : ViewModelBase
         }
         else
         {
-            FlashMessages.ReplaceWith(NoApiKey);
+            FlashMessages.ReplaceWith(WellKnownMessages.NoApiKey);
         }
     }
 

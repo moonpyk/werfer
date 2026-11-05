@@ -1,5 +1,4 @@
 using Avalonia.Threading;
-using FluentAvalonia.UI.Controls;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Werfer.Services;
@@ -13,12 +12,13 @@ namespace Werfer.ViewModels;
 [UsedImplicitly]
 public class TimerViewModel : ViewModelBase
 {
+    // Day the history was last loaded for
+    private DateOnly _historyDate;
+
     // Id of the entry last seen running: when it changes, that entry has finished and joins the history
     private string? _runningId;
     private IDisposable? _ticker;
     private TimeSpan _weekFinished;
-    // Day the history was last loaded for
-    private DateOnly _historyDate;
 
     public TimerViewModel(
         IApplicationSettings applicationSettings,
@@ -176,10 +176,7 @@ public class TimerViewModel : ViewModelBase
         {
             if (SelectedChoice is null)
             {
-                FlashMessages.Push(new FlashMessage(
-                    "Pick a project and a task first",
-                    Severity: FAInfoBarSeverity.Warning
-                ));
+                FlashMessages.Push(WellKnownMessages.PickProjectFirst);
                 return;
             }
 

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Runtime.CompilerServices;
 using FluentAvalonia.UI.Controls;
@@ -16,18 +17,14 @@ public abstract class ViewModelBase(
     FlashMessageService flashMessages
 ) : INotifyPropertyChanged
 {
-    /// <summary>
-    ///     Shown when Clockify rejects the API key, cleared once a key is accepted.
-    /// </summary>
-    protected static readonly FlashMessage InvalidApiKey = new(
-        "Check your Clockify API key in Settings",
-        "Invalid API key",
-        FAInfoBarSeverity.Error
-    );
-
     // Operations can overlap (a history reload during a stop): busy until the last one ends
     private int _busyCount;
 
+    [SuppressMessage(
+        "ReSharper",
+        "MemberCanBePrivate.Global",
+        Justification = "Is useful to have on hand"
+    )]
     protected ILogger Logger { get; } = logger;
 
     public FlashMessageService FlashMessages { get; } = flashMessages;
@@ -57,7 +54,7 @@ public abstract class ViewModelBase(
         catch (ApiException e) when (e.StatusCode == HttpStatusCode.Unauthorized)
         {
             Logger.LogWarning(e, "Invalid API key");
-            FlashMessages.ReplaceWith(InvalidApiKey);
+            FlashMessages.ReplaceWith(WellKnownMessages.InvalidApiKey);
         }
         catch (Exception e)
         {

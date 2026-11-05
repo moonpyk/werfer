@@ -1,0 +1,43 @@
+using FluentAvalonia.UI.Controls;
+
+namespace Werfer.Services;
+
+/// <summary>
+///     The flash messages shown from several places, or pushed and removed by identity: one instance each.
+/// </summary>
+public static class WellKnownMessages
+{
+    /// <summary>
+    ///     No API key saved yet: without one the app can't do anything.
+    /// </summary>
+    public static FlashMessage NoApiKey { get; } = new(
+        "Set your Clockify API key in Settings",
+        "Not connected",
+        FAInfoBarSeverity.Error
+    );
+
+    /// <summary>
+    ///     Shown when Clockify rejects the API key, cleared once a key is accepted.
+    /// </summary>
+    public static FlashMessage InvalidApiKey { get; } = new(
+        "Check your Clockify API key in Settings",
+        "Invalid API key",
+        FAInfoBarSeverity.Error
+    );
+
+    /// <summary>
+    ///     The settings file couldn't be written, the change only lasts until the app closes.
+    /// </summary>
+    public static FlashMessage SettingsNotSaved { get; } = new(
+        "Unable to persist settings",
+        Severity: FAInfoBarSeverity.Warning
+    );
+
+    /// <summary>
+    ///     Start pressed with no project and task picked.
+    /// </summary>
+    public static FlashMessage PickProjectFirst { get; } = new(
+        "Pick a project and a task first",
+        Severity: FAInfoBarSeverity.Warning
+    );
+}

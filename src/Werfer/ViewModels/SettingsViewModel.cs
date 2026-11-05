@@ -1,4 +1,3 @@
-using FluentAvalonia.UI.Controls;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Werfer.Services;
@@ -63,7 +62,7 @@ public class SettingsViewModel : ViewModelBase
 
             if (!ApplicationSettings.TrySave())
             {
-                FlashMessages.Push(new FlashMessage("Unable to persist settings", Severity: FAInfoBarSeverity.Warning));
+                FlashMessages.Push(WellKnownMessages.SettingsNotSaved);
             }
         }
     }
@@ -99,7 +98,7 @@ public class SettingsViewModel : ViewModelBase
             ApplicationSettings.ApiKey = ApiKey;
             if (!ApplicationSettings.TrySave())
             {
-                FlashMessages.Push(new FlashMessage("Unable to persist settings", Severity: FAInfoBarSeverity.Warning));
+                FlashMessages.Push(WellKnownMessages.SettingsNotSaved);
             }
         });
     }

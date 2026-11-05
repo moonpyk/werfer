@@ -1,21 +1,16 @@
 using System.Collections.ObjectModel;
-using FluentAvalonia.UI.Controls;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Werfer.Services;
 
 /// <summary>
-///     A message shown to the user as an info bar.
-///     A record, so two messages with the same content are equal.
-/// </summary>
-public record FlashMessage(
-    string Message,
-    string? Title = null,
-    FAInfoBarSeverity Severity = FAInfoBarSeverity.Informational
-);
-
-/// <summary>
 ///     Messages currently shown to the user, each one at most once.
 /// </summary>
+[SuppressMessage(
+    "ReSharper",
+    "UnusedMethodReturnValue.Global",
+    Justification = "Fluent usage"
+)]
 public class FlashMessageService
 {
     private readonly ObservableCollection<FlashMessage> _messages = [];
