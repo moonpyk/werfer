@@ -30,8 +30,9 @@
             <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
         </Style>
         <!-- Round play button, hidden until its card or line is hovered; Opacity rather than IsVisible keeps its room,
-             so the layout doesn't jump. Also shown with keyboard focus inside. The group's is matched as a direct
-             child, hovering the group card mustn't show the play buttons of all its lines -->
+             so the layout doesn't jump. Also shown when tabbed to: :focus-visible, not the card's :focus-within, which
+             the three dots button keeps after a click and its menu closed. The group's is matched as a direct child,
+             hovering the group card mustn't show the play buttons of all its lines -->
         <Style Selector="Border.entryCard Button.continue">
             <Setter Property="Width" Value="28" />
             <Setter Property="Height" Value="28" />
@@ -44,9 +45,8 @@
         </Style>
         <Style
             Selector="Border.entryCard:pointerover > Grid > Button.continue,
-                         Border.entryCard:focus-within > Grid > Button.continue,
                          Border.entryLine:pointerover Button.continue,
-                         Border.entryLine:focus-within Button.continue">
+                         Button.continue:focus-visible">
             <Setter Property="Opacity" Value="1" />
         </Style>
         <!-- Three dots, flat until hovered -->
