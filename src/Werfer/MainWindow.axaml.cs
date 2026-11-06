@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Media;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Windowing;
 using JetBrains.Annotations;
@@ -41,6 +42,9 @@ public partial class MainWindow : FAAppWindow
     private void Initialize()
     {
         InitializeComponent();
+        // FAAppWindow's TitleBarBackground resource resolves to nothing, leaving its title bar panel without
+        // background: not hit-testable, so only the icon and title text could drag the window
+        TitleBar.BackgroundColor = TitleBar.InactiveBackgroundColor = Colors.Transparent;
         // Matches the page MainWindowViewModel opens on
         Navigation.SelectedItem = TimerItem;
     }
