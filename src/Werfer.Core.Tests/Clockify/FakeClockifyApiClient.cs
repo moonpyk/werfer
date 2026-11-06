@@ -1,3 +1,5 @@
+using System.Net;
+using Refit;
 using Werfer.Clockify.Models;
 using Werfer.Clockify.Requests;
 
@@ -37,6 +39,16 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
     /// </summary>
     public Exception? UserException { get; set; }
 
+    /// <summary>
+    ///     What the entries query (not in-progress) serves, a page at a time
+    /// </summary>
+    public List<TimeEntry> Entries { get; } = [];
+
+    /// <summary>
+    ///     Page size served whatever the one asked, like Clockify capping it without error
+    /// </summary>
+    public int MaxPageSize { get; set; } = int.MaxValue;
+
     public Task<User> GetCurrentUserAsync(CancellationToken ctk = default)
     {
         return UserException is null
@@ -44,7 +56,7 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
             : Task.FromException<User>(UserException);
     }
 
-    public Task<List<TimeEntry>> GetTimeEntriesForUserAsync(
+    public Task<IApiResponse<List<TimeEntry>>> GetRawTimeEntriesForUserAsync(
         string workspaceId,
         string userId,
         string? description = null,
@@ -59,7 +71,15 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
         CancellationToken ctk = default
     )
     {
-        return Task.FromResult<List<TimeEntry>>(Running is null ? [] : [Running]);
+        if (inProgress == true)
+        {
+            return Page<TimeEntry>(Running is null ? [] : [Running], true);
+        }
+
+        var size = Math.Min(pageSize ?? 50, MaxPageSize);
+        var skip = ((page ?? 1) - 1) * size;
+
+        return Page<TimeEntry>([.. Entries.Skip(skip).Take(size)], skip + size >= Entries.Count);
     }
 
     public Task<TimeEntry> GetTimeEntryAsync(string workspaceId, string id, CancellationToken ctk = default)
@@ -109,7 +129,7 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
         return Running ?? new TimeEntry();
     }
 
-    public Task<List<Project>> GetProjectsAsync(
+    public Task<IApiResponse<List<Project>>> GetRawProjectsAsync(
         string workspaceId,
         string? name = null,
         bool? archived = null,
@@ -138,5 +158,16 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
     public Task DeleteTimeEntryAsync(string workspaceId, string id, CancellationToken ctk = default)
     {
         throw new NotSupportedException();
+    }
+
+    private static Task<IApiResponse<List<T>>> Page<T>(List<T> items, bool last)
+    {
+        var message = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            RequestMessage = new HttpRequestMessage(HttpMethod.Get, "https://api.clockify.me/")
+        };
+        message.Headers.Add("Last-Page", last ? "true" : "false");
+
+        return Task.FromResult<IApiResponse<List<T>>>(new ApiResponse<List<T>>(message, items, new RefitSettings()));
     }
 }

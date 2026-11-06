@@ -108,7 +108,6 @@ public class TimeTrackingService(
                 WorkspaceId,
                 CurrentUser.Id,
                 inProgress: true,
-                pageSize: 1,
                 ctk: ctk
             )
         ).FirstOrDefault();
@@ -122,12 +121,10 @@ public class TimeTrackingService(
     public Task<List<TimeEntry>> GetTimeEntriesSinceAsync(DateTimeOffset start, CancellationToken ctk = default)
     {
         // Read only, no lock: it would queue behind (and delay) a start or stop for nothing
-        // shortcut: single page of 1000 entries, about 20 weeks of a busy user; paginate if history ever spans longer
         return Client.GetTimeEntriesForUserAsync(
             WorkspaceId,
             CurrentUser.Id,
             start: start,
-            pageSize: 1000,
             ctk: ctk
         );
     }
@@ -148,12 +145,10 @@ public class TimeTrackingService(
     /// </summary>
     public async Task<List<ProjectTaskChoice>> GetProjectTasksAsync(CancellationToken ctk = default)
     {
-        // shortcut: single page of 5000 projects (Clockify max), paginate if a workspace ever exceeds it
         var projects = await Client.GetProjectsAsync(
             WorkspaceId,
             archived: false,
             hydrated: true,
-            pageSize: 5000,
             ctk: ctk
         );
 

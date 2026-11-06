@@ -142,6 +142,25 @@ public class TimeTrackingServiceTests
         Assert.Equal("good-key", options.Value.ApiKey);
     }
 
+    [Fact]
+    public async Task GetTimeEntriesSince_PageSizeCapped_ReadsEveryPage()
+    {
+        var (client, service) = await ConnectedWithRunningEntryAsync();
+        // Clockify serves fewer than asked without error: the oldest entries, on the last pages, mustn't be lost
+        client.MaxPageSize = 2;
+        client.Entries.AddRange(Enumerable.Range(1, 5).Select(i => new TimeEntry { Id = $"h{i}" }));
+
+        var entries = await service.GetTimeEntriesSinceAsync(Started, TestContext.Current.CancellationToken);
+
+        Assert.Equal([
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5"
+        ], entries.Select(e => e.Id));
+    }
+
     private static Task<ApiException> ApiErrorAsync(HttpStatusCode status)
     {
         return ApiException.Create(
