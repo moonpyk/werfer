@@ -12,7 +12,7 @@ public partial class TimeEntryGroupViewModel(
     TimeEntryGroup group,
     ProjectTaskViewModel? choice,
     TimerViewModel timer
-)
+) : TimeEntryItemViewModel(timer)
 {
     /// <summary>
     ///     Null when the project or task isn't startable anymore (archived, done): it can't be continued
@@ -44,10 +44,7 @@ public partial class TimeEntryGroupViewModel(
         group.Entries.Max(e => e.TimeInterval!.End!.Value)
     );
 
-    /// <summary>
-    ///     What the delete menu removes: every entry of the group
-    /// </summary>
-    public string[] EntryIds { get; } = [.. group.Entries.Select(e => e.Id)];
+    public override string[] EntryIds { get; } = [.. group.Entries.Select(e => e.Id)];
 
     public int Count => Source.Count;
 
@@ -64,6 +61,7 @@ public partial class TimeEntryGroupViewModel(
     [
         .. Source.Select(e => new TimeEntryLineViewModel(
             this,
+            Timer,
             e.Id,
             FormatRange(e.TimeInterval!.Start, e.TimeInterval.End!.Value),
             TimeEntryHistory.Format(TimeEntryExtensions.Sum([e]))
@@ -76,15 +74,7 @@ public partial class TimeEntryGroupViewModel(
     [RelayCommand(CanExecute = nameof(CanContinue))]
     public Task ContinueAsync()
     {
-        return timer.ContinueAsync(this);
-    }
-
-    /// <summary>
-    ///     Deletes some or all of the group's entries, see <see cref="EntryIds" />
-    /// </summary>
-    public Task DeleteAsync(IReadOnlyList<string> ids)
-    {
-        return timer.DeleteAsync(ids);
+        return Timer.ContinueAsync(this);
     }
 
     private static string FormatRange(DateTimeOffset start, DateTimeOffset end)
@@ -96,9 +86,19 @@ public partial class TimeEntryGroupViewModel(
 /// <summary>
 ///     An entry of an expanded group; continuing it continues its group, they share project, task and description
 /// </summary>
-public record TimeEntryLineViewModel(
-    TimeEntryGroupViewModel Group,
-    string Id,
-    string Range,
-    string Duration
-);
+public class TimeEntryLineViewModel(
+    TimeEntryGroupViewModel group,
+    TimerViewModel timer,
+    string id,
+    string range,
+    string duration
+) : TimeEntryItemViewModel(timer)
+{
+    public TimeEntryGroupViewModel Group { get; } = group;
+
+    public override string[] EntryIds { get; } = [id];
+
+    public string Range { get; } = range;
+
+    public string Duration { get; } = duration;
+}
