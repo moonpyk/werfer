@@ -13,7 +13,7 @@ public partial class TimeEntryGroupViewModel(
     TimeEntryGroup group,
     ProjectTaskViewModel? choice,
     TimerViewModel timer
-) : TimeEntryItemViewModel(timer)
+) : TimeEntryItemViewModelBase(timer)
 {
     /// <summary>
     ///     Null when the project or task isn't startable anymore (archived, done): it can't be continued
@@ -49,7 +49,10 @@ public partial class TimeEntryGroupViewModel(
         group.Entries.Max(e => e.TimeInterval!.End!.Value)
     );
 
-    public override string[] EntryIds { get; } = [.. group.Entries.Select(e => e.Id)];
+    protected override string[] EntryIds { get; } =
+    [
+        .. group.Entries.Select(e => e.Id)
+    ];
 
     public int Count => Source.Count;
 
@@ -86,24 +89,4 @@ public partial class TimeEntryGroupViewModel(
     {
         return $"{start.ToLocalTime():HH:mm} - {end.ToLocalTime():HH:mm}";
     }
-}
-
-/// <summary>
-///     An entry of an expanded group; continuing it continues its group, they share project, task and description
-/// </summary>
-public class TimeEntryLineViewModel(
-    TimeEntryGroupViewModel group,
-    TimerViewModel timer,
-    string id,
-    string range,
-    string duration
-) : TimeEntryItemViewModel(timer)
-{
-    public TimeEntryGroupViewModel Group { get; } = group;
-
-    public override string[] EntryIds { get; } = [id];
-
-    public string Range { get; } = range;
-
-    public string Duration { get; } = duration;
 }

@@ -53,7 +53,10 @@ public abstract partial class ViewModelBase(
         catch (Exception e)
         {
             Logger.LogError(e, "While running operation");
-            FlashMessages.ReplaceWith(new FlashMessage(e.Message, Severity: FAInfoBarSeverity.Error));
+            FlashMessages.ReplaceWith(new FlashMessage(
+                e.Message,
+                Severity: FAInfoBarSeverity.Error
+            ));
         }
         finally
         {

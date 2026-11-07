@@ -6,14 +6,16 @@ namespace Werfer.ViewModels;
 /// <summary>
 ///     A history item, a group or one entry of an expanded group: the entry menu's actions, shared by both.
 /// </summary>
-public abstract partial class TimeEntryItemViewModel(TimerViewModel timer)
+public abstract partial class TimeEntryItemViewModelBase(
+    TimerViewModel timer
+)
 {
     protected TimerViewModel Timer { get; } = timer;
 
     /// <summary>
     ///     What the menu acts on: every entry of a group, or the line's single entry
     /// </summary>
-    public abstract string[] EntryIds { get; }
+    protected abstract string[] EntryIds { get; }
 
     [RelayCommand]
     private async Task DeleteAsync()

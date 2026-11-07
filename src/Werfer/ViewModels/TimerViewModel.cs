@@ -288,11 +288,11 @@ public partial class TimerViewModel : ViewModelBase
             return;
         }
 
-        WithBusyIndicator(() => TimeTracking.UpdateRunningEntryAsync(
+        _ = WithBusyIndicator(() => TimeTracking.UpdateRunningEntryAsync(
             projectId,
             taskId,
             text
-        )).ContinueWith(t => t.Exception?.Handle(_ => true));
+        ));
     }
 
     private async Task LoadProjectChoicesAsync()

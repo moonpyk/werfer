@@ -8,7 +8,7 @@
     <UserControl.Resources>
         <!-- Entry menu, opened by the three dots and by a right click on the card or line; one instance per use -->
         <MenuFlyout x:Key="EntryMenu" x:Shared="False">
-            <MenuItem x:DataType="vm:TimeEntryItemViewModel" Header="Delete" Command="{Binding DeleteCommand}">
+            <MenuItem x:DataType="vm:TimeEntryItemViewModelBase" Header="Delete" Command="{Binding DeleteCommand}">
                 <MenuItem.Icon>
                     <ui:FASymbolIcon Symbol="Delete" />
                 </MenuItem.Icon>

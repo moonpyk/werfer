@@ -12,7 +12,8 @@ namespace Werfer.ViewModels;
 [UsedImplicitly]
 public partial class SettingsViewModel : ViewModelBase
 {
-    public SettingsViewModel(ILogger<SettingsViewModel> logger,
+    public SettingsViewModel(
+        ILogger<SettingsViewModel> logger,
         IApplicationSettings applicationSettings,
         FlashMessageService flashMessages,
         TimeTrackingService timeTracking
