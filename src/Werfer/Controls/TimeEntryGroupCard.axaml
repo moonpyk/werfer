@@ -1,14 +1,14 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
-             xmlns:viewModels="clr-namespace:Werfer.ViewModels"
+             xmlns:vm="clr-namespace:Werfer.ViewModels"
              xmlns:converters="clr-namespace:Werfer.Converters"
              x:Class="Werfer.Controls.TimeEntryGroupCard"
-             x:DataType="viewModels:TimeEntryGroupViewModel">
+             x:DataType="vm:TimeEntryGroupViewModel">
     <UserControl.Resources>
         <!-- Entry menu, opened by the three dots and by a right click on the card or line; one instance per use -->
         <MenuFlyout x:Key="EntryMenu" x:Shared="False">
-            <MenuItem Header="Delete" Command="{Binding DeleteCommand}" x:DataType="viewModels:TimeEntryItemViewModel">
+            <MenuItem x:DataType="vm:TimeEntryItemViewModel" Header="Delete" Command="{Binding DeleteCommand}">
                 <MenuItem.Icon>
                     <ui:FASymbolIcon Symbol="Delete" />
                 </MenuItem.Icon>
@@ -76,12 +76,12 @@
                 x:Name="CountToggle"
                 Grid.Column="0"
                 Grid.Row="0"
+                ToolTip.Tip="Show the entries"
                 Margin="0,0,8,0"
                 Padding="6,0"
                 MinWidth="24"
                 VerticalAlignment="Center"
                 Content="{Binding Count}"
-                ToolTip.Tip="Show the entries"
                 IsVisible="{Binding IsMultiple}" />
             <StackPanel Grid.Column="1" Grid.Row="0">
                 <TextBlock
@@ -96,14 +96,15 @@
                         Width="8"
                         Height="8"
                         VerticalAlignment="Center"
-                        Fill="{Binding Choice.Brush}"
+                        Fill="{Binding Brush}"
                         IsVisible="{Binding Choice, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                    <TextBlock Text="{Binding ProjectName}" FontSize="12"
+                    <TextBlock Text="{Binding ProjectName}"
+                               FontSize="12"
                                TextTrimming="CharacterEllipsis">
                         <TextBlock.Foreground>
                             <MultiBinding
                                 Converter="{x:Static converters:ReadableTextBrushConverter.Instance}">
-                                <Binding Path="Choice.Color" />
+                                <Binding Path="Color" />
                                 <Binding RelativeSource="{RelativeSource Self}" />
                                 <Binding Path="ActualThemeVariant"
                                          RelativeSource="{RelativeSource Self}" />
@@ -123,22 +124,29 @@
             <Button
                 Grid.Column="2"
                 Grid.Row="0"
-                Classes="accent continue"
                 ToolTip.Tip="Continue"
+                Classes="accent continue"
                 Command="{Binding ContinueCommand}">
                 <ui:FASymbolIcon Symbol="PlayFilled" FontSize="12" />
             </Button>
             <StackPanel Grid.Column="3" Grid.Row="0" Margin="8,0,4,0"
                         VerticalAlignment="Center">
-                <TextBlock Text="{Binding Duration}" FontWeight="SemiBold" FontFeatures="+tnum"
+                <TextBlock Text="{Binding Duration}"
+                           FontWeight="SemiBold"
+                           FontFeatures="+tnum"
                            HorizontalAlignment="Right" />
-                <TextBlock Text="{Binding Range}" FontSize="12" FontFeatures="+tnum"
+                <TextBlock Text="{Binding Range}"
+                           FontSize="12"
+                           FontFeatures="+tnum"
                            HorizontalAlignment="Right"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
             </StackPanel>
-            <Button Grid.Column="4" Grid.Row="0" Classes="more"
-                    ToolTip.Tip="More"
-                    Flyout="{StaticResource EntryMenu}">
+            <Button
+                Grid.Row="0"
+                Grid.Column="4"
+                ToolTip.Tip="More"
+                Classes="more"
+                Flyout="{StaticResource EntryMenu}">
                 <ui:FASymbolIcon Symbol="MoreVertical" FontSize="16" />
             </Button>
 
@@ -152,7 +160,7 @@
                 IsVisible="{Binding #CountToggle.IsChecked}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate
-                        x:DataType="viewModels:TimeEntryLineViewModel">
+                        x:DataType="vm:TimeEntryLineViewModel">
                         <Border Classes="entryLine" ContextFlyout="{StaticResource EntryMenu}">
                             <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                                 <TextBlock Grid.Column="0"
@@ -162,18 +170,20 @@
                                 <!-- Continues the group: its entries share project, task and description -->
                                 <Button
                                     Grid.Column="1"
-                                    Classes="accent continue"
                                     ToolTip.Tip="Continue"
+                                    Classes="accent continue"
                                     Command="{Binding Group.ContinueCommand}">
                                     <ui:FASymbolIcon Symbol="PlayFilled"
                                                      FontSize="12" />
                                 </Button>
-                                <TextBlock Grid.Column="2" Margin="8,0,4,0"
+                                <TextBlock Grid.Column="2"
+                                           Margin="8,0,4,0"
                                            Text="{Binding Duration}"
                                            FontFeatures="+tnum"
                                            VerticalAlignment="Center" />
-                                <Button Grid.Column="3" Classes="more"
+                                <Button Grid.Column="3"
                                         ToolTip.Tip="More"
+                                        Classes="more"
                                         Flyout="{StaticResource EntryMenu}">
                                     <ui:FASymbolIcon Symbol="MoreVertical"
                                                      FontSize="14" />

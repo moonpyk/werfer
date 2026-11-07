@@ -1,3 +1,4 @@
+using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -81,7 +82,13 @@ public partial class TimerViewModel : ViewModelBase
     ///     Pushed to the running entry when changed
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedBrush))]
     public partial ProjectTaskViewModel? SelectedChoice { get; set; }
+
+    /// <summary>
+    ///     Flattened: a binding to SelectedChoice.Brush logs a warning whenever nothing is selected
+    /// </summary>
+    public IBrush? SelectedBrush => SelectedChoice?.Brush;
 
     /// <summary>
     ///     Text of the project box: a null SelectedItem doesn't clear what was typed, ResetAsync empties it here
@@ -129,7 +136,7 @@ public partial class TimerViewModel : ViewModelBase
     ///     Starts a time tracking entry for the selected project and task while displaying the busy indicator.
     /// </summary>
     [RelayCommand]
-    public Task StartAsync()
+    private Task StartAsync()
     {
         return WithBusyIndicator(async () =>
         {
@@ -151,7 +158,7 @@ public partial class TimerViewModel : ViewModelBase
     ///     Stops the currently running time tracking entry while displaying the busy indicator.
     /// </summary>
     [RelayCommand]
-    public Task StopAsync()
+    private Task StopAsync()
     {
         return WithBusyIndicator(() => TimeTracking.StopAsync());
     }
@@ -392,6 +399,7 @@ public partial class TimerViewModel : ViewModelBase
 
     partial void OnDescriptionChanged(string? value)
     {
+        _ = value;
         PushToRunningEntry(description: true);
     }
 }

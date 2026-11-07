@@ -1,3 +1,4 @@
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using Werfer.Clockify.Models;
 using Werfer.Services;
@@ -20,6 +21,10 @@ public partial class TimeEntryGroupViewModel(
     public ProjectTaskViewModel? Choice { get; } = choice;
 
     public bool CanContinue => Choice is not null;
+
+    public IBrush? Brush => Choice?.Brush;
+
+    public Color? Color => Choice?.Color;
 
     public string? Description { get; } = group.Description;
 
@@ -72,7 +77,7 @@ public partial class TimeEntryGroupViewModel(
     ///     Starts a new entry with this line's project, task and description
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanContinue))]
-    public Task ContinueAsync()
+    private Task ContinueAsync()
     {
         return Timer.ContinueAsync(this);
     }
