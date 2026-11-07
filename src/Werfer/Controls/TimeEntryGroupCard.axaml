@@ -40,10 +40,12 @@
         <Style Selector="Border.entryLine:pointerover">
             <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
         </Style>
-        <!-- Square play button, the theme's corner radius like the three dots, hidden until its card or line is hovered; Opacity rather than IsVisible keeps its room,
-             so the layout doesn't jump. Also shown when tabbed to: :focus-visible, not the card's :focus-within, which
-             the three dots button keeps after a click and its menu closed. The group's is matched as a direct child,
-             hovering the group card mustn't show the play buttons of all its lines -->
+        <!-- 
+        Square play button, the theme's corner radius like the three dots, hidden until its card or line is hovered; Opacity rather than IsVisible keeps its room,
+        so the layout doesn't jump. Also shown when tabbed to: :focus-visible, not the card's :focus-within, which
+        the three dots button keeps after a click and its menu closed. The group's is matched as a direct child,
+        hovering the group card mustn't show the play buttons of all its lines 
+        -->
         <Style Selector="Border.entryCard Button.continue">
             <Setter Property="Width" Value="28" />
             <Setter Property="Height" Value="28" />
@@ -85,12 +87,12 @@
                 IsVisible="{Binding IsMultiple}" />
             <StackPanel Grid.Column="1" Grid.Row="0">
                 <TextBlock
+                    ToolTip.Tip="{Binding Description}"
                     Text="{Binding DisplayDescription}"
                     Opacity="{Binding DescriptionOpacity}"
                     FontWeight="SemiBold"
                     MaxLines="1"
-                    TextTrimming="CharacterEllipsis"
-                    ToolTip.Tip="{Binding Description}" />
+                    TextTrimming="CharacterEllipsis" />
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <Ellipse
                         Width="8"
@@ -129,8 +131,11 @@
                 Command="{Binding ContinueCommand}">
                 <ui:FASymbolIcon Symbol="PlayFilled" FontSize="12" />
             </Button>
-            <StackPanel Grid.Column="3" Grid.Row="0" Margin="8,0,4,0"
-                        VerticalAlignment="Center">
+            <StackPanel
+                Grid.Column="3"
+                Grid.Row="0"
+                Margin="8,0,4,0"
+                VerticalAlignment="Center">
                 <TextBlock Text="{Binding Duration}"
                            FontWeight="SemiBold"
                            FontFeatures="+tnum"

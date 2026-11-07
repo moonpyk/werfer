@@ -2,11 +2,11 @@
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:ui="using:FluentAvalonia.UI.Controls"
                  xmlns:wnd="using:FluentAvalonia.UI.Windowing"
-                 xmlns:services="clr-namespace:Werfer.Services"
-                 xmlns:viewModels="clr-namespace:Werfer.ViewModels"
+                 xmlns:svc="clr-namespace:Werfer.Services"
+                 xmlns:vm="clr-namespace:Werfer.ViewModels"
                  xmlns:views="clr-namespace:Werfer.Views"
                  x:Class="Werfer.MainWindow"
-                 x:DataType="viewModels:MainWindowViewModel"
+                 x:DataType="vm:MainWindowViewModel"
                  Icon="/Assets/Werfer.ico"
                  Title="Werfer"
                  Width="420"
@@ -17,10 +17,10 @@
                  Topmost="{Binding ApplicationSettings.Topmost}">
     <!-- Page view models are mapped to their views here, no reflection-based ViewLocator (NativeAOT) -->
     <Window.DataTemplates>
-        <DataTemplate DataType="viewModels:TimerViewModel">
+        <DataTemplate DataType="vm:TimerViewModel">
             <views:TimerView />
         </DataTemplate>
-        <DataTemplate DataType="viewModels:SettingsViewModel">
+        <DataTemplate DataType="vm:SettingsViewModel">
             <views:SettingsView />
         </DataTemplate>
     </Window.DataTemplates>
@@ -31,11 +31,7 @@
             Background="{DynamicResource LayerFillColorDefaultBrush}"
             BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
             BorderThickness="0,1,0,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <Grid ColumnDefinitions="*,Auto">
                 <TextBlock
                     Grid.Column="0"
                     ToolTip.Tip="{Binding Status}"
@@ -60,7 +56,7 @@
             Margin="8,0,8,4"
             ItemsSource="{Binding FlashMessages.Messages}">
             <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="services:FlashMessage">
+                <DataTemplate DataType="svc:FlashMessage">
                     <ui:FAInfoBar
                         Margin="0,4,0,0"
                         IsOpen="True"

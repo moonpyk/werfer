@@ -1,10 +1,10 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
-             xmlns:viewModels="clr-namespace:Werfer.ViewModels"
+             xmlns:vm="clr-namespace:Werfer.ViewModels"
              xmlns:controls="clr-namespace:Werfer.Controls"
              x:Class="Werfer.Views.Timer.HistoryView"
-             x:DataType="viewModels:TimerViewModel">
+             x:DataType="vm:TimerViewModel">
     <!-- The week's finished entries, grouped by day, then by project, task and description -->
     <DockPanel>
         <Border
@@ -15,9 +15,9 @@
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Grid.Column="0" Text="This week" FontWeight="SemiBold" />
                 <TextBlock Grid.Column="1" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                    <Run Text="{Binding WeekTotal}" 
-                         FontWeight="SemiBold" 
-                         FontFeatures="+tnum"/>
+                    <Run Text="{Binding WeekTotal}"
+                         FontWeight="SemiBold"
+                         FontFeatures="+tnum" />
                 </TextBlock>
             </Grid>
         </Border>
@@ -35,22 +35,24 @@
         <ScrollViewer HorizontalScrollBarVisibility="Disabled">
             <ItemsControl ItemsSource="{Binding History}">
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="viewModels:TimeEntryDayViewModel">
+                    <DataTemplate x:DataType="vm:TimeEntryDayViewModel">
                         <StackPanel>
                             <Grid ColumnDefinitions="*,Auto" Margin="12,10,12,6">
                                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
-                                    <ui:FASymbolIcon Symbol="Calendar" 
-                                                     FontSize="14" 
+                                    <ui:FASymbolIcon Symbol="Calendar"
+                                                     FontSize="14"
                                                      VerticalAlignment="Center"
                                                      Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                                     <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
                                 </StackPanel>
-                                <TextBlock Grid.Column="1" Text="{Binding Total}" FontFeatures="+tnum"
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding Total}"
+                                           FontFeatures="+tnum"
                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                             </Grid>
                             <ItemsControl ItemsSource="{Binding Groups}">
                                 <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="viewModels:TimeEntryGroupViewModel">
+                                    <DataTemplate x:DataType="vm:TimeEntryGroupViewModel">
                                         <controls:TimeEntryGroupCard />
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
