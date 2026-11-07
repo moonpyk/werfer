@@ -13,11 +13,9 @@ public class TimeEntryDayViewModel(
     TimerViewModel timer
 )
 {
-    public string Title { get; } = (
-        day.Date == today ? "Today"
+    public string Title { get; } = day.Date == today ? "Today"
         : day.Date == today.AddDays(-1) ? "Yesterday"
-        : day.Date.ToString("dddd d MMM", CultureInfo.CurrentCulture)
-    ).ToUpper(CultureInfo.CurrentCulture);
+        : day.Date.ToString("dddd d MMM", CultureInfo.CurrentCulture);
 
     public string Total { get; } = TimeEntryHistory.Format(day.Duration);
 

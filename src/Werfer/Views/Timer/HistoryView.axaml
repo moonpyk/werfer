@@ -15,9 +15,9 @@
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Grid.Column="0" Text="This week" FontWeight="SemiBold" />
                 <TextBlock Grid.Column="1" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                    <Run Text="Week total: " />
-                    <Run Text="{Binding WeekTotal}" FontWeight="SemiBold" FontFeatures="+tnum"
-                         Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    <Run Text="{Binding WeekTotal}" 
+                         FontWeight="SemiBold" 
+                         FontFeatures="+tnum"/>
                 </TextBlock>
             </Grid>
         </Border>
@@ -39,7 +39,9 @@
                         <StackPanel>
                             <Grid ColumnDefinitions="*,Auto" Margin="12,10,12,6">
                                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
-                                    <ui:FASymbolIcon Symbol="Calendar" FontSize="14" VerticalAlignment="Center"
+                                    <ui:FASymbolIcon Symbol="Calendar" 
+                                                     FontSize="14" 
+                                                     VerticalAlignment="Center"
                                                      Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                                     <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
                                 </StackPanel>
