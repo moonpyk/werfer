@@ -40,7 +40,7 @@
         <Style Selector="Border.entryLine:pointerover">
             <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
         </Style>
-        <!-- Round play button, hidden until its card or line is hovered; Opacity rather than IsVisible keeps its room,
+        <!-- Square play button, the theme's corner radius like the three dots, hidden until its card or line is hovered; Opacity rather than IsVisible keeps its room,
              so the layout doesn't jump. Also shown when tabbed to: :focus-visible, not the card's :focus-within, which
              the three dots button keeps after a click and its menu closed. The group's is matched as a direct child,
              hovering the group card mustn't show the play buttons of all its lines -->
@@ -48,7 +48,6 @@
             <Setter Property="Width" Value="28" />
             <Setter Property="Height" Value="28" />
             <Setter Property="Padding" Value="0" />
-            <Setter Property="CornerRadius" Value="14" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />

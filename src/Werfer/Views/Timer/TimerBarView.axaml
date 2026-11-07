@@ -80,11 +80,11 @@
         </Button>
         <!-- Accent button with its brushes overridden to red, so hover and pressed states keep working -->
         <Button
-            Grid.Column="1"
+            Grid.Column="2"
             ToolTip.Tip="Stop (Ctrl+Space)"
             Classes="accent"
             Command="{Binding StopAsync}"
-            IsVisible="{Binding IsRunning}"
+            IsVisible="{Binding IsRunning, FallbackValue=False}"
             IsEnabled="{Binding !IsBusy}"
             FontSize="16"
             MinWidth="120"
