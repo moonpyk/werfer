@@ -17,7 +17,7 @@ namespace Werfer;
 
 public class App : Application
 {
-    public IServiceProvider? Provider { get; private set; }
+    public IServiceProvider? Services { get; private set; }
 
     public static string ApplicationPath { get; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -33,6 +33,41 @@ public class App : Application
     }
 
     public override void OnFrameworkInitializationCompleted()
+    {
+        Services = ConfigureServices();
+
+        Logger.Sink = new AvaloniaLogSink(
+            Services.GetRequiredService<ILoggerFactory>()
+        );
+
+        var crashLogger = Services.GetRequiredService<ILogger<App>>();
+
+        // Without these an exception on the UI thread kills the app with nothing logged
+        // Qualified: inside an AvaloniaObject, Dispatcher is the instance property
+        Dispatcher.UIThread.UnhandledException += (_, e) =>
+        {
+            crashLogger.LogCritical(
+                e.Exception,
+                "Unhandled UI exception"
+            );
+        };
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            crashLogger.LogCritical(
+                e.ExceptionObject as Exception,
+                "Unhandled exception"
+            );
+        };
+
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            desktop.MainWindow = Services.GetRequiredService<MainWindow>();
+        }
+
+        base.OnFrameworkInitializationCompleted();
+    }
+
+    private static ServiceProvider ConfigureServices()
     {
         var services = new ServiceCollection();
 
@@ -63,38 +98,8 @@ public class App : Application
             // Windows
             .AddSingleton<MainWindow>()
             ;
-
-        Provider = services.BuildServiceProvider();
-
-        Logger.Sink = new AvaloniaLogSink(
-            Provider.GetRequiredService<ILoggerFactory>()
-        );
-
-        var crashLogger = Provider.GetRequiredService<ILogger<App>>();
-
-        // Without these an exception on the UI thread kills the app with nothing logged
-        // Qualified: inside an AvaloniaObject, Dispatcher is the instance property
-        Dispatcher.UIThread.UnhandledException += (_, e) =>
-        {
-            crashLogger.LogCritical(
-                e.Exception,
-                "Unhandled UI exception"
-            );
-        };
-        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
-        {
-            crashLogger.LogCritical(
-                e.ExceptionObject as Exception,
-                "Unhandled exception"
-            );
-        };
-
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            desktop.MainWindow = Provider.GetRequiredService<MainWindow>();
-        }
-
-        base.OnFrameworkInitializationCompleted();
+        
+        return services.BuildServiceProvider();
     }
 
     private static void ConfigureLogging(ILoggingBuilder builder)
