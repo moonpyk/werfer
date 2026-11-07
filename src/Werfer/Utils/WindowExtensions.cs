@@ -1,8 +1,14 @@
+using System.Diagnostics.CodeAnalysis;
 using Avalonia;
 using Avalonia.Controls;
 
 namespace Werfer.Utils;
 
+[SuppressMessage(
+    "ReSharper", 
+    "UnusedMethodReturnValue.Global",
+    Justification = "Fluent usage"
+)]
 public static class WindowExtensions
 {
     /// <summary>

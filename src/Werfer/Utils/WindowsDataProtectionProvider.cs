@@ -7,6 +7,7 @@ namespace Werfer.Utils;
 [SupportedOSPlatform("windows")]
 public class WindowsDataProtectionProvider : IDataProtectionProvider
 {
+    /// <inheritdoc />
     public byte[] Protect(byte[] plaintext, byte[] entropy)
     {
         return ProtectedData.Protect(
@@ -16,6 +17,7 @@ public class WindowsDataProtectionProvider : IDataProtectionProvider
         );
     }
 
+    /// <inheritdoc />
     public byte[] Unprotect(byte[] protectedData, byte[] entropy)
     {
         return ProtectedData.Unprotect(
