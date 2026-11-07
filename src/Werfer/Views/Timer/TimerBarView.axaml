@@ -69,7 +69,7 @@
             Grid.Column="1"
             ToolTip.Tip="Start (Ctrl+Space)"
             Classes="accent"
-            Command="{Binding StartAsync}"
+            Command="{Binding StartCommand}"
             IsVisible="{Binding !IsRunning}"
             IsEnabled="{Binding !IsBusy}"
             MinWidth="120"
@@ -80,10 +80,10 @@
         </Button>
         <!-- Accent button with its brushes overridden to red, so hover and pressed states keep working -->
         <Button
-            Grid.Column="2"
+            Grid.Column="1"
             ToolTip.Tip="Stop (Ctrl+Space)"
             Classes="accent"
-            Command="{Binding StopAsync}"
+            Command="{Binding StopCommand}"
             IsVisible="{Binding IsRunning, FallbackValue=False}"
             IsEnabled="{Binding !IsBusy}"
             FontSize="16"

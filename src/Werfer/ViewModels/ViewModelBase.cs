@@ -1,7 +1,6 @@
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using System.Runtime.CompilerServices;
+using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using Refit;
@@ -12,10 +11,10 @@ namespace Werfer.ViewModels;
 /// <summary>
 ///     Change notification plus the busy flag and error reporting shared by every page.
 /// </summary>
-public abstract class ViewModelBase(
+public abstract partial class ViewModelBase(
     ILogger logger,
     FlashMessageService flashMessages
-) : INotifyPropertyChanged
+) : ObservableObject
 {
     // Operations can overlap (a history reload during a stop): busy until the last one ends
     private int _busyCount;
@@ -32,13 +31,8 @@ public abstract class ViewModelBase(
     /// <summary>
     ///     Indicates whether a background process or operation is currently in progress.
     /// </summary>
-    public bool IsBusy
-    {
-        get;
-        private set => Set(ref field, value);
-    }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
+    [ObservableProperty]
+    public partial bool IsBusy { get; private set; }
 
     /// <summary>
     ///     Runs an operation with <see cref="IsBusy" /> set, turning any failure into an error flash message.
@@ -65,21 +59,5 @@ public abstract class ViewModelBase(
         {
             IsBusy = Interlocked.Decrement(ref _busyCount) > 0;
         }
-    }
-
-    protected void Set<T>(ref T field, T value, [CallerMemberName] string? name = null)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value))
-        {
-            return;
-        }
-
-        field = value;
-        NotifyPropertyChanged(name);
-    }
-
-    protected void NotifyPropertyChanged([CallerMemberName] string? name = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

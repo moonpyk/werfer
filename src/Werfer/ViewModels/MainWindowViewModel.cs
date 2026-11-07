@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.ComponentModel;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Werfer.Services;
@@ -8,7 +9,7 @@ namespace Werfer.ViewModels;
 ///     Window shell: holds both pages and the one currently shown.
 /// </summary>
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-public class MainWindowViewModel : ViewModelBase
+public partial class MainWindowViewModel : ViewModelBase
 {
     public MainWindowViewModel(
         ILogger<MainWindowViewModel> logger,
@@ -73,29 +74,17 @@ public class MainWindowViewModel : ViewModelBase
 
     public SettingsViewModel Settings { get; }
 
-    public string? Status
-    {
-        get;
-        private set => Set(ref field, value);
-    }
+    [ObservableProperty]
+    public partial string? Status { get; private set; }
 
     // Drives the progress ring, whichever page is working
-    public bool IsAnyPageBusy
-    {
-        get;
-        private set => Set(ref field, value);
-    }
+    [ObservableProperty]
+    public partial bool IsAnyPageBusy { get; private set; }
 
     // Shown through the DataTemplates declared in MainWindow.axaml
-    public ViewModelBase CurrentPage
-    {
-        get;
-        private set
-        {
-            Set(ref field, value);
-            NotifyPropertyChanged(nameof(ShowRefreshButton));
-        }
-    }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowRefreshButton))]
+    public partial ViewModelBase CurrentPage { get; private set; }
 
     public bool ShowRefreshButton => CurrentPage is TimerViewModel;
 

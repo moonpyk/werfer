@@ -1,4 +1,6 @@
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Werfer.Services;
@@ -10,7 +12,7 @@ namespace Werfer.ViewModels;
 ///     Main page: pick a project and task, describe the work, start and stop the timer.
 /// </summary>
 [UsedImplicitly]
-public class TimerViewModel : ViewModelBase
+public partial class TimerViewModel : ViewModelBase
 {
     // Day the history was last loaded for
     private DateOnly _historyDate;
@@ -29,6 +31,8 @@ public class TimerViewModel : ViewModelBase
     {
         ApplicationSettings = applicationSettings;
         TimeTracking = timeTracking;
+        Elapsed = "00:00:00";
+        WeekTotal = "00:00:00";
 
         // Connection happens from the settings page, projects are loaded here once it succeeds, then the history
         // which needs their names
@@ -59,11 +63,8 @@ public class TimerViewModel : ViewModelBase
     /// <summary>
     ///     Null until connected, the timer panel is hidden meanwhile
     /// </summary>
-    public List<ProjectTaskViewModel>? ProjectChoices
-    {
-        get;
-        private set => Set(ref field, value);
-    }
+    [ObservableProperty]
+    public partial List<ProjectTaskViewModel>? ProjectChoices { get; private set; }
 
     /// <summary>
     ///     Feeds the project box with at most 10 matches, the full list is too long to scroll
@@ -79,79 +80,39 @@ public class TimerViewModel : ViewModelBase
     /// <summary>
     ///     Pushed to the running entry when changed
     /// </summary>
-    public ProjectTaskViewModel? SelectedChoice
-    {
-        get;
-        set
-        {
-            if (field == value)
-            {
-                return;
-            }
-
-            Set(ref field, value);
-            // Null when the box is cleared, the running task is kept
-            PushToRunningEntry(value);
-        }
-    }
+    [ObservableProperty]
+    public partial ProjectTaskViewModel? SelectedChoice { get; set; }
 
     /// <summary>
     ///     Text of the project box: a null SelectedItem doesn't clear what was typed, ResetAsync empties it here
     /// </summary>
-    public string? ProjectSearchText
-    {
-        get;
-        set => Set(ref field, value);
-    }
+    [ObservableProperty]
+    public partial string? ProjectSearchText { get; set; }
 
     /// <summary>
     ///     Free text, usually a Jira ticket key, pushed to the running entry when edited (on lost focus)
     /// </summary>
-    public string? Description
-    {
-        get;
-        set
-        {
-            if (field == value)
-            {
-                return;
-            }
-
-            Set(ref field, value);
-            PushToRunningEntry(description: true);
-        }
-    }
+    [ObservableProperty]
+    public partial string? Description { get; set; }
 
     /// <summary>
     ///     Indicates whether a time tracking entry is currently running.
     /// </summary>
-    public bool IsRunning
-    {
-        get;
-        private set => Set(ref field, value);
-    }
+    [ObservableProperty]
+    public partial bool IsRunning { get; private set; }
 
     /// <summary>
     ///     Formatted elapsed time for the current running entry, or 00:00:00 when the timer is stopped.
     /// </summary>
-    public string Elapsed
-    {
-        get;
-        private set => Set(ref field, value);
-    } = "00:00:00";
+    [ObservableProperty]
+    public partial string Elapsed { get; private set; }
 
     /// <summary>
     ///     Finished entries of the current week by day, null until loaded
     /// </summary>
-    public List<TimeEntryDayViewModel>? History
-    {
-        get;
-        private set
-        {
-            Set(ref field, value);
-            NotifyPropertyChanged(nameof(IsHistoryEmpty));
-        }
-    }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsHistoryEmpty))]
+    public partial List<TimeEntryDayViewModel>? History { get; private set; }
 
     /// <summary>
     ///     Nothing to list yet: not connected, loading or an empty week; the view shows an icon instead
@@ -161,15 +122,13 @@ public class TimerViewModel : ViewModelBase
     /// <summary>
     ///     Finished entries of the week plus the running one, ticks with it
     /// </summary>
-    public string WeekTotal
-    {
-        get;
-        private set => Set(ref field, value);
-    } = "00:00:00";
+    [ObservableProperty]
+    public partial string WeekTotal { get; private set; }
 
     /// <summary>
     ///     Starts a time tracking entry for the selected project and task while displaying the busy indicator.
     /// </summary>
+    [RelayCommand]
     public Task StartAsync()
     {
         return WithBusyIndicator(async () =>
@@ -191,6 +150,7 @@ public class TimerViewModel : ViewModelBase
     /// <summary>
     ///     Stops the currently running time tracking entry while displaying the busy indicator.
     /// </summary>
+    [RelayCommand]
     public Task StopAsync()
     {
         return WithBusyIndicator(() => TimeTracking.StopAsync());
@@ -422,5 +382,16 @@ public class TimerViewModel : ViewModelBase
             // shortcut: an entry started before the week counts whole, split it at the week start if that ever matters
             UpdateWeekTotal(elapsed);
         }
+    }
+
+    // Null when the box is cleared, the running task is kept
+    partial void OnSelectedChoiceChanged(ProjectTaskViewModel? value)
+    {
+        PushToRunningEntry(value);
+    }
+
+    partial void OnDescriptionChanged(string? value)
+    {
+        PushToRunningEntry(description: true);
     }
 }

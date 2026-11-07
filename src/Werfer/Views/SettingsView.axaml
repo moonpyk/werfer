@@ -11,7 +11,7 @@
             PlaceholderText="Paste your API key" />
         <Button
             Content="Save and connect"
-            Command="{Binding ConnectAsync}"
+            Command="{Binding ConnectCommand}"
             IsEnabled="{Binding !IsBusy}"
             IsDefault="True" />
 

@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Input;
 using Werfer.Clockify.Models;
 using Werfer.Services;
 
@@ -7,7 +8,7 @@ namespace Werfer.ViewModels;
 ///     One line of the history: entries of a day sharing project, task and description. Its actions go through the
 ///     timer page, so the card binds them directly.
 /// </summary>
-public class TimeEntryGroupViewModel(
+public partial class TimeEntryGroupViewModel(
     TimeEntryGroup group,
     ProjectTaskViewModel? choice,
     TimerViewModel timer
@@ -72,6 +73,7 @@ public class TimeEntryGroupViewModel(
     /// <summary>
     ///     Starts a new entry with this line's project, task and description
     /// </summary>
+    [RelayCommand(CanExecute = nameof(CanContinue))]
     public Task ContinueAsync()
     {
         return timer.ContinueAsync(this);
@@ -95,8 +97,8 @@ public class TimeEntryGroupViewModel(
 ///     An entry of an expanded group; continuing it continues its group, they share project, task and description
 /// </summary>
 public record TimeEntryLineViewModel(
-    TimeEntryGroupViewModel Group, 
-    string Id, 
-    string Range, 
+    TimeEntryGroupViewModel Group,
+    string Id,
+    string Range,
     string Duration
 );

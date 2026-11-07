@@ -125,8 +125,7 @@
                 Grid.Row="0"
                 Classes="accent continue"
                 ToolTip.Tip="Continue"
-                Command="{Binding ContinueAsync}"
-                IsEnabled="{Binding CanContinue}">
+                Command="{Binding ContinueCommand}">
                 <ui:FASymbolIcon Symbol="PlayFilled" FontSize="12" />
             </Button>
             <StackPanel Grid.Column="3" Grid.Row="0" Margin="8,0,4,0"
@@ -165,8 +164,7 @@
                                     Grid.Column="1"
                                     Classes="accent continue"
                                     ToolTip.Tip="Continue"
-                                    Command="{Binding Group.ContinueAsync}"
-                                    IsEnabled="{Binding Group.CanContinue}">
+                                    Command="{Binding Group.ContinueCommand}">
                                     <ui:FASymbolIcon Symbol="PlayFilled"
                                                      FontSize="12" />
                                 </Button>
