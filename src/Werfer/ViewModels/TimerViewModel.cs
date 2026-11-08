@@ -44,7 +44,7 @@ public partial class TimerViewModel : ViewModelBase
         TimeTracking.Connected += (_, _) => _ = WithBusyIndicator(async () =>
         {
             await LoadProjectChoicesAsync();
-            await LoadHistoryCoreAsync();
+            await LoadHistoryImplAsync();
         });
 
         // The running entry may change from another screen, the timer display follows it
@@ -201,7 +201,7 @@ public partial class TimerViewModel : ViewModelBase
         {
             await TimeTracking.RefreshRunningEntryAsync();
             // Entries may also have been added or edited elsewhere
-            await LoadHistoryCoreAsync();
+            await LoadHistoryImplAsync();
         });
     }
 
@@ -210,7 +210,7 @@ public partial class TimerViewModel : ViewModelBase
     /// </summary>
     public Task LoadHistoryAsync()
     {
-        return WithBusyIndicator(LoadHistoryCoreAsync);
+        return WithBusyIndicator(LoadHistoryImplAsync);
     }
 
     /// <summary>
@@ -226,7 +226,7 @@ public partial class TimerViewModel : ViewModelBase
             }
             finally
             {
-                await LoadHistoryCoreAsync();
+                await LoadHistoryImplAsync();
             }
         });
     }
@@ -255,13 +255,7 @@ public partial class TimerViewModel : ViewModelBase
         IsEditorOpen = false;
     }
 
-    partial void OnIsEditorOpenChanged(bool value)
-    {
-        if (!value)
-        {
-            SetEditedItem(null);
-        }
-    }
+
 
     private void SetEditedItem(TimeEntryItemViewModelBase? item)
     {
@@ -309,7 +303,7 @@ public partial class TimerViewModel : ViewModelBase
                 taskId,
                 description
             );
-            await LoadHistoryCoreAsync();
+            await LoadHistoryImplAsync();
         });
     }
 
@@ -406,7 +400,7 @@ public partial class TimerViewModel : ViewModelBase
         OnRunningEntryChanged();
     }
 
-    private async Task LoadHistoryCoreAsync()
+    private async Task LoadHistoryImplAsync()
     {
         if (ProjectChoices is null)
         {
@@ -499,5 +493,13 @@ public partial class TimerViewModel : ViewModelBase
     {
         _ = value;
         PushToRunningEntry(description: true);
+    }
+    
+    partial void OnIsEditorOpenChanged(bool value)
+    {
+        if (!value)
+        {
+            SetEditedItem(null);
+        }
     }
 }
