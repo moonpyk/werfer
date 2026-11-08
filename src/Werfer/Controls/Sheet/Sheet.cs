@@ -103,9 +103,16 @@ public class Sheet : ContentControl
     public static readonly StyledProperty<Animation?> BackdropClosingAnimationProperty =
         AvaloniaProperty.Register<Sheet, Animation?>(nameof(BackdropClosingAnimation));
 
-    // Half Fluent's dialog smoke (SmokeFillColorDefault, 30 % black), which is too dark for a sheet; Fluent's
-    // light-dismiss overlays are transparent. A brush either way, so the backdrop is hit-tested
-    private static readonly IBrush BackdropBrush = new SolidColorBrush(Color.FromArgb(0x26, 0, 0, 0));
+    /// <summary>
+    ///     Defines the <see cref="BackdropBrush" /> property.
+    /// </summary>
+    public static readonly StyledProperty<IBrush?> BackdropBrushProperty =
+        AvaloniaProperty.Register<Sheet, IBrush?>(nameof(BackdropBrush));
+
+    // Fluent's dialog smoke (SmokeFillColorDefault, 30 % black) at the sheet's edge, fading to transparent at the
+    // opposite one: dims where the sheet is, the content far from it stays clear
+    private static readonly IBrush BottomBackdrop = SmokeGradient(new RelativePoint(0.5, 1, RelativeUnit.Relative));
+    private static readonly IBrush TopBackdrop = SmokeGradient(new RelativePoint(0.5, 0, RelativeUnit.Relative));
 
     // Shared, an animation holds no per-target state. In from the sheet's edge, decelerating; out to it, faster and
     // accelerating, as Fluent's own transitions
@@ -175,11 +182,7 @@ public class Sheet : ContentControl
                 Name = "PART_Root",
                 Children =
                 {
-                    new Border
-                    {
-                        Name = "PART_Backdrop",
-                        Background = BackdropBrush
-                    }.RegisterInNameScope(scope),
+                    new Border { Name = "PART_Backdrop" }.RegisterInNameScope(scope),
                     sheet
                 }
             }.RegisterInNameScope(scope);
@@ -230,6 +233,33 @@ public class Sheet : ContentControl
     {
         get => GetValue(AnimationsProperty);
         set => SetValue(AnimationsProperty, value);
+    }
+
+    /// <summary>
+    ///     Gets or sets the brush of the backdrop, covering the content while the sheet is open.
+    /// </summary>
+    /// <value>
+    ///     The default is <see langword="null" />: a gradient from 30 % black at the edge set by
+    ///     <see cref="Placement" /> to transparent at the opposite edge.
+    /// </value>
+    /// <remarks>
+    ///     A transparent brush is fine: whatever its color, the backdrop catches pointer input, so a press anywhere on
+    ///     it still closes the sheet. Only <see langword="null" /> falls back to the default.
+    /// </remarks>
+    /// <example>
+    ///     <code language="xml"><![CDATA[
+    /// <local:Sheet.BackdropBrush>
+    ///     <LinearGradientBrush StartPoint="50%,100%" EndPoint="50%,0%">
+    ///         <GradientStop Offset="0" Color="#66003366" />
+    ///         <GradientStop Offset="1" Color="#00003366" />
+    ///     </LinearGradientBrush>
+    /// </local:Sheet.BackdropBrush>
+    /// ]]></code>
+    /// </example>
+    public IBrush? BackdropBrush
+    {
+        get => GetValue(BackdropBrushProperty);
+        set => SetValue(BackdropBrushProperty, value);
     }
 
     /// <summary>
@@ -316,6 +346,7 @@ public class Sheet : ContentControl
 
         _sheet = e.NameScope.Find<Border>("PART_Sheet");
         ApplyPlacement();
+        ApplyBackdropBrush();
 
         // Initial state, without transition
         _root = e.NameScope.Find<Panel>("PART_Root");
@@ -330,11 +361,31 @@ public class Sheet : ContentControl
         if (change.Property == PlacementProperty)
         {
             ApplyPlacement();
+            ApplyBackdropBrush();
+        }
+        else if (change.Property == BackdropBrushProperty)
+        {
+            ApplyBackdropBrush();
         }
         else if (change.Property == IsOpenProperty)
         {
             _ = TransitionAsync(change.GetNewValue<bool>());
         }
+    }
+
+    // From 30 % black at `edge` to transparent at the opposite edge; transparent black, so the fade doesn't go grey
+    private static IBrush SmokeGradient(RelativePoint edge)
+    {
+        return new LinearGradientBrush
+        {
+            StartPoint = edge,
+            EndPoint = new RelativePoint(edge.Point.X, 1 - edge.Point.Y, RelativeUnit.Relative),
+            GradientStops =
+            {
+                new GradientStop(Color.FromArgb(0x4D, 0, 0, 0), 0),
+                new GradientStop(Color.FromArgb(0, 0, 0, 0), 1)
+            }
+        }.ToImmutable();
     }
 
     // Animates the given properties of its target from their first value to their second
@@ -452,6 +503,12 @@ public class Sheet : ContentControl
         _sheet.VerticalAlignment = top ? VerticalAlignment.Top : VerticalAlignment.Bottom;
         _sheet.CornerRadius = top ? new CornerRadius(0, 0, 8, 8) : new CornerRadius(8, 8, 0, 0);
         _sheet.BorderThickness = top ? new Thickness(0, 0, 0, 1) : new Thickness(0, 1, 0, 0);
+    }
+
+    // The brush set, or the default gradient from the sheet's edge
+    private void ApplyBackdropBrush()
+    {
+        _backdrop?.Background = BackdropBrush ?? (Placement == SheetPlacement.Top ? TopBackdrop : BottomBackdrop);
     }
 
     // Light dismiss
