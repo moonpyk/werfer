@@ -96,7 +96,9 @@
                         <ui:FASymbolIconSource Symbol="Settings" />
                     </ui:FANavigationViewItem.IconSource>
                     <ui:FANavigationViewItem.InfoBadge>
-                        <ui:FAInfoBadge Classes="Icon Critical" IsVisible="{Binding Settings.NeedsAttention}" />
+                        <ui:FAInfoBadge 
+                            Classes="Icon Critical" 
+                            IsVisible="{Binding Settings.NeedsAttention}" />
                     </ui:FANavigationViewItem.InfoBadge>
                 </ui:FANavigationViewItem>
             </ui:FANavigationView.FooterMenuItems>
