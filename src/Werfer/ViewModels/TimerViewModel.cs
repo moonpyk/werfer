@@ -398,7 +398,7 @@ public partial class TimerViewModel : ViewModelBase
         // Set before the request: a failed load is reported once, not retried every minute by the date check
         _historyDate = today;
 
-        var load = ++_historyLoadGeneration;
+        var load = Interlocked.Increment(ref _historyLoadGeneration);
 
         var entries = await TimeTracking.GetTimeEntriesSinceAsync(
             TimeEntryHistory.StartOfWeek(now, ApplicationSettings.WeekStart, zone)
