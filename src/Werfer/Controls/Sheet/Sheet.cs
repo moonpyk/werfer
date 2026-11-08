@@ -500,9 +500,15 @@ public class Sheet : ContentControl
 
         var top = Placement == SheetPlacement.Top;
 
-        _sheet.VerticalAlignment = top ? VerticalAlignment.Top : VerticalAlignment.Bottom;
-        _sheet.CornerRadius = top ? new CornerRadius(0, 0, 8, 8) : new CornerRadius(8, 8, 0, 0);
-        _sheet.BorderThickness = top ? new Thickness(0, 0, 0, 1) : new Thickness(0, 1, 0, 0);
+        _sheet.VerticalAlignment = top
+            ? VerticalAlignment.Top
+            : VerticalAlignment.Bottom;
+        _sheet.CornerRadius = top
+            ? new CornerRadius(0, 0, 8, 8)
+            : new CornerRadius(8, 8, 0, 0);
+        _sheet.BorderThickness = top
+            ? new Thickness(0, 0, 0, 1)
+            : new Thickness(0, 1, 0, 0);
     }
 
     // The brush set, or the default gradient from the sheet's edge
