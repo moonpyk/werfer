@@ -23,6 +23,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Werfer.Core\Werfer.Core.csproj"/>
+        <ProjectReference Include="..\..\src\Werfer.Core\Werfer.Core.csproj"/>
     </ItemGroup>
 </Project>
