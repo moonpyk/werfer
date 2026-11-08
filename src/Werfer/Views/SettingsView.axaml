@@ -3,7 +3,7 @@
              xmlns:vm="clr-namespace:Werfer.ViewModels"
              x:Class="Werfer.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
-    <StackPanel Margin="16" Spacing="8">
+    <StackPanel Margin="12" Spacing="8">
         <TextBlock Text="Clockify API key" />
         <TextBox
             Text="{Binding ApiKey}"

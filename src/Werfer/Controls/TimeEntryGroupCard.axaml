@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="clr-namespace:Werfer.ViewModels"
-             xmlns:converters="clr-namespace:Werfer.Converters"
+             xmlns:cv="clr-namespace:Werfer.Converters"
              x:Class="Werfer.Controls.TimeEntryGroupCard"
              x:DataType="vm:TimeEntryGroupViewModel">
     <UserControl.Resources>
@@ -128,7 +128,7 @@
                                TextTrimming="CharacterEllipsis">
                         <TextBlock.Foreground>
                             <MultiBinding
-                                Converter="{x:Static converters:ReadableTextBrushConverter.Instance}">
+                                Converter="{x:Static cv:ReadableTextBrushConverter.Instance}">
                                 <Binding Path="Color" />
                                 <Binding RelativeSource="{RelativeSource Self}" />
                                 <Binding Path="ActualThemeVariant"
@@ -189,10 +189,12 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate
                         x:DataType="vm:TimeEntryLineViewModel">
-                        <Border Classes="entryLine" Classes.editing="{Binding IsEditing}"
-                                Classes.editable="{Binding CanEdit}"
-                                ContextFlyout="{StaticResource EntryMenu}"
-                                PointerReleased="OnEntryPointerReleased">
+                        <Border
+                            Classes.editing="{Binding IsEditing}"
+                            Classes.editable="{Binding CanEdit}"
+                            Classes="entryLine"
+                            ContextFlyout="{StaticResource EntryMenu}"
+                            PointerReleased="OnEntryPointerReleased">
                             <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                                 <TextBlock Grid.Column="0"
                                            Text="{Binding Range}"

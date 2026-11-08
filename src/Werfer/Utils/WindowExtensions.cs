@@ -5,7 +5,7 @@ using Avalonia.Controls;
 namespace Werfer.Utils;
 
 [SuppressMessage(
-    "ReSharper", 
+    "ReSharper",
     "UnusedMethodReturnValue.Global",
     Justification = "Fluent usage"
 )]
@@ -46,6 +46,7 @@ public static class WindowExtensions
 
             var position = new PixelPoint(x, y);
 
+            // Window is not on any screen
             if (self.Screens.ScreenFromPoint(position) is null)
             {
                 return self;

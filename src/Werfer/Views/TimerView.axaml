@@ -34,8 +34,15 @@
                             HorizontalAlignment="Right"
                             Spacing="8"
                             Margin="0,16,0,0">
-                            <Button Content="Cancel" MinWidth="96" Command="{Binding CancelCommand}" />
-                            <Button Content="Save" Classes="accent" MinWidth="96" Command="{Binding SaveCommand}" />
+                            <Button
+                                Content="Cancel"
+                                MinWidth="96"
+                                Command="{Binding CancelCommand}" />
+                            <Button
+                                Content="Save"
+                                Classes="accent"
+                                MinWidth="96"
+                                Command="{Binding SaveCommand}" />
                         </StackPanel>
                         <edit:TimeEntryEditView />
                     </DockPanel>

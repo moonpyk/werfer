@@ -38,7 +38,10 @@
                     <DataTemplate x:DataType="vm:TimeEntryDayViewModel">
                         <StackPanel>
                             <Grid ColumnDefinitions="*,Auto" Margin="12,10,12,6">
-                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
+                                <StackPanel
+                                    Grid.Column="0"
+                                    Orientation="Horizontal"
+                                    Spacing="6">
                                     <ui:FASymbolIcon Symbol="Calendar"
                                                      FontSize="14"
                                                      VerticalAlignment="Center"

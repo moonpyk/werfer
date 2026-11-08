@@ -128,12 +128,16 @@ public partial class ApplicationSettings : IApplicationSettings
                 App.ApplicationPath
             );
 
+            var sb = new StringBuilder();
+            sb.Append(JsonSerializer.Serialize(
+                _persisted,
+                SettingsJsonContext.Default.PersistedSettings
+            ));
+            sb.AppendLine();
+
             File.WriteAllText(
                 FilePath,
-                JsonSerializer.Serialize(
-                    _persisted,
-                    SettingsJsonContext.Default.PersistedSettings
-                ) + Environment.NewLine
+                sb.ToString()
             );
 
             return true;
