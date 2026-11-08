@@ -271,38 +271,19 @@ public partial class TimerViewModel : ViewModelBase
             return Task.CompletedTask;
         }
 
-        CloseEditor();
-
-        // An archived project isn't among the choices: none picked keeps the entry's own
-        return UpdateAsync(
-            form.Entry,
-            range,
-            form.SelectedChoice?.Project.Id ?? form.Entry.ProjectId,
-            form.SelectedChoice?.Task.Id ?? form.Entry.TaskId,
-            form.Description
-        );
-    }
-
-    /// <summary>
-    ///     Changes a history entry, then reloads the history.
-    /// </summary>
-    private Task UpdateAsync(
-        TimeEntry entry,
-        TimeRange range,
-        string? projectId,
-        string? taskId,
-        string? description
-    )
-    {
         return WithBusyIndicator(async () =>
         {
+            // An archived project isn't among the choices: none picked keeps the entry's own
             await TimeTracking.UpdateTimeEntryAsync(
-                entry,
+                form.Entry,
                 range,
-                projectId,
-                taskId,
-                description
+                form.SelectedChoice?.Project.Id ?? form.Entry.ProjectId,
+                form.SelectedChoice?.Task.Id ?? form.Entry.TaskId,
+                form.Description
             );
+
+            // Only once saved: on failure (reported by WithBusyIndicator) the sheet stays open, nothing typed is lost
+            CloseEditor();
             await LoadHistoryImplAsync();
         });
     }
