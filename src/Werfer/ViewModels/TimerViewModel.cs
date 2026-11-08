@@ -22,6 +22,9 @@ public partial class TimerViewModel : ViewModelBase
     // Day the history was last loaded for
     private DateOnly _historyDate;
 
+    // Numbers the history loads, see LoadHistoryImplAsync
+    private int _historyLoadGeneration;
+
     // Id of the entry last seen running: when it changes, that entry has finished and joins the history
     private string? _runningId;
     private IDisposable? _ticker;
@@ -395,9 +398,18 @@ public partial class TimerViewModel : ViewModelBase
         // Set before the request: a failed load is reported once, not retried every minute by the date check
         _historyDate = today;
 
+        var load = ++_historyLoadGeneration;
+
         var entries = await TimeTracking.GetTimeEntriesSinceAsync(
             TimeEntryHistory.StartOfWeek(now, ApplicationSettings.WeekStart, zone)
         );
+
+        // Loads overlap (a stop, F5, a save): the last one started wins, not the last one to answer, which may
+        // predate a save and show the entry unchanged
+        if (load != _historyLoadGeneration)
+        {
+            return;
+        }
 
         History =
         [
