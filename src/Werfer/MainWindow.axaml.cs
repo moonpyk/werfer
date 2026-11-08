@@ -126,6 +126,16 @@ public partial class MainWindow : FAAppWindow
                 e.Handled = true;
                 return;
 
+            // Closes the edit sheet, like its Cancel button; unhandled so far, an open dropdown inside it took it first
+            case
+            {
+                KeyModifiers: KeyModifiers.None,
+                Key: Key.Escape
+            } when ViewModel is { Timer.IsEditorOpen: true }:
+                ViewModel.Timer.CloseEditor();
+                e.Handled = true;
+                return;
+
             default:
                 base.OnKeyDown(e);
                 break;

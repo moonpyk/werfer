@@ -1,5 +1,6 @@
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Werfer.Clockify.Models;
 using Werfer.Services;
 
@@ -13,11 +14,15 @@ public partial class TimeEntryEditViewModel : ObservableObject
     public TimeEntryEditViewModel(
         TimeEntry entry,
         ProjectTaskViewModel? choice,
-        Func<string?, CancellationToken, Task<IEnumerable<object>>> projectChoicesPopulator
+        Func<string?, CancellationToken, Task<IEnumerable<object>>> projectChoicesPopulator,
+        Func<TimeEntryEditViewModel, Task> save,
+        Action cancel
     )
     {
         Entry = entry;
         ProjectChoicesPopulator = projectChoicesPopulator;
+        SaveAction = save;
+        CancelAction = cancel;
 
         var start = entry.TimeInterval!.Start.ToLocalTime();
         var end = entry.TimeInterval.End!.Value.ToLocalTime();
@@ -32,18 +37,24 @@ public partial class TimeEntryEditViewModel : ObservableObject
 
     public TimeEntry Entry { get; }
 
+    private Func<TimeEntryEditViewModel, Task> SaveAction { get; }
+    private Action CancelAction { get; }
+
     public Func<string?, CancellationToken, Task<IEnumerable<object>>> ProjectChoicesPopulator { get; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Interval), nameof(Duration), nameof(CanSave))]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     public partial DateTime? Day { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Interval), nameof(Duration), nameof(CanSave))]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     public partial string? Start { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Interval), nameof(Duration), nameof(CanSave))]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     public partial string? End { get; set; }
 
     [ObservableProperty]
@@ -78,4 +89,16 @@ public partial class TimeEntryEditViewModel : ObservableObject
     public bool CanSave => Interval is not null;
 
     public string Duration => Interval is { } i ? TimeEntryHistory.Format(i.Duration) : string.Empty;
+
+    [RelayCommand(CanExecute = nameof(CanSave))]
+    private Task SaveAsync()
+    {
+        return SaveAction(this);
+    }
+
+    [RelayCommand]
+    private void Cancel()
+    {
+        CancelAction();
+    }
 }

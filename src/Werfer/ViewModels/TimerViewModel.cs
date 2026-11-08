@@ -16,6 +16,9 @@ namespace Werfer.ViewModels;
 [UsedImplicitly]
 public partial class TimerViewModel : ViewModelBase
 {
+    // The entry shown in the edit sheet, highlighted in the history meanwhile
+    private TimeEntryItemViewModelBase? _editedItem;
+
     // Day the history was last loaded for
     private DateOnly _historyDate;
 
@@ -134,6 +137,18 @@ public partial class TimerViewModel : ViewModelBase
     public partial string WeekTotal { get; private set; }
 
     /// <summary>
+    ///     The edit sheet's form; kept once closed, set anew by <see cref="Edit" />
+    /// </summary>
+    [ObservableProperty]
+    public partial TimeEntryEditViewModel? Editor { get; private set; }
+
+    /// <summary>
+    ///     Bound both ways to the sheet, which closes itself on a click outside
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsEditorOpen { get; set; }
+
+    /// <summary>
     ///     Starts a time tracking entry for the selected project and task while displaying the busy indicator.
     /// </summary>
     [RelayCommand]
@@ -217,9 +232,67 @@ public partial class TimerViewModel : ViewModelBase
     }
 
     /// <summary>
+    ///     Opens the edit sheet on a history entry.
+    /// </summary>
+    public void Edit(TimeEntryItemViewModelBase item, TimeEntry entry)
+    {
+        SetEditedItem(item);
+        Editor = new TimeEntryEditViewModel(
+            entry,
+            item.Choice,
+            ProjectChoicesPopulator,
+            SaveEditAsync,
+            CloseEditor
+        );
+        IsEditorOpen = true;
+    }
+
+    /// <summary>
+    ///     Closes the edit sheet without saving: Cancel, Escape; a click outside closes it through the binding.
+    /// </summary>
+    public void CloseEditor()
+    {
+        IsEditorOpen = false;
+    }
+
+    partial void OnIsEditorOpenChanged(bool value)
+    {
+        if (!value)
+        {
+            SetEditedItem(null);
+        }
+    }
+
+    private void SetEditedItem(TimeEntryItemViewModelBase? item)
+    {
+        _editedItem?.IsEditing = false;
+        _editedItem = item;
+        _editedItem?.IsEditing = true;
+    }
+
+    private Task SaveEditAsync(TimeEntryEditViewModel form)
+    {
+        if (form.Interval is not { } range)
+        {
+            return Task.CompletedTask;
+        }
+
+        CloseEditor();
+
+        // An archived project isn't among the choices: none picked keeps the entry's own
+        return UpdateAsync(
+            form.Entry,
+            range,
+            form.SelectedChoice?.Project.Id ?? form.Entry.ProjectId,
+            form.SelectedChoice?.Task.Id ?? form.Entry.TaskId,
+            form.Description
+        );
+    }
+
+    /// <summary>
     ///     Changes a history entry, then reloads the history.
     /// </summary>
-    public Task UpdateAsync(
+    private Task UpdateAsync(
         TimeEntry entry,
         TimeRange range,
         string? projectId,
@@ -230,10 +303,10 @@ public partial class TimerViewModel : ViewModelBase
         return WithBusyIndicator(async () =>
         {
             await TimeTracking.UpdateTimeEntryAsync(
-                entry, 
-                range, 
-                projectId, 
-                taskId, 
+                entry,
+                range,
+                projectId,
+                taskId,
                 description
             );
             await LoadHistoryCoreAsync();

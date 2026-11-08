@@ -2,16 +2,45 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:Werfer.ViewModels"
              xmlns:timer="clr-namespace:Werfer.Views.Timer"
+             xmlns:edit="clr-namespace:Werfer.Views.Edit"
+             xmlns:controls="clr-namespace:Werfer.Controls"
              x:Class="Werfer.Views.TimerView"
              x:DataType="vm:TimerViewModel">
-    <!--
-    The timer bar on top, sized by its content (the description grows with its lines), the week's history takes the
-    rest; both bind to this page's view model. Disabled until connected and the projects are loaded
-    -->
-    <Grid
-        RowDefinitions="Auto,*"
-        IsEnabled="{Binding ProjectChoices, Converter={x:Static ObjectConverters.IsNotNull}}">
-        <timer:TimerBarView Grid.Row="0" />
-        <timer:HistoryView Grid.Row="1" />
-    </Grid>
+    <Panel>
+        <!--
+        The timer bar on top, sized by its content (the description grows with its lines), the week's history takes the
+        rest; both bind to this page's view model. Disabled until connected and the projects are loaded
+        -->
+        <Grid
+            RowDefinitions="Auto,*"
+            IsEnabled="{Binding ProjectChoices, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <timer:TimerBarView Grid.Row="0" />
+            <timer:HistoryView Grid.Row="1" />
+        </Grid>
+
+        <!-- Edit sheet, modal; Escape closes it, see MainWindow.OnKeyDown -->
+        <controls:Sheet IsOpen="{Binding IsEditorOpen}" Content="{Binding Editor}">
+            <controls:Sheet.ContentTemplate>
+                <DataTemplate x:DataType="vm:TimeEntryEditViewModel">
+                    <!-- Enter saves, except in the description, which takes it as a new line -->
+                    <DockPanel>
+                        <DockPanel.KeyBindings>
+                            <KeyBinding Gesture="Enter" Command="{Binding SaveCommand}" />
+                        </DockPanel.KeyBindings>
+                        <!-- Same order as the delete dialog: Cancel left, Save right -->
+                        <StackPanel
+                            DockPanel.Dock="Bottom"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Spacing="8"
+                            Margin="0,16,0,0">
+                            <Button Content="Cancel" MinWidth="96" Command="{Binding CancelCommand}" />
+                            <Button Content="Save" Classes="accent" MinWidth="96" Command="{Binding SaveCommand}" />
+                        </StackPanel>
+                        <edit:TimeEntryEditView />
+                    </DockPanel>
+                </DataTemplate>
+            </controls:Sheet.ContentTemplate>
+        </controls:Sheet>
+    </Panel>
 </UserControl>

@@ -1,10 +1,7 @@
-using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Werfer.Clockify.Models;
-using Werfer.Views;
 
 namespace Werfer.ViewModels;
 
@@ -18,10 +15,10 @@ public abstract partial class TimeEntryItemViewModelBase(
     protected TimerViewModel Timer { get; } = timer;
 
     /// <summary>
-    ///     While its edit window is open: the card shows which entry is being edited
+    ///     While its edit sheet is open: the card shows which entry is being edited
     /// </summary>
     [ObservableProperty]
-    public partial bool IsEditing { get; private set; }
+    public partial bool IsEditing { get; set; }
 
     /// <summary>
     ///     Null when the project or task isn't startable anymore (archived, done)
@@ -36,43 +33,11 @@ public abstract partial class TimeEntryItemViewModelBase(
     // Entries are edited one by one, a group of several is edited through its expanded lines
     public bool CanEdit => TimeEntries.Count == 1;
 
+    // Opens the edit sheet of the timer page
     [RelayCommand(CanExecute = nameof(CanEdit))]
-    private async Task EditAsync()
+    private void Edit()
     {
-        // A separate window for now, the in-window dialog was too cramped for a form
-        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime
-            {
-                MainWindow: { } owner
-            })
-        {
-            return;
-        }
-
-        var entry = TimeEntries[0];
-        var form = new TimeEntryEditViewModel(entry, Choice, Timer.ProjectChoicesPopulator);
-        bool saved;
-        IsEditing = true;
-
-        try
-        {
-            saved = await new EditWindow { DataContext = form }.ShowDialog<bool>(owner);
-        }
-        finally
-        {
-            IsEditing = false;
-        }
-
-        if (saved && form.Interval is { } interval)
-        {
-            // Failures are reported by the view model's WithBusyIndicator
-            await Timer.UpdateAsync(
-                entry,
-                interval,
-                form.SelectedChoice?.Project.Id ?? entry.ProjectId,
-                form.SelectedChoice?.Task.Id ?? entry.TaskId,
-                form.Description
-            );
-        }
+        Timer.Edit(this, TimeEntries[0]);
     }
 
     [RelayCommand]
