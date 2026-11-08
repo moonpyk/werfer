@@ -43,6 +43,17 @@
             <Setter Property="Padding" Value="12,4,4,4" />
             <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
             <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+            <!-- Transparent until edited, so the accent border doesn't shift the content -->
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+        <!-- A click on the background edits the entry, see OnEntryPointerReleased; not a group of several -->
+        <Style Selector="Border.entryCard.editable, Border.entryLine.editable">
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <!-- The entry being edited, see IsEditing -->
+        <Style Selector="Border.entryCard.editing, Border.entryLine.editing">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
         </Style>
         <!-- Slight highlight on hover, the theme's own hover fills -->
         <Style Selector="Border.entryCard:pointerover">
@@ -81,7 +92,8 @@
         </Style>
     </UserControl.Styles>
 
-    <Border Classes="entryCard" ContextFlyout="{StaticResource EntryMenu}">
+    <Border Classes="entryCard" Classes.editing="{Binding IsEditing}" Classes.editable="{Binding CanEdit}"
+            ContextFlyout="{StaticResource EntryMenu}" PointerReleased="OnEntryPointerReleased">
         <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto"
               RowDefinitions="Auto,Auto">
             <!-- Entry count, toggles the entries of the group -->
@@ -177,7 +189,10 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate
                         x:DataType="vm:TimeEntryLineViewModel">
-                        <Border Classes="entryLine" ContextFlyout="{StaticResource EntryMenu}">
+                        <Border Classes="entryLine" Classes.editing="{Binding IsEditing}"
+                                Classes.editable="{Binding CanEdit}"
+                                ContextFlyout="{StaticResource EntryMenu}"
+                                PointerReleased="OnEntryPointerReleased">
                             <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                                 <TextBlock Grid.Column="0"
                                            Text="{Binding Range}"

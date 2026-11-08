@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Werfer.Clockify.Models;
@@ -12,9 +13,15 @@ namespace Werfer.ViewModels;
 /// </summary>
 public abstract partial class TimeEntryItemViewModelBase(
     TimerViewModel timer
-)
+) : ObservableObject
 {
     protected TimerViewModel Timer { get; } = timer;
+
+    /// <summary>
+    ///     While its edit window is open: the card shows which entry is being edited
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsEditing { get; private set; }
 
     /// <summary>
     ///     Null when the project or task isn't startable anymore (archived, done)
@@ -27,7 +34,7 @@ public abstract partial class TimeEntryItemViewModelBase(
     protected abstract IReadOnlyList<TimeEntry> TimeEntries { get; }
 
     // Entries are edited one by one, a group of several is edited through its expanded lines
-    private bool CanEdit => TimeEntries.Count == 1;
+    public bool CanEdit => TimeEntries.Count == 1;
 
     [RelayCommand(CanExecute = nameof(CanEdit))]
     private async Task EditAsync()
@@ -43,7 +50,17 @@ public abstract partial class TimeEntryItemViewModelBase(
 
         var entry = TimeEntries[0];
         var form = new TimeEntryEditViewModel(entry, Choice, Timer.ProjectChoicesPopulator);
-        var saved = await new EditWindow { DataContext = form }.ShowDialog<bool>(owner);
+        bool saved;
+        IsEditing = true;
+
+        try
+        {
+            saved = await new EditWindow { DataContext = form }.ShowDialog<bool>(owner);
+        }
+        finally
+        {
+            IsEditing = false;
+        }
 
         if (saved && form.Interval is { } interval)
         {
