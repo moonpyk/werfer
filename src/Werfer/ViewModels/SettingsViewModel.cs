@@ -94,6 +94,7 @@ public partial class SettingsViewModel : ViewModelBase
 
     partial void OnApiKeyChanged(string value)
     {
+        _ = value;
         // Only raised here: a typed key isn't verified yet, ConnectAsync clears it once Clockify accepts one
         if (!HasApiKey)
         {
