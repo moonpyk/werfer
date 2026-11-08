@@ -15,10 +15,8 @@ public partial class TimeEntryGroupViewModel(
     TimerViewModel timer
 ) : TimeEntryItemViewModelBase(timer)
 {
-    /// <summary>
-    ///     Null when the project or task isn't startable anymore (archived, done): it can't be continued
-    /// </summary>
-    public ProjectTaskViewModel? Choice { get; } = choice;
+    // Null: it can't be continued
+    public override ProjectTaskViewModel? Choice { get; } = choice;
 
     public bool CanContinue => Choice is not null;
 
@@ -49,15 +47,10 @@ public partial class TimeEntryGroupViewModel(
         group.Entries.Max(e => e.TimeInterval!.End!.Value)
     );
 
-    protected override string[] EntryIds { get; } =
-    [
-        .. group.Entries.Select(e => e.Id)
-    ];
-
-    public int Count => Source.Count;
+    public int Count => TimeEntries.Count;
 
     // Kept rather than capturing the constructor parameter, which the initializers above already read
-    private IReadOnlyList<TimeEntry> Source { get; } = group.Entries;
+    protected override IReadOnlyList<TimeEntry> TimeEntries { get; } = group.Entries;
 
     public bool IsMultiple => Count > 1;
 
@@ -67,10 +60,10 @@ public partial class TimeEntryGroupViewModel(
     /// </summary>
     public List<TimeEntryLineViewModel> Entries => field ??=
     [
-        .. Source.Select(e => new TimeEntryLineViewModel(
+        .. TimeEntries.Select(e => new TimeEntryLineViewModel(
             this,
             Timer,
-            e.Id,
+            e,
             FormatRange(e.TimeInterval!.Start, e.TimeInterval.End!.Value),
             TimeEntryHistory.Format(TimeEntryExtensions.Sum([e]))
         ))

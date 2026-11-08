@@ -1,3 +1,4 @@
+using System.Globalization;
 using Werfer.Clockify.Models;
 
 namespace Werfer.Services;
@@ -51,6 +52,66 @@ public static class TimeEntryHistory
         var date = local.Date.AddDays(-(((int)local.DayOfWeek - (int)firstDay + 7) % 7));
 
         return new DateTimeOffset(date, zone.GetUtcOffset(date));
+    }
+
+    /// <summary>
+    ///     Start and end of an entry edited as a day plus two times of day in <paramref name="zone" />. An end before the
+    ///     start falls on the next day. A time left as shown, to the minute, keeps <paramref name="original" />'s
+    ///     seconds: re-saving an entry mustn't change its duration.
+    /// </summary>
+    public static TimeRange EditedInterval(
+        DateOnly day,
+        TimeOnly start,
+        TimeOnly end,
+        TimeInterval original,
+        TimeZoneInfo zone
+    )
+    {
+        return new TimeRange(
+            At(day, start, original.Start),
+            // shortcut: an end before the start only means the next day, entries of 24 h or more can't be entered
+            At(end < start ? day.AddDays(1) : day, end, original.End)
+        );
+
+        DateTimeOffset At(DateOnly date, TimeOnly time, DateTimeOffset? kept)
+        {
+            var local = date.ToDateTime(time);
+
+            if (kept is { } k)
+            {
+                var shown = TimeZoneInfo.ConvertTime(k, zone).DateTime;
+                if (shown.AddTicks(-(shown.Ticks % TimeSpan.TicksPerMinute)) == local)
+                {
+                    return k;
+                }
+            }
+
+            return new DateTimeOffset(local, zone.GetUtcOffset(local));
+        }
+    }
+
+    /// <summary>
+    ///     A time of day as typed: "9:05", "09:05", "905", "0905", or "9" for 09:00.
+    /// </summary>
+    public static bool TryParseTimeOfDay(string? text, out TimeOnly time)
+    {
+        var typed = text?.Trim() ?? string.Empty;
+
+        // Digits only: the last two are the minutes, if any
+        if (typed.Length is >= 1 and <= 4 && typed.All(char.IsAsciiDigit))
+        {
+            typed = typed.Length <= 2 ? $"{typed}:00" : $"{typed[..^2]}:{typed[^2..]}";
+        }
+
+        return TimeOnly.TryParseExact(typed, "H:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out time);
+    }
+
+    /// <summary>
+    ///     HH:mm, the way <see cref="TryParseTimeOfDay" /> reads it back.
+    /// </summary>
+    public static string FormatTimeOfDay(TimeOnly time)
+    {
+        return time.ToString("HH:mm", CultureInfo.InvariantCulture);
     }
 
     /// <summary>

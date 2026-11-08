@@ -264,6 +264,31 @@ public class TimeTrackingService(
         }, ctk);
     }
 
+    /// <summary>
+    ///     Changes a finished entry's times, project, task and description; its other fields are kept.
+    /// </summary>
+    public Task UpdateTimeEntryAsync(
+        TimeEntry entry,
+        TimeRange range,
+        string? projectId,
+        string? taskId,
+        string? description,
+        CancellationToken ctk = default
+    )
+    {
+        // Clockify's update is a full replace, see UpdateRunningEntryCoreAsync
+        return ExclusiveAsync(() => Client.UpdateTimeEntryAsync(WorkspaceId, entry.Id, new CreateTimeEntryRequest
+        {
+            Start = range.Start,
+            End = range.End,
+            ProjectId = projectId,
+            TaskId = taskId,
+            Billable = entry.Billable,
+            TagIds = entry.TagIds,
+            Description = Normalize(description)
+        }, ctk), ctk);
+    }
+
     private Task ExclusiveAsync(Func<Task> action, CancellationToken ctk)
     {
         return ExclusiveAsync(async () =>

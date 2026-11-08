@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:controls="clr-namespace:Werfer.Controls"
+             x:Class="Werfer.Controls.TimeOfDayBox">
+    <UserControl.Styles>
+        <!-- Small chevrons stacked inside the box's right edge, flat until hovered -->
+        <Style Selector="RepeatButton.spin">
+            <Setter Property="Width" Value="20" />
+            <Setter Property="Height" Value="14" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="RepeatButton.spin ui|FASymbolIcon">
+            <Setter Property="FontSize" Value="10" />
+        </Style>
+    </UserControl.Styles>
+
+    <!-- Typed rather than TimePicker, whose flyout takes no keyboard input; no mask, the hour's leading 0 is optional.
+         The chevrons change the time by a minute (Tag), repeating while held -->
+    <TextBox
+        Text="{Binding $parent[controls:TimeOfDayBox].Text}"
+        MaxLength="5"
+        MinWidth="0">
+        <TextBox.InnerRightContent>
+            <StackPanel VerticalAlignment="Center" Margin="0,0,4,0">
+                <RepeatButton Classes="spin" Tag="1" Click="OnSpin">
+                    <ui:FASymbolIcon Symbol="ChevronUp" />
+                </RepeatButton>
+                <RepeatButton Classes="spin" Tag="-1" Click="OnSpin">
+                    <ui:FASymbolIcon Symbol="ChevronDown" />
+                </RepeatButton>
+            </StackPanel>
+        </TextBox.InnerRightContent>
+    </TextBox>
+</UserControl>

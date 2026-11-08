@@ -61,6 +61,32 @@ public class TimeTrackingServiceTests
         Assert.Equal("JIRA-2", service.RunningEntry?.Description);
     }
 
+    [Fact]
+    public async Task UpdateFinished_ResendsTheFieldsClockifyWouldClear()
+    {
+        var (client, service) = await ConnectedWithRunningEntryAsync();
+        var end = Started.AddHours(1);
+
+        await service.UpdateTimeEntryAsync(
+            RunningEntry(end),
+            new TimeRange(Started, end),
+            "p2",
+            "t2",
+            "  JIRA-2  ",
+            TestContext.Current.CancellationToken
+        );
+
+        var (id, request) = Assert.Single(client.Updates);
+        Assert.Equal("e1", id);
+        Assert.Equal(Started, request.Start);
+        Assert.Equal(end, request.End);
+        Assert.True(request.Billable);
+        Assert.Equal(["tag"], request.TagIds);
+        Assert.Equal("p2", request.ProjectId);
+        Assert.Equal("t2", request.TaskId);
+        Assert.Equal("JIRA-2", request.Description);
+    }
+
     [Theory]
     [InlineData("JIRA-1")]
     // Same once trimmed

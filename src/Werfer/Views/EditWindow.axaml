@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Werfer.ViewModels"
+        xmlns:edit="clr-namespace:Werfer.Views.Edit"
+        x:Class="Werfer.Views.EditWindow"
+        x:DataType="vm:TimeEntryEditViewModel"
+        Title="Edit entry"
+        Width="400"
+        SizeToContent="Height"
+        CanResize="False"
+        CanMinimize="False"
+        CanMaximize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+    <!-- The form is its own control, so it can move elsewhere (a drawer) as is -->
+    <DockPanel Margin="12">
+        <!-- Same order as the delete dialog: Cancel left, Save right and default. Escape cancels; Enter saves, except
+             in the description, which takes it as a new line -->
+        <StackPanel
+            DockPanel.Dock="Bottom"
+            Orientation="Horizontal"
+            HorizontalAlignment="Right"
+            Spacing="8"
+            Margin="0,16,0,0">
+            <Button Content="Cancel" MinWidth="96" IsCancel="True" Click="OnCancelClick" />
+            <Button
+                Content="Save"
+                Classes="accent"
+                MinWidth="96"
+                IsDefault="True"
+                IsEnabled="{Binding CanSave}"
+                Click="OnSaveClick" />
+        </StackPanel>
+        <edit:TimeEntryEditView />
+    </DockPanel>
+</Window>

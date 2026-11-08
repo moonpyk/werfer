@@ -32,6 +32,76 @@ public class TimeEntryHistoryTests
         Assert.Equal(DateTimeOffset.Parse(expected).Offset, start.Offset);
     }
 
+    [Theory]
+    [InlineData("9:05", "09:05")]
+    [InlineData("09:05", "09:05")]
+    [InlineData("905", "09:05")]
+    [InlineData("0905", "09:05")]
+    [InlineData("9", "09:00")]
+    [InlineData(" 23:59 ", "23:59")]
+    public void TryParseTimeOfDay_LeadingZeroOptional(string typed, string expected)
+    {
+        Assert.True(TimeEntryHistory.TryParseTimeOfDay(typed, out var time));
+        Assert.Equal(TimeOnly.Parse(expected), time);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("24:00")]
+    [InlineData("9:5")]
+    [InlineData("960")]
+    [InlineData("12345")]
+    [InlineData("9h05")]
+    public void TryParseTimeOfDay_Invalid(string? typed)
+    {
+        Assert.False(TimeEntryHistory.TryParseTimeOfDay(typed, out _));
+    }
+
+    [Fact]
+    public void EditedInterval_Unchanged_KeepsTheSeconds()
+    {
+        var original = new TimeInterval
+        {
+            Start = DateTimeOffset.Parse("2026-04-01T13:40:12Z"),
+            End = DateTimeOffset.Parse("2026-04-01T14:29:34Z")
+        };
+
+        // As the form shows them in Paris: to the minute
+        var (start, end) = TimeEntryHistory.EditedInterval(
+            new DateOnly(2026, 4, 1),
+            new TimeOnly(15, 40),
+            new TimeOnly(16, 29),
+            original,
+            Paris
+        );
+
+        Assert.Equal(original.Start, start);
+        Assert.Equal(original.End, end);
+    }
+
+    [Fact]
+    public void EditedInterval_EndBeforeStart_EndsTheNextDay()
+    {
+        var original = new TimeInterval
+        {
+            Start = DateTimeOffset.Parse("2026-04-01T13:40:12Z"),
+            End = DateTimeOffset.Parse("2026-04-01T14:29:34Z")
+        };
+
+        // Saturday 2026-03-28 22:00 to Sunday 03:30, across the DST switch: each end gets its own offset
+        var (start, end) = TimeEntryHistory.EditedInterval(
+            new DateOnly(2026, 3, 28),
+            new TimeOnly(22, 0),
+            new TimeOnly(3, 30),
+            original,
+            Paris
+        );
+
+        Assert.Equal(DateTimeOffset.Parse("2026-03-28T22:00:00+01:00"), start);
+        Assert.Equal(DateTimeOffset.Parse("2026-03-29T03:30:00+02:00"), end);
+    }
+
     [Fact]
     public void Group_ByLocalDayThenProjectTaskDescription_MostRecentFirst()
     {

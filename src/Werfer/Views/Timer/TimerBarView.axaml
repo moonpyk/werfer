@@ -2,7 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="clr-namespace:Werfer.ViewModels"
-             xmlns:converters="clr-namespace:Werfer.Converters"
              x:Class="Werfer.Views.Timer.TimerBarView"
              x:DataType="vm:TimerViewModel">
     <!-- What you work on on the left, the big action button on the right -->
@@ -23,6 +22,7 @@
                 FilterMode="None"
                 MinimumPrefixLength="3"
                 PlaceholderText="Project / Task"
+                ItemTemplate="{StaticResource ProjectTaskTemplate}"
                 HorizontalAlignment="Stretch">
                 <AutoCompleteBox.InnerLeftContent>
                     <Ellipse
@@ -32,24 +32,6 @@
                         Fill="{Binding SelectedBrush}"
                         IsVisible="{Binding SelectedChoice, Converter={x:Static ObjectConverters.IsNotNull}}" />
                 </AutoCompleteBox.InnerLeftContent>
-                <AutoCompleteBox.ItemTemplate>
-                    <DataTemplate x:DataType="vm:ProjectTaskViewModel">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Ellipse Width="10" Height="10" Fill="{Binding Brush}" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding Project.Name}" FontWeight="SemiBold">
-                                <TextBlock.Foreground>
-                                    <MultiBinding
-                                        Converter="{x:Static converters:ReadableTextBrushConverter.Instance}">
-                                        <Binding Path="Color" />
-                                        <Binding RelativeSource="{RelativeSource Self}" />
-                                        <Binding Path="ActualThemeVariant" RelativeSource="{RelativeSource Self}" />
-                                    </MultiBinding>
-                                </TextBlock.Foreground>
-                            </TextBlock>
-                            <TextBlock Text="{Binding Task.Name}" Opacity="0.8" />
-                        </StackPanel>
-                    </DataTemplate>
-                </AutoCompleteBox.ItemTemplate>
             </AutoCompleteBox>
 
             <!-- Enter adds a line; \n rather than Windows' \r\n, so the text compares equal to what Clockify sends back.

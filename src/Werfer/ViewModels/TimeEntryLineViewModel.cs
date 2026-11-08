@@ -1,3 +1,5 @@
+using Werfer.Clockify.Models;
+
 namespace Werfer.ViewModels;
 
 /// <summary>
@@ -6,14 +8,16 @@ namespace Werfer.ViewModels;
 public class TimeEntryLineViewModel(
     TimeEntryGroupViewModel group,
     TimerViewModel timer,
-    string id,
+    TimeEntry entry,
     string range,
     string duration
 ) : TimeEntryItemViewModelBase(timer)
 {
     public TimeEntryGroupViewModel Group { get; } = group;
 
-    protected override string[] EntryIds { get; } = [id];
+    public override ProjectTaskViewModel? Choice => Group.Choice;
+
+    protected override IReadOnlyList<TimeEntry> TimeEntries { get; } = [entry];
 
     public string Range { get; } = range;
 

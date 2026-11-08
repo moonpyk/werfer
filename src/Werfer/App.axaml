@@ -1,9 +1,31 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:sty="using:FluentAvalonia.Styling"
+             xmlns:vm="clr-namespace:Werfer.ViewModels"
+             xmlns:cv="clr-namespace:Werfer.Converters"
              x:Class="Werfer.App"
              Name="Werfer"
              RequestedThemeVariant="Default">
+    <Application.Resources>
+        <!-- A project / task suggestion: colored dot, project in its color, task; shared by the timer bar and the edit dialog -->
+        <DataTemplate x:Key="ProjectTaskTemplate" x:DataType="vm:ProjectTaskViewModel">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Ellipse Width="10" Height="10" Fill="{Binding Brush}" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Project.Name}" FontWeight="SemiBold">
+                    <TextBlock.Foreground>
+                        <MultiBinding
+                            Converter="{x:Static cv:ReadableTextBrushConverter.Instance}">
+                            <Binding Path="Color" />
+                            <Binding RelativeSource="{RelativeSource Self}" />
+                            <Binding Path="ActualThemeVariant" RelativeSource="{RelativeSource Self}" />
+                        </MultiBinding>
+                    </TextBlock.Foreground>
+                </TextBlock>
+                <TextBlock Text="{Binding Task.Name}" Opacity="0.8" />
+            </StackPanel>
+        </DataTemplate>
+    </Application.Resources>
+
     <Application.Styles>
         <sty:FluentAvaloniaTheme PreferSystemTheme="True" PreferUserAccentColor="True" />
         <!-- No focus rectangle: ugly, and Avalonia's Control.OnGotFocus crashes re-adding one still attached ("already has a visual parent AdornerLayer") -->

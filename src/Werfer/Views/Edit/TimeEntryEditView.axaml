@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:vm="clr-namespace:Werfer.ViewModels"
+             xmlns:controls="clr-namespace:Werfer.Controls"
+             x:Class="Werfer.Views.Edit.TimeEntryEditView"
+             x:DataType="vm:TimeEntryEditViewModel">
+    <!-- Day, start > end and duration, description, project / task -->
+    <StackPanel Spacing="8">
+        <CalendarDatePicker SelectedDate="{Binding Day}" HorizontalAlignment="Stretch" />
+
+        <Grid ColumnDefinitions="96,Auto,96,*">
+            <controls:TimeOfDayBox Grid.Column="0" Text="{Binding Start}" />
+            <ui:FASymbolIcon Grid.Column="1" Symbol="ChevronRight" FontSize="12" Margin="8,0" />
+            <controls:TimeOfDayBox Grid.Column="2" Text="{Binding End}" />
+            <TextBlock
+                Grid.Column="3"
+                Text="{Binding Duration}"
+                FontWeight="SemiBold"
+                FontFeatures="+tnum"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- Multiline like the timer bar's, same \n line breaks so the text compares equal to what Clockify sends back -->
+        <TextBox
+            Text="{Binding Description}"
+            PlaceholderText="What did you work on?"
+            AcceptsReturn="True"
+            NewLine="&#10;"
+            TextWrapping="Wrap"
+            MinHeight="80"
+            MaxHeight="140" />
+
+        <AutoCompleteBox
+            AsyncPopulator="{Binding ProjectChoicesPopulator}"
+            SelectedItem="{Binding SelectedChoice}"
+            ItemTemplate="{StaticResource ProjectTaskTemplate}"
+            FilterMode="None"
+            MinimumPrefixLength="3"
+            PlaceholderText="Project / Task"
+            HorizontalAlignment="Stretch">
+            <AutoCompleteBox.InnerLeftContent>
+                <Ellipse
+                    Width="10"
+                    Height="10"
+                    Margin="8,0,0,0"
+                    Fill="{Binding SelectedBrush}"
+                    IsVisible="{Binding SelectedChoice, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            </AutoCompleteBox.InnerLeftContent>
+        </AutoCompleteBox>
+    </StackPanel>
+</UserControl>

@@ -1,5 +1,9 @@
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Werfer.Clockify.Models;
+using Werfer.Views;
 
 namespace Werfer.ViewModels;
 
@@ -13,9 +17,46 @@ public abstract partial class TimeEntryItemViewModelBase(
     protected TimerViewModel Timer { get; } = timer;
 
     /// <summary>
+    ///     Null when the project or task isn't startable anymore (archived, done)
+    /// </summary>
+    public abstract ProjectTaskViewModel? Choice { get; }
+
+    /// <summary>
     ///     What the menu acts on: every entry of a group, or the line's single entry
     /// </summary>
-    protected abstract string[] EntryIds { get; }
+    protected abstract IReadOnlyList<TimeEntry> TimeEntries { get; }
+
+    // Entries are edited one by one, a group of several is edited through its expanded lines
+    private bool CanEdit => TimeEntries.Count == 1;
+
+    [RelayCommand(CanExecute = nameof(CanEdit))]
+    private async Task EditAsync()
+    {
+        // A separate window for now, the in-window dialog was too cramped for a form
+        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime
+            {
+                MainWindow: { } owner
+            })
+        {
+            return;
+        }
+
+        var entry = TimeEntries[0];
+        var form = new TimeEntryEditViewModel(entry, Choice, Timer.ProjectChoicesPopulator);
+        var saved = await new EditWindow { DataContext = form }.ShowDialog<bool>(owner);
+
+        if (saved && form.Interval is { } interval)
+        {
+            // Failures are reported by the view model's WithBusyIndicator
+            await Timer.UpdateAsync(
+                entry,
+                interval,
+                form.SelectedChoice?.Project.Id ?? entry.ProjectId,
+                form.SelectedChoice?.Task.Id ?? entry.TaskId,
+                form.Description
+            );
+        }
+    }
 
     [RelayCommand]
     private async Task DeleteAsync()
@@ -27,7 +68,7 @@ public abstract partial class TimeEntryItemViewModelBase(
         // Escape and the close button both return None, Delete must be told apart from a dismissal
         var dialog = new FAContentDialog
         {
-            Title = EntryIds.Length > 1 ? $"Delete {EntryIds.Length} entries?" : "Delete this entry?",
+            Title = TimeEntries.Count > 1 ? $"Delete {TimeEntries.Count} entries?" : "Delete this entry?",
             Content = "This can't be undone.",
             PrimaryButtonText = "Cancel",
             SecondaryButtonText = "Delete",
@@ -37,7 +78,7 @@ public abstract partial class TimeEntryItemViewModelBase(
         if (await dialog.ShowAsync() == FAContentDialogResult.Secondary)
         {
             // Failures are reported by the view model's WithBusyIndicator
-            await Timer.DeleteAsync(EntryIds);
+            await Timer.DeleteAsync([.. TimeEntries.Select(e => e.Id)]);
         }
     }
 }

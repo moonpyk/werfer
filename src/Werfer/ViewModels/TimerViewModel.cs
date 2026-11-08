@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
+using Werfer.Clockify.Models;
 using Werfer.Services;
 using Werfer.Utils;
 
@@ -212,6 +213,30 @@ public partial class TimerViewModel : ViewModelBase
             {
                 await LoadHistoryCoreAsync();
             }
+        });
+    }
+
+    /// <summary>
+    ///     Changes a history entry, then reloads the history.
+    /// </summary>
+    public Task UpdateAsync(
+        TimeEntry entry,
+        TimeRange range,
+        string? projectId,
+        string? taskId,
+        string? description
+    )
+    {
+        return WithBusyIndicator(async () =>
+        {
+            await TimeTracking.UpdateTimeEntryAsync(
+                entry, 
+                range, 
+                projectId, 
+                taskId, 
+                description
+            );
+            await LoadHistoryCoreAsync();
         });
     }
 
