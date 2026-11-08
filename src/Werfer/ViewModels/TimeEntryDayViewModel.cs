@@ -1,5 +1,6 @@
 using System.Globalization;
 using Werfer.Services;
+using Werfer.Utils;
 
 namespace Werfer.ViewModels;
 
@@ -15,7 +16,7 @@ public class TimeEntryDayViewModel(
 {
     public string Title { get; } = day.Date == today ? "Today"
         : day.Date == today.AddDays(-1) ? "Yesterday"
-        : day.Date.ToString("dddd d MMM", CultureInfo.CurrentCulture);
+        : day.Date.ToString("dddd d MMM", CultureInfo.CurrentCulture).FirstCharToUpper();
 
     public string Total { get; } = TimeEntryHistory.Format(day.Duration);
 
