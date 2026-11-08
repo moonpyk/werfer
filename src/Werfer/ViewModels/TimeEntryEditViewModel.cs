@@ -43,17 +43,29 @@ public partial class TimeEntryEditViewModel : ObservableObject
     public Func<string?, CancellationToken, Task<IEnumerable<object>>> ProjectChoicesPopulator { get; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Interval), nameof(Duration), nameof(CanSave))]
+    [NotifyPropertyChangedFor(
+        nameof(Interval),
+        nameof(Duration),
+        nameof(CanSave)
+    )]
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     public partial DateTime? Day { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Interval), nameof(Duration), nameof(CanSave))]
+    [NotifyPropertyChangedFor(
+        nameof(Interval),
+        nameof(Duration),
+        nameof(CanSave)
+    )]
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     public partial string? Start { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Interval), nameof(Duration), nameof(CanSave))]
+    [NotifyPropertyChangedFor(
+        nameof(Interval),
+        nameof(Duration),
+        nameof(CanSave)
+    )]
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     public partial string? End { get; set; }
 
