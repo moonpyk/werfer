@@ -5,6 +5,22 @@
              xmlns:controls="clr-namespace:Werfer.Controls"
              x:Class="Werfer.Views.Timer.HistoryView"
              x:DataType="vm:TimerViewModel">
+    <UserControl.Resources>
+        <!-- Empty state logo: the white one on a dark theme; the black one otherwise, light or any other theme -->
+        <ResourceDictionary>
+            <!-- ReSharper disable Xaml.RedundantResource -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark">
+                    <Bitmap x:Key="EmptyHistoryLogo">avares://Werfer/Assets/WerferWhite.png</Bitmap>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Default">
+                    <Bitmap x:Key="EmptyHistoryLogo">avares://Werfer/Assets/WerferBlack.png</Bitmap>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+            <!-- ReSharper restore Xaml.RedundantResource -->
+        </ResourceDictionary>
+    </UserControl.Resources>
+
     <!-- The week's finished entries, grouped by day, then by project, task and description -->
     <DockPanel>
         <Border
@@ -22,48 +38,52 @@
             </Grid>
         </Border>
 
-        <!-- Empty state, docked above the list, which has nothing to show meanwhile -->
-        <ui:FASymbolIcon
-            DockPanel.Dock="Top"
-            Margin="0,48"
-            Symbol="CalendarEmpty"
-            FontSize="40"
-            Opacity="0.4"
-            HorizontalAlignment="Center"
-            IsVisible="{Binding IsHistoryEmpty}" />
+        <!-- 
+        One cell for the empty state and the list, one shown at a time: the logo is centered in the whole area.
+        A DockPanel child that isn't last docks left instead, against the edge 
+        -->
+        <Panel>
+            <Image
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                IsVisible="{Binding IsHistoryEmpty}"
+                Stretch="None"
+                Opacity="0.4"
+                Source="{DynamicResource EmptyHistoryLogo}" />
 
-        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-            <ItemsControl ItemsSource="{Binding History}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:TimeEntryDayViewModel">
-                        <StackPanel>
-                            <Grid ColumnDefinitions="*,Auto" Margin="12,10,12,6">
-                                <StackPanel
-                                    Grid.Column="0"
-                                    Orientation="Horizontal"
-                                    Spacing="6">
-                                    <ui:FASymbolIcon Symbol="Calendar"
-                                                     FontSize="14"
-                                                     VerticalAlignment="Center"
-                                                     Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
-                                </StackPanel>
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding Total}"
-                                           FontFeatures="+tnum"
-                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                            </Grid>
-                            <ItemsControl ItemsSource="{Binding Groups}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:TimeEntryGroupViewModel">
-                                        <controls:TimeEntryGroupCard />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding IsHistoryFilled}">
+                <ItemsControl ItemsSource="{Binding History}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:TimeEntryDayViewModel">
+                            <StackPanel>
+                                <Grid ColumnDefinitions="*,Auto" Margin="12,10,12,6">
+                                    <StackPanel
+                                        Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        Spacing="6">
+                                        <ui:FASymbolIcon Symbol="Calendar"
+                                                         FontSize="14"
+                                                         VerticalAlignment="Center"
+                                                         Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Total}"
+                                               FontFeatures="+tnum"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding Groups}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:TimeEntryGroupViewModel">
+                                            <controls:TimeEntryGroupCard />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Panel>
     </DockPanel>
 </UserControl>
