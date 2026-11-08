@@ -3,7 +3,7 @@
              xmlns:vm="clr-namespace:Werfer.ViewModels"
              xmlns:timer="clr-namespace:Werfer.Views.Timer"
              xmlns:edit="clr-namespace:Werfer.Views.Edit"
-             xmlns:controls="clr-namespace:Werfer.Controls"
+             xmlns:sheet="clr-namespace:Werfer.Controls.Sheet"
              x:Class="Werfer.Views.TimerView"
              x:DataType="vm:TimerViewModel">
     <Panel>
@@ -19,8 +19,8 @@
         </Grid>
 
         <!-- Edit sheet, modal; Escape closes it, see MainWindow.OnKeyDown -->
-        <controls:Sheet IsOpen="{Binding IsEditorOpen}" Content="{Binding Editor}">
-            <controls:Sheet.ContentTemplate>
+        <sheet:Sheet IsOpen="{Binding IsEditorOpen}" Content="{Binding Editor}">
+            <sheet:Sheet.ContentTemplate>
                 <DataTemplate x:DataType="vm:TimeEntryEditViewModel">
                     <!-- Enter saves, except in the description, which takes it as a new line -->
                     <DockPanel>
@@ -40,7 +40,7 @@
                         <edit:TimeEntryEditView />
                     </DockPanel>
                 </DataTemplate>
-            </controls:Sheet.ContentTemplate>
-        </controls:Sheet>
+            </sheet:Sheet.ContentTemplate>
+        </sheet:Sheet>
     </Panel>
 </UserControl>

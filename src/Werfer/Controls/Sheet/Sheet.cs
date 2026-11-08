@@ -10,51 +10,9 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
+using JetBrains.Annotations;
 
-namespace Werfer.Controls;
-
-/// <summary>
-///     The edge of its parent a <see cref="Sheet" /> is docked to, and slides in from.
-/// </summary>
-public enum SheetPlacement
-{
-    /// <summary>
-    ///     Docked to the bottom edge, sliding up.
-    /// </summary>
-    Bottom,
-
-    /// <summary>
-    ///     Docked to the top edge, sliding down.
-    /// </summary>
-    Top
-}
-
-/// <summary>
-///     The transitions a <see cref="Sheet" /> animates; flags, to keep one direction only.
-/// </summary>
-[Flags]
-public enum SheetAnimations
-{
-    /// <summary>
-    ///     Shown and hidden at once.
-    /// </summary>
-    None = 0,
-
-    /// <summary>
-    ///     The backdrop fades in and the sheet slides in from its edge.
-    /// </summary>
-    Opening = 1,
-
-    /// <summary>
-    ///     The backdrop fades out and the sheet slides back out to its edge.
-    /// </summary>
-    Closing = 2,
-
-    /// <summary>
-    ///     Both <see cref="Opening" /> and <see cref="Closing" />.
-    /// </summary>
-    All = Opening | Closing
-}
+namespace Werfer.Controls.Sheet;
 
 /// <summary>
 ///     A modal sheet docked to the top or bottom edge of its parent, sliding in over a dimmed backdrop.
@@ -98,6 +56,7 @@ public enum SheetAnimations
 /// </Panel>
 /// ]]></code>
 /// </example>
+[PublicAPI]
 public class Sheet : ContentControl
 {
     /// <summary>
@@ -216,7 +175,11 @@ public class Sheet : ContentControl
                 Name = "PART_Root",
                 Children =
                 {
-                    new Border { Name = "PART_Backdrop", Background = BackdropBrush }.RegisterInNameScope(scope),
+                    new Border
+                    {
+                        Name = "PART_Backdrop",
+                        Background = BackdropBrush
+                    }.RegisterInNameScope(scope),
                     sheet
                 }
             }.RegisterInNameScope(scope);
@@ -402,13 +365,27 @@ public class Sheet : ContentControl
     // From `offset` (positive: below its place) and transparent, to its place and opaque
     private static Animation SlideIn(double offset)
     {
-        return Tween(200, new CubicEaseOut(), [(TranslateTransform.YProperty, offset, 0), (OpacityProperty, 0, 1)]);
+        return Tween(
+            200,
+            new CubicEaseOut(),
+            [
+                (TranslateTransform.YProperty, offset, 0),
+                (OpacityProperty, 0, 1)
+            ]
+        );
     }
 
     // The reverse, faster
     private static Animation SlideOut(double offset)
     {
-        return Tween(150, new CubicEaseIn(), [(TranslateTransform.YProperty, 0, offset), (OpacityProperty, 1, 0)]);
+        return Tween(
+            150,
+            new CubicEaseIn(),
+            [
+                (TranslateTransform.YProperty, 0, offset),
+                (OpacityProperty, 1, 0)
+            ]
+        );
     }
 
     // Shows the root then slides in, or slides out then hides it; a transition started meanwhile takes over
