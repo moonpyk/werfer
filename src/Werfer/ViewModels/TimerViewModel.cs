@@ -126,8 +126,7 @@ public partial class TimerViewModel : ViewModelBase
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(
-        nameof(IsHistoryEmpty),
-        nameof(IsHistoryFilled)
+        nameof(IsHistoryEmpty)
     )]
     public partial List<TimeEntryDayViewModel>? History { get; private set; }
 
@@ -135,11 +134,6 @@ public partial class TimerViewModel : ViewModelBase
     ///     Nothing to list yet: not connected, loading or an empty week; the view shows an icon instead
     /// </summary>
     public bool IsHistoryEmpty => History is not { Count: > 0 };
-
-    /// <summary>
-    ///     Something to list: connected, loaded and not empty
-    /// </summary>
-    public bool IsHistoryFilled => !IsHistoryEmpty;
 
     /// <summary>
     ///     Finished entries of the week plus the running one, ticks with it

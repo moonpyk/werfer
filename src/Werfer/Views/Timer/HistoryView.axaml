@@ -48,15 +48,19 @@
                 VerticalAlignment="Center"
                 IsVisible="{Binding IsHistoryEmpty}"
                 Stretch="None"
-                Opacity="0.4"
+                Opacity="0.2"
                 Source="{DynamicResource EmptyHistoryLogo}" />
 
-            <ScrollViewer HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding IsHistoryFilled}">
+            <ScrollViewer
+                HorizontalScrollBarVisibility="Disabled"
+                IsVisible="{Binding Path=!IsHistoryEmpty}">
                 <ItemsControl ItemsSource="{Binding History}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:TimeEntryDayViewModel">
                             <StackPanel>
-                                <Grid ColumnDefinitions="*,Auto" Margin="12,10,12,6">
+                                <Grid
+                                    ColumnDefinitions="*,Auto"
+                                    Margin="12,10,12,6">
                                     <StackPanel
                                         Grid.Column="0"
                                         Orientation="Horizontal"
