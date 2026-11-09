@@ -10,6 +10,8 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using JetBrains.Annotations;
 
 namespace Werfer.Controls.Sheet;
@@ -104,6 +106,12 @@ public class Sheet : ContentControl
         AvaloniaProperty.Register<Sheet, Animation?>(nameof(BackdropClosingAnimation));
 
     /// <summary>
+    ///     Defines the <see cref="IsLightDismissEnabled" /> property.
+    /// </summary>
+    public static readonly StyledProperty<bool> IsLightDismissEnabledProperty =
+        AvaloniaProperty.Register<Sheet, bool>(nameof(IsLightDismissEnabled), true);
+
+    /// <summary>
     ///     Defines the <see cref="BackdropBrush" /> property.
     /// </summary>
     public static readonly StyledProperty<IBrush?> BackdropBrushProperty =
@@ -152,6 +160,8 @@ public class Sheet : ContentControl
             var sheet = new Border
             {
                 Name = "PART_Sheet",
+                // Tab stays in the sheet, the content it covers mustn't take the focus
+                [KeyboardNavigation.TabNavigationProperty] = KeyboardNavigationMode.Cycle,
                 // Both, so custom animations can scale it as well as move it
                 RenderTransform = new TransformGroup
                 {
@@ -260,6 +270,20 @@ public class Sheet : ContentControl
     {
         get => GetValue(BackdropBrushProperty);
         set => SetValue(BackdropBrushProperty, value);
+    }
+
+    /// <summary>
+    ///     Gets or sets whether a press on the backdrop closes the sheet.
+    /// </summary>
+    /// <value>
+    ///     The default is <see langword="true" />. When <see langword="false" />, the backdrop still catches pointer
+    ///     input, so the content below stays out of reach; bind it to keep the sheet open while its content is busy,
+    ///     e.g. saving.
+    /// </value>
+    public bool IsLightDismissEnabled
+    {
+        get => GetValue(IsLightDismissEnabledProperty);
+        set => SetValue(IsLightDismissEnabledProperty, value);
     }
 
     /// <summary>
@@ -454,6 +478,11 @@ public class Sheet : ContentControl
         // Closing: clicks go through to the content right away, not after the animation
         _root.IsHitTestVisible = open;
 
+        if (open)
+        {
+            FocusFirstElement();
+        }
+
         if (!Animations.HasFlag(open ? SheetAnimations.Opening : SheetAnimations.Closing))
         {
             _root.IsVisible = open;
@@ -517,11 +546,29 @@ public class Sheet : ContentControl
         _backdrop?.Background = BackdropBrush ?? (Placement == SheetPlacement.Top ? TopBackdrop : BottomBackdrop);
     }
 
+    // Moves the focus into the sheet, off the content it covers. Posted: its content is laid out (and templated) once
+    // shown, not yet when the sheet opens
+    private void FocusFirstElement()
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            _sheet?.GetVisualDescendants()
+                .OfType<InputElement>()
+                .FirstOrDefault(e => e is { Focusable: true, IsEffectivelyEnabled: true, IsEffectivelyVisible: true })
+                ?.Focus(NavigationMethod.Tab);
+        }, DispatcherPriority.Loaded);
+    }
+
     // Light dismiss
     private void OnBackdropPressed(object? sender, PointerPressedEventArgs e)
     {
-        // Not SetValue: that would replace a binding instead of updating its source
-        SetCurrentValue(IsOpenProperty, false);
+        // Swallowed either way: when dismissing is off, the content below stays out of reach
         e.Handled = true;
+
+        if (IsLightDismissEnabled)
+        {
+            // Not SetValue: that would replace a binding instead of updating its source
+            SetCurrentValue(IsOpenProperty, false);
+        }
     }
 }
