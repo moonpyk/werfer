@@ -77,6 +77,7 @@ public static class TimeEntryHistory
         {
             var local = date.ToDateTime(time);
 
+            // ReSharper disable once InvertIf : Leads to code duplication
             if (kept is { } k)
             {
                 var shown = TimeZoneInfo.ConvertTime(k, zone).DateTime;
