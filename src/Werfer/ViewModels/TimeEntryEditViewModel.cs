@@ -24,6 +24,15 @@ public partial class TimeEntryEditViewModel : ObservableObject
         SaveAction = save;
         CancelAction = cancel;
 
+        // Cancel would only close the sheet, not stop the update already sent
+        SaveCommand.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(SaveCommand.IsRunning))
+            {
+                CancelCommand.NotifyCanExecuteChanged();
+            }
+        };
+
         var start = entry.TimeInterval!.Start.ToLocalTime();
         var end = entry.TimeInterval.End!.Value.ToLocalTime();
 
@@ -108,7 +117,9 @@ public partial class TimeEntryEditViewModel : ObservableObject
         return SaveAction(this);
     }
 
-    [RelayCommand]
+    private bool CanCancel => !SaveCommand.IsRunning;
+
+    [RelayCommand(CanExecute = nameof(CanCancel))]
     private void Cancel()
     {
         CancelAction();

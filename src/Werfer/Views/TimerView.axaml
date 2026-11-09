@@ -19,7 +19,10 @@
         </Grid>
 
         <!-- Edit sheet, modal; Escape closes it, see MainWindow.OnKeyDown -->
-        <sheet:Sheet IsOpen="{Binding IsEditorOpen}" Content="{Binding Editor}">
+        <sheet:Sheet
+            IsOpen="{Binding IsEditorOpen}"
+            IsLightDismissEnabled="{Binding !IsSavingEdit}"
+            Content="{Binding Editor}">
             <sheet:Sheet.ContentTemplate>
                 <DataTemplate x:DataType="vm:TimeEntryEditViewModel">
                     <!-- Enter saves, except in the description, which takes it as a new line -->

@@ -160,6 +160,12 @@ public partial class TimerViewModel : ViewModelBase
     public partial bool IsEditorOpen { get; set; }
 
     /// <summary>
+    ///     While the edit sheet's changes are being sent: it can't be closed meanwhile, closing wouldn't stop them
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsSavingEdit { get; private set; }
+
+    /// <summary>
     ///     Starts a time tracking entry for the selected project and task while displaying the busy indicator.
     /// </summary>
     [RelayCommand]
@@ -263,7 +269,10 @@ public partial class TimerViewModel : ViewModelBase
     /// </summary>
     public void CloseEditor()
     {
-        IsEditorOpen = false;
+        if (!IsSavingEdit)
+        {
+            IsEditorOpen = false;
+        }
     }
 
     private void SetEditedItem(TimeEntryItemViewModelBase? item)
@@ -282,14 +291,23 @@ public partial class TimerViewModel : ViewModelBase
 
         return WithBusyIndicator(async () =>
         {
-            // An archived project isn't among the choices: none picked keeps the entry's own
-            await TimeTracking.UpdateTimeEntryAsync(
-                form.Entry,
-                range,
-                form.SelectedChoice?.Project.Id ?? form.Entry.ProjectId,
-                form.SelectedChoice?.Task.Id ?? form.Entry.TaskId,
-                form.Description
-            );
+            IsSavingEdit = true;
+
+            try
+            {
+                // An archived project isn't among the choices: none picked keeps the entry's own
+                await TimeTracking.UpdateTimeEntryAsync(
+                    form.Entry,
+                    range,
+                    form.SelectedChoice?.Project.Id ?? form.Entry.ProjectId,
+                    form.SelectedChoice?.Task.Id ?? form.Entry.TaskId,
+                    form.Description
+                );
+            }
+            finally
+            {
+                IsSavingEdit = false;
+            }
 
             // Only once saved: on failure (reported by WithBusyIndicator) the sheet stays open, nothing typed is lost
             CloseEditor();

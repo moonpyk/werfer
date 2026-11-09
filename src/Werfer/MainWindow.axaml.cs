@@ -76,7 +76,7 @@ public partial class MainWindow : FAAppWindow
             {
                 KeyModifiers: KeyModifiers.Control,
                 Key: Key.Space
-            } when ViewModel is not null:
+            } when ViewModel is { Timer.IsEditorOpen: false }:
                 e.Handled = true;
 
                 // Checked before Focus(): committing the description starts an update, which sets IsBusy
@@ -96,7 +96,7 @@ public partial class MainWindow : FAAppWindow
             {
                 KeyModifiers: KeyModifiers.None,
                 Key: Key.F5
-            } when ViewModel is not null:
+            } when ViewModel is { Timer.IsEditorOpen: false }:
                 // Pushes the description being typed first, the refresh would overwrite it otherwise
                 Focus();
                 _ = ViewModel.Timer.RefreshAsync();
@@ -108,7 +108,7 @@ public partial class MainWindow : FAAppWindow
             {
                 KeyModifiers: KeyModifiers.Control,
                 Key: Key.L
-            } when ViewModel is { CurrentPage: TimerViewModel timer }:
+            } when ViewModel is { CurrentPage: TimerViewModel { IsEditorOpen: false } timer }:
                 // Commits the text being typed first: clearing an unchanged value wouldn't reach the TextBox
                 Focus();
                 timer.Description = null;
@@ -120,7 +120,7 @@ public partial class MainWindow : FAAppWindow
             {
                 KeyModifiers: KeyModifiers.Control,
                 Key: Key.N
-            } when ViewModel is { CurrentPage: TimerViewModel timer }:
+            } when ViewModel is { CurrentPage: TimerViewModel { IsEditorOpen: false } timer }:
                 Focus();
                 _ = timer.ResetAsync();
                 e.Handled = true;
