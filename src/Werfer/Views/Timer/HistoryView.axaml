@@ -49,6 +49,7 @@
                 IsVisible="{Binding IsHistoryEmpty}"
                 Stretch="None"
                 Opacity="0.2"
+                Margin="8"
                 Source="{DynamicResource EmptyHistoryLogo}" />
 
             <ScrollViewer
