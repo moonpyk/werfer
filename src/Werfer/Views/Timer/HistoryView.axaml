@@ -4,7 +4,7 @@
              xmlns:vm="clr-namespace:Werfer.ViewModels"
              xmlns:controls="clr-namespace:Werfer.Controls"
              x:Class="Werfer.Views.Timer.HistoryView"
-             x:DataType="vm:TimerViewModel">
+             x:DataType="vm:HistoryViewModel">
     <UserControl.Resources>
         <!-- Empty state logo: the white one on a dark theme; the black one otherwise, light or any other theme -->
         <ResourceDictionary>
@@ -46,7 +46,7 @@
             <Image
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                IsVisible="{Binding IsHistoryEmpty}"
+                IsVisible="{Binding IsEmpty}"
                 Stretch="None"
                 Opacity="0.2"
                 Margin="8"
@@ -54,8 +54,8 @@
 
             <ScrollViewer
                 HorizontalScrollBarVisibility="Disabled"
-                IsVisible="{Binding Path=!IsHistoryEmpty}">
-                <ItemsControl ItemsSource="{Binding History}">
+                IsVisible="{Binding !IsEmpty}">
+                <ItemsControl ItemsSource="{Binding Days}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:TimeEntryDayViewModel">
                             <StackPanel>

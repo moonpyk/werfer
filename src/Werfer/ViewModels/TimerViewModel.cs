@@ -1,34 +1,24 @@
-using Avalonia.Media;
-using Avalonia.Threading;
+using System.ComponentModel;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Werfer.Clockify.Models;
 using Werfer.Services;
-using Werfer.Utils;
 
 namespace Werfer.ViewModels;
 
 /// <summary>
-///     Main page: pick a project and task, describe the work, start and stop the timer.
+///     Main page: the timer bar and the week's history, each its own view model, and the edit sheet over them. Holds
+///     what ties them together: loading on connection, a finished entry joining the history, the week's total
+///     counting the running entry, a history line continued in the bar, the shortcuts blocked behind the sheet.
 /// </summary>
 [UsedImplicitly]
 public partial class TimerViewModel : ViewModelBase
 {
     // The entry shown in the edit sheet, highlighted in the history meanwhile
     private TimeEntryItemViewModelBase? _editedItem;
-
-    // Day the history was last loaded for
-    private DateOnly _historyDate;
-
-    // Numbers the history loads, see LoadHistoryImplAsync
-    private int _historyLoadGeneration;
-
-    // Id of the entry last seen running: when it changes, that entry has finished and joins the history
-    private string? _runningId;
-    private IDisposable? _ticker;
-    private TimeSpan _weekFinished;
 
     public TimerViewModel(
         IApplicationSettings applicationSettings,
@@ -37,109 +27,31 @@ public partial class TimerViewModel : ViewModelBase
         TimeTrackingService timeTracking
     ) : base(logger, flashMessages)
     {
-        ApplicationSettings = applicationSettings;
         TimeTracking = timeTracking;
-        Elapsed = "00:00:00";
-        WeekTotal = "00:00:00";
+        Player = new TimerPlayerViewModel(
+            logger, 
+            flashMessages, 
+            applicationSettings, 
+            timeTracking
+        );
+        History = new HistoryViewModel(
+            logger, 
+            flashMessages, 
+            applicationSettings, 
+            timeTracking, 
+            this
+        );
 
-        // Connection happens from the settings page, projects are loaded here once it succeeds, then the history
-        // which needs their names
-        TimeTracking.Connected += (_, _) => _ = WithBusyIndicator(async () =>
-        {
-            await LoadProjectChoicesAsync();
-            await LoadHistoryImplAsync();
-        });
-
-        // The running entry may change from another screen, the timer display follows it
-        TimeTracking.RunningEntryChanged += (_, _) => OnRunningEntryChanged();
-
-        // "Today" and the week move at midnight, the app often stays open across it
-        DispatcherTimer.Run(() =>
-        {
-            if (History is not null && DateOnly.FromDateTime(DateTime.Now) != _historyDate)
-            {
-                _ = LoadHistoryAsync();
-            }
-
-            return true;
-        }, TimeSpan.FromMinutes(1));
+        timeTracking.Connected += OnConnected;
+        Player.EntryFinished += OnEntryFinished;
+        Player.PropertyChanged += OnPlayerPropertyChanged;
     }
 
-    private IApplicationSettings ApplicationSettings { get; }
     private TimeTrackingService TimeTracking { get; }
 
-    /// <summary>
-    ///     Null until connected, the timer panel is hidden meanwhile
-    /// </summary>
-    [ObservableProperty]
-    public partial List<ProjectTaskViewModel>? ProjectChoices { get; private set; }
+    public TimerPlayerViewModel Player { get; }
 
-    /// <summary>
-    ///     Feeds the project box with at most 10 matches, the full list is too long to scroll
-    /// </summary>
-    public Func<string?, CancellationToken, Task<IEnumerable<object>>> ProjectChoicesPopulator =>
-        (search, _) => Task.FromResult<IEnumerable<object>>(
-        [
-            .. (ProjectChoices ?? [])
-            .Where(c => AutoComplete.ProjectAutoCompleteFilterPredicate(search, c))
-            .Take(ApplicationSettings.MaxProjectChoices)
-        ]);
-
-    /// <summary>
-    ///     Pushed to the running entry when changed
-    /// </summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedBrush))]
-    public partial ProjectTaskViewModel? SelectedChoice { get; set; }
-
-    /// <summary>
-    ///     Flattened: a binding to SelectedChoice.Brush logs a warning whenever nothing is selected
-    /// </summary>
-    public IBrush? SelectedBrush => SelectedChoice?.Brush;
-
-    /// <summary>
-    ///     Text of the project box: a null SelectedItem doesn't clear what was typed, ResetAsync empties it here
-    /// </summary>
-    [ObservableProperty]
-    public partial string? ProjectSearchText { get; set; }
-
-    /// <summary>
-    ///     Free text, usually a Jira ticket key, pushed to the running entry when edited (on lost focus)
-    /// </summary>
-    [ObservableProperty]
-    public partial string? Description { get; set; }
-
-    /// <summary>
-    ///     Indicates whether a time tracking entry is currently running.
-    /// </summary>
-    [ObservableProperty]
-    public partial bool IsRunning { get; private set; }
-
-    /// <summary>
-    ///     Formatted elapsed time for the current running entry, or 00:00:00 when the timer is stopped.
-    /// </summary>
-    [ObservableProperty]
-    public partial string Elapsed { get; private set; }
-
-    /// <summary>
-    ///     Finished entries of the current week by day, null until loaded
-    /// </summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(
-        nameof(IsHistoryEmpty)
-    )]
-    public partial List<TimeEntryDayViewModel>? History { get; private set; }
-
-    /// <summary>
-    ///     Nothing to list yet: not connected, loading or an empty week; the view shows an icon instead
-    /// </summary>
-    public bool IsHistoryEmpty => History is not { Count: > 0 };
-
-    /// <summary>
-    ///     Finished entries of the week plus the running one, ticks with it
-    /// </summary>
-    [ObservableProperty]
-    public partial string WeekTotal { get; private set; }
+    public HistoryViewModel History { get; }
 
     /// <summary>
     ///     The edit sheet's form; kept once closed, set anew by <see cref="Edit" />
@@ -151,95 +63,64 @@ public partial class TimerViewModel : ViewModelBase
     ///     Bound both ways to the sheet, which closes itself on a click outside
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(ToggleCommand),
+        nameof(ClearDescriptionCommand),
+        nameof(ResetCommand)
+    )]
+    [NotifyCanExecuteChangedFor(
+        nameof(RefreshCommand),
+        nameof(CloseEditorCommand)
+    )]
     public partial bool IsEditorOpen { get; set; }
 
     /// <summary>
     ///     While the edit sheet's changes are being sent: it can't be closed meanwhile, closing wouldn't stop them
     /// </summary>
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CloseEditorCommand))]
     public partial bool IsSavingEdit { get; private set; }
 
-    /// <summary>
-    ///     Starts a time tracking entry for the selected project and task while displaying the busy indicator.
-    /// </summary>
-    [RelayCommand]
-    private Task StartAsync()
-    {
-        return WithBusyIndicator(async () =>
-        {
-            if (SelectedChoice is null)
-            {
-                FlashMessages.Push(WellKnownMessages.PickProjectFirst);
-                return;
-            }
+    // The bar's commands for the window's shortcuts, see its KeyBindings: none acts behind the edit sheet
+    public ICommand? ToggleCommand => IsEditorOpen ? null : Player.ToggleCommand;
+    public ICommand? ClearDescriptionCommand => IsEditorOpen ? null : Player.ClearDescriptionCommand;
+    public ICommand? ResetCommand => IsEditorOpen ? null : Player.ResetCommand;
 
-            await TimeTracking.StartAsync(
-                SelectedChoice.Project.Id,
-                SelectedChoice.Task.Id,
-                Description
-            );
-        });
-    }
+    private bool CanRefresh => !IsEditorOpen;
+    private bool CanCloseEditor => IsEditorOpen && !IsSavingEdit;
 
     /// <summary>
-    ///     Stops the currently running time tracking entry while displaying the busy indicator.
+    ///     Fetches the running entry and the week's history, they may have changed elsewhere.
     /// </summary>
-    [RelayCommand]
-    private Task StopAsync()
-    {
-        return WithBusyIndicator(() => TimeTracking.StopAsync());
-    }
-
-    /// <summary>
-    ///     Starts the timer when it is stopped, or stops the currently running timer when it is active.
-    /// </summary>
-    public Task ToggleAsync()
-    {
-        return IsRunning
-            ? StopAsync()
-            : StartAsync();
-    }
-
-    /// <summary>
-    ///     Refreshes the currently running time tracking entry while displaying the busy indicator.
-    /// </summary>
-    /// <return>
-    ///     A task that represents the asynchronous refresh operation.
-    /// </return>
+    [RelayCommand(CanExecute = nameof(CanRefresh))]
     public Task RefreshAsync()
     {
         return WithBusyIndicator(async () =>
         {
+            // A description still being typed goes first, the refreshed entry would overwrite it
+            await Player.PushDescriptionAsync();
+
             await TimeTracking.RefreshRunningEntryAsync();
-            // Entries may also have been added or edited elsewhere
-            await LoadHistoryImplAsync();
+            await History.LoadImplAsync();
         });
     }
 
     /// <summary>
-    ///     Reloads the week's history, e.g. once the first day of the week changed. Does nothing until connected.
+    ///     Starts a new entry on a history line's project, task and description, stopping the running one first.
     /// </summary>
-    public Task LoadHistoryAsync()
+    public Task ContinueAsync(TimeEntryGroupViewModel group)
     {
-        return WithBusyIndicator(LoadHistoryImplAsync);
+        return group.Choice is null
+            ? Task.CompletedTask
+            : Player.ContinueAsync(group.Choice, group.Description);
     }
 
     /// <summary>
-    ///     Deletes history entries, then reloads the history, also after a partial failure, to show what's left.
+    ///     Deletes history entries, see <see cref="HistoryViewModel.DeleteAsync" />.
     /// </summary>
     public Task DeleteAsync(IReadOnlyList<string> ids)
     {
-        return WithBusyIndicator(async () =>
-        {
-            try
-            {
-                await TimeTracking.DeleteTimeEntriesAsync(ids);
-            }
-            finally
-            {
-                await LoadHistoryImplAsync();
-            }
-        });
+        return History.DeleteAsync(ids);
     }
 
     /// <summary>
@@ -248,10 +129,11 @@ public partial class TimerViewModel : ViewModelBase
     public void Edit(TimeEntryItemViewModelBase item, TimeEntry entry)
     {
         SetEditedItem(item);
+        
         Editor = new TimeEntryEditViewModel(
             entry,
             item.Choice,
-            ProjectChoicesPopulator,
+            Player.ProjectChoicesPopulator,
             SaveEditAsync,
             CloseEditor
         );
@@ -261,6 +143,7 @@ public partial class TimerViewModel : ViewModelBase
     /// <summary>
     ///     Closes the edit sheet without saving: Cancel, Escape; a click outside closes it through the binding.
     /// </summary>
+    [RelayCommand(CanExecute = nameof(CanCloseEditor))]
     public void CloseEditor()
     {
         if (!IsSavingEdit)
@@ -305,205 +188,34 @@ public partial class TimerViewModel : ViewModelBase
 
             // Only once saved: on failure (reported by WithBusyIndicator) the sheet stays open, nothing typed is lost
             CloseEditor();
-            await LoadHistoryImplAsync();
+            await History.LoadImplAsync();
         });
     }
 
-    /// <summary>
-    ///     Starts a new entry on a history line's project, task and description, stopping the running one first.
-    /// </summary>
-    public async Task ContinueAsync(TimeEntryGroupViewModel group)
+    // Connection happens from the settings page: the projects first, then the history, which needs their names
+    private void OnConnected(object? sender, EventArgs e)
     {
-        // Like the start button: a second click while the first start is pending would start a second entry
-        if (group.Choice is null || IsBusy)
+        _ = WithBusyIndicator(async () =>
         {
-            return;
-        }
-
-        if (IsRunning)
-        {
-            await StopAsync();
-        }
-
-        // Same as ResetAsync: changing the fields of a still running entry would push them to it
-        if (IsRunning)
-        {
-            return;
-        }
-
-        SelectedChoice = group.Choice;
-        Description = group.Description;
-        await StartAsync();
+            await Player.LoadProjectChoicesAsync();
+            History.Choices = Player.ProjectChoices;
+            await History.LoadImplAsync();
+        });
     }
 
-    /// <summary>
-    ///     Back to a blank, stopped timer: stops the running entry, then clears the description and the task.
-    /// </summary>
-    public async Task ResetAsync()
+    // Stopped here or elsewhere: the entry now belongs to the history
+    private void OnEntryFinished(object? sender, EventArgs e)
     {
-        if (IsRunning)
-        {
-            await StopAsync();
-        }
-
-        // The stop failed (already reported): clearing now would push blank fields to the still running entry
-        if (IsRunning)
-        {
-            return;
-        }
-
-        Description = null;
-        SelectedChoice = null;
-        ProjectSearchText = string.Empty;
+        _ = History.LoadAsync();
     }
 
-    // Each setter only sends its own field, the others come from the running entry, so the order in which
-    // OnRunningEntryChanged refreshes them can't send a half-updated state
-    private void PushToRunningEntry(
-        ProjectTaskViewModel? choice = null,
-        bool description = false
-    )
+    // The week's total counts the running entry, second by second
+    private void OnPlayerPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (TimeTracking.RunningEntry is not { } running)
+        if (e.PropertyName == nameof(TimerPlayerViewModel.RunningElapsed))
         {
-            return;
+            History.RunningElapsed = Player.RunningElapsed;
         }
-
-        var projectId = choice?.Project.Id ?? running.ProjectId;
-        var taskId = choice?.Task.Id ?? running.TaskId;
-        var text = description ? Description : running.Description;
-
-        // Skips values coming from the running entry itself, nothing to send
-        if (
-            projectId is null ||
-            taskId is null ||
-            (projectId == running.ProjectId && taskId == running.TaskId && text == running.Description))
-        {
-            return;
-        }
-
-        _ = WithBusyIndicator(() => TimeTracking.UpdateRunningEntryAsync(
-            projectId,
-            taskId,
-            text
-        ));
-    }
-
-    private async Task LoadProjectChoicesAsync()
-    {
-        ProjectChoices = (await TimeTracking.GetProjectTasksAsync())
-            .Select(pt => new ProjectTaskViewModel(pt))
-            // Projects sharing a color end up next to each other in the list
-            .OrderBy(c => c.Project.Color)
-            .ThenBy(c => c.ToString())
-            .ToList();
-
-        // Choices weren't loaded yet when ConnectAsync raised the change
-        OnRunningEntryChanged();
-    }
-
-    private async Task LoadHistoryImplAsync()
-    {
-        if (ProjectChoices is null)
-        {
-            return;
-        }
-
-        var zone = TimeZoneInfo.Local;
-        var now = DateTimeOffset.Now;
-        var today = DateOnly.FromDateTime(now.Date);
-
-        // Set before the request: a failed load is reported once, not retried every minute by the date check
-        _historyDate = today;
-
-        var load = Interlocked.Increment(ref _historyLoadGeneration);
-
-        var entries = await TimeTracking.GetTimeEntriesSinceAsync(
-            TimeEntryHistory.StartOfWeek(now, ApplicationSettings.WeekStart, zone)
-        );
-
-        // Loads overlap (a stop, F5, a save): the last one started wins, not the last one to answer, which may
-        // predate a save and show the entry unchanged
-        if (load != _historyLoadGeneration)
-        {
-            return;
-        }
-
-        History =
-        [
-            .. entries
-                .GroupBy(zone)
-                .Select(d => new TimeEntryDayViewModel(d, today, ProjectChoices, this))
-        ];
-
-        _weekFinished = entries.Sum();
-        UpdateWeekTotal();
-    }
-
-    private void UpdateWeekTotal(TimeSpan running = default)
-    {
-        WeekTotal = TimeEntryHistory.Format(_weekFinished + running);
-    }
-
-    private void OnRunningEntryChanged()
-    {
-        _ticker?.Dispose();
-        _ticker = null;
-
-        var running = TimeTracking.RunningEntry;
-
-        IsRunning = running is not null;
-
-        // The entry last seen running has finished (stopped here or elsewhere), it now belongs to the history
-        if (_runningId is not null && _runningId != running?.Id)
-        {
-            _ = LoadHistoryAsync();
-        }
-
-        _runningId = running?.Id;
-
-        if (running is null)
-        {
-            Elapsed = "00:00:00";
-            UpdateWeekTotal();
-            return;
-        }
-
-        SelectedChoice = ProjectChoices?.Find(c => c.Task.Id == running.TaskId
-        ) ?? SelectedChoice;
-        Description = running.Description;
-
-        var start = running.TimeInterval?.Start ?? DateTimeOffset.UtcNow;
-
-        UpdateElapsed();
-
-        _ticker = DispatcherTimer.Run(() =>
-        {
-            UpdateElapsed();
-            return true;
-        }, TimeSpan.FromSeconds(1));
-        return;
-
-        void UpdateElapsed()
-        {
-            var elapsed = DateTimeOffset.UtcNow - start;
-            // Not TimeSpan's "hh", which drops whole days: a timer forgotten over a weekend would look short
-            Elapsed = TimeEntryHistory.Format(elapsed);
-            // shortcut: an entry started before the week counts whole, split it at the week start if that ever matters
-            UpdateWeekTotal(elapsed);
-        }
-    }
-
-    // Null when the box is cleared, the running task is kept
-    partial void OnSelectedChoiceChanged(ProjectTaskViewModel? value)
-    {
-        PushToRunningEntry(value);
-    }
-
-    partial void OnDescriptionChanged(string? value)
-    {
-        _ = value;
-        PushToRunningEntry(description: true);
     }
 
     partial void OnIsEditorOpenChanged(bool value)

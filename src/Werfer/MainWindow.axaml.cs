@@ -1,6 +1,5 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using FluentAvalonia.UI.Controls;
@@ -67,94 +66,6 @@ public partial class MainWindow : FAAppWindow
         }
 
         base.OnClosing(e);
-    }
-
-    protected override void OnKeyDown(KeyEventArgs e)
-    {
-        switch (e)
-        {
-            // Ctrl+space Start/Stop counter
-            case
-            {
-                KeyModifiers: KeyModifiers.Control,
-                Key: Key.Space
-            } when ViewModel is
-            {
-                Timer.IsEditorOpen: false
-            }:
-                e.Handled = true;
-
-                // Checked before Focus(): committing the description starts an update, which sets IsBusy
-                if (ViewModel.Timer.IsBusy)
-                {
-                    return;
-                }
-
-                // Commits the description being typed, it's only pushed on lost focus
-                Focus();
-                _ = ViewModel.Timer.ToggleAsync();
-                return;
-
-            // Refresh
-            case
-            {
-                KeyModifiers: KeyModifiers.None,
-                Key: Key.F5
-            } when ViewModel is
-            {
-                Timer.IsEditorOpen: false
-            }:
-                e.Handled = true;
-
-                // Pushes the description being typed first, the refresh would overwrite it otherwise
-                Focus();
-                _ = ViewModel.Timer.RefreshAsync();
-                return;
-
-            // "cLear", timer page only: the cleared field must be on screen
-            case
-            {
-                KeyModifiers: KeyModifiers.Control,
-                Key: Key.L
-            } when ViewModel is
-            {
-                CurrentPage: TimerViewModel { IsEditorOpen: false } timer
-            }:
-                e.Handled = true;
-
-                // Commits the text being typed first: clearing an unchanged value wouldn't reach the TextBox
-                Focus();
-                timer.Description = null;
-                return;
-
-            // "New": a blank, stopped timer
-            case
-            {
-                KeyModifiers: KeyModifiers.Control,
-                Key: Key.N
-            } when ViewModel is
-            {
-                CurrentPage: TimerViewModel { IsEditorOpen: false } timer
-            }:
-                e.Handled = true;
-
-                // Commits the text being typed first: clearing an unchanged value wouldn't reach the TextBox
-                Focus();
-                _ = timer.ResetAsync();
-                return;
-
-            // Closes the edit sheet, like its Cancel button; unhandled so far, an open dropdown inside it took it first
-            case
-            {
-                KeyModifiers: KeyModifiers.None,
-                Key: Key.Escape
-            } when ViewModel is { Timer.IsEditorOpen: true }:
-                e.Handled = true;
-                ViewModel.Timer.CloseEditor();
-                return;
-        }
-
-        base.OnKeyDown(e);
     }
 
     private void OnNavigationSelectionChanged(object? sender, FANavigationViewSelectionChangedEventArgs e)

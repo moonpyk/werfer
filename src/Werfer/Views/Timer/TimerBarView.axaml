@@ -3,7 +3,7 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="clr-namespace:Werfer.ViewModels"
              x:Class="Werfer.Views.Timer.TimerBarView"
-             x:DataType="vm:TimerViewModel">
+             x:DataType="vm:TimerPlayerViewModel">
     <!-- What you work on on the left, the big action button on the right -->
     <Grid
         Margin="8"
@@ -35,10 +35,12 @@
             </AutoCompleteBox>
 
             <!-- Enter adds a line; \n rather than Windows' \r\n, so the text compares equal to what Clockify sends back.
-                 Grows with its lines, about 6 at most, then scrolls so the history below keeps its room -->
+                 Grows with its lines, about 6 at most, then scrolls so the history below keeps its room. The view model
+                 follows the typing; the running entry gets the text on lost focus, see OnDescriptionLostFocus -->
             <TextBox
                 Grid.Row="1"
-                Text="{Binding Description, UpdateSourceTrigger=LostFocus}"
+                Text="{Binding Description}"
+                LostFocus="OnDescriptionLostFocus"
                 PlaceholderText="What are you working on?"
                 AcceptsReturn="True"
                 NewLine="&#10;"

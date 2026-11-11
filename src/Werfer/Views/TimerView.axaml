@@ -13,9 +13,9 @@
         -->
         <Grid
             RowDefinitions="Auto,*"
-            IsEnabled="{Binding ProjectChoices, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <timer:TimerBarView Grid.Row="0" />
-            <timer:HistoryView Grid.Row="1" />
+            IsEnabled="{Binding Player.ProjectChoices, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <timer:TimerBarView Grid.Row="0" DataContext="{Binding Player}" />
+            <timer:HistoryView Grid.Row="1" DataContext="{Binding History}" />
         </Grid>
 
         <!-- Edit sheet, modal; Escape closes it, see MainWindow.OnKeyDown -->

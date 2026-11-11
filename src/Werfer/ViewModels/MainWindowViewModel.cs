@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Windows.Input;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using JetBrains.Annotations;
@@ -32,6 +33,8 @@ public partial class MainWindowViewModel : ViewModelBase
         timeTracking.Connected += OnConnected;
         settings.PropertyChanged += OnSettingsPropertyChanged;
         timer.PropertyChanged += OnPagePropertyChanged;
+        timer.Player.PropertyChanged += OnPagePropertyChanged;
+        timer.History.PropertyChanged += OnPagePropertyChanged;
         settings.PropertyChanged += OnPagePropertyChanged;
 
         // A key saved by a previous run connects right away, the timer page fills in once it's done
@@ -83,7 +86,9 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(
         nameof(CurrentPage),
-        nameof(ShowRefreshButton)
+        nameof(ShowRefreshButton),
+        nameof(ClearDescriptionCommand),
+        nameof(ResetCommand)
     )]
     public partial AppPageEnum Page { get; private set; }
 
@@ -96,6 +101,11 @@ public partial class MainWindowViewModel : ViewModelBase
     };
 
     public bool ShowRefreshButton => Page == AppPageEnum.Timer;
+
+    // Shortcuts acting on the timer page's fields, see the window's KeyBindings: none while another page is shown,
+    // the cleared fields must be on screen
+    public ICommand? ClearDescriptionCommand => Page == AppPageEnum.Timer ? Timer.ClearDescriptionCommand : null;
+    public ICommand? ResetCommand => Page == AppPageEnum.Timer ? Timer.ResetCommand : null;
 
     [ObservableProperty]
     public partial string? UserEmail { get; private set; }
@@ -119,7 +129,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (e.PropertyName == nameof(SettingsViewModel.WeekStart))
         {
-            _ = Timer.LoadHistoryAsync();
+            _ = Timer.History.LoadAsync();
         }
     }
 
@@ -129,7 +139,13 @@ public partial class MainWindowViewModel : ViewModelBase
         switch (e.PropertyName)
         {
             case nameof(IsBusy):
-                IsAnyPageBusy = Timer.IsBusy || Settings.IsBusy;
+                IsAnyPageBusy = Timer.IsBusy || Timer.Player.IsBusy || Timer.History.IsBusy || Settings.IsBusy;
+                break;
+
+            // The timer page's shortcuts follow its edit sheet, see TimerViewModel
+            case nameof(TimerViewModel.ClearDescriptionCommand):
+            case nameof(TimerViewModel.ResetCommand):
+                OnPropertyChanged(e.PropertyName);
                 break;
         }
     }

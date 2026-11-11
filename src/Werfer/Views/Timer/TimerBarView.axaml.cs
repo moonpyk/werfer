@@ -1,4 +1,6 @@
 using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Werfer.ViewModels;
 
 namespace Werfer.Views.Timer;
 
@@ -10,5 +12,11 @@ public partial class TimerBarView : UserControl
     public TimerBarView()
     {
         InitializeComponent();
+    }
+
+    // Typed: now it goes to the running entry
+    private void OnDescriptionLostFocus(object? sender, RoutedEventArgs e)
+    {
+        _ = (DataContext as TimerPlayerViewModel)?.PushDescriptionAsync();
     }
 }

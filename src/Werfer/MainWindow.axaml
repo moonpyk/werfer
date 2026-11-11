@@ -17,6 +17,18 @@
                  CanMaximize="False"
                  Topmost="{Binding ApplicationSettings.Topmost}">
     <!-- Page view models are mapped to their views here, no reflection-based ViewLocator (NativeAOT) -->
+    <!-- Shortcuts; their conditions (no edit sheet open, timer page, ...) are the commands' CanExecute -->
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+Space" Command="{Binding Timer.ToggleCommand}" />
+        <!-- Fetches the running entry and the week's history, they may have changed elsewhere -->
+        <KeyBinding Gesture="F5" Command="{Binding Timer.RefreshCommand}" />
+        <KeyBinding Gesture="Ctrl+L" Command="{Binding ClearDescriptionCommand}" />
+        <!-- "New": a blank, stopped timer -->
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding ResetCommand}" />
+        <!-- Closes the edit sheet, like its Cancel button; an open dropdown inside it takes Escape first -->
+        <KeyBinding Gesture="Escape" Command="{Binding Timer.CloseEditorCommand}" />
+    </Window.KeyBindings>
+
     <Window.DataTemplates>
         <DataTemplate DataType="vm:TimerViewModel">
             <views:TimerView />
@@ -94,7 +106,7 @@
                     x:Name="RefreshItem"
                     SelectsOnInvoked="False"
                     IsVisible="{Binding ShowRefreshButton}"
-                    IsEnabled="{Binding Timer.ProjectChoices, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    IsEnabled="{Binding Timer.Player.ProjectChoices, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <ui:FANavigationViewItem.IconSource>
                         <ui:FASymbolIconSource Symbol="Refresh" />
                     </ui:FANavigationViewItem.IconSource>
