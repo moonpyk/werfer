@@ -76,6 +76,13 @@
             Content="{Binding CurrentPage}"
             SelectionChanged="OnNavigationSelectionChanged"
             ItemInvoked="OnNavigationItemInvoked">
+            <ui:FANavigationView.MenuItems>
+                <ui:FANavigationViewItem x:Name="TimerItem" Content="Timer">
+                    <ui:FANavigationViewItem.IconSource>
+                        <ui:FASymbolIconSource Symbol="Clock" />
+                    </ui:FANavigationViewItem.IconSource>
+                </ui:FANavigationViewItem>
+            </ui:FANavigationView.MenuItems>
             <ui:FANavigationView.FooterMenuItems>
                 <!-- Action, not a page: invoking it doesn't change the selection -->
                 <ui:FANavigationViewItem
@@ -102,13 +109,6 @@
                     </ui:FANavigationViewItem.InfoBadge>
                 </ui:FANavigationViewItem>
             </ui:FANavigationView.FooterMenuItems>
-            <ui:FANavigationView.MenuItems>
-                <ui:FANavigationViewItem x:Name="TimerItem" Content="Timer">
-                    <ui:FANavigationViewItem.IconSource>
-                        <ui:FASymbolIconSource Symbol="Clock" />
-                    </ui:FANavigationViewItem.IconSource>
-                </ui:FANavigationViewItem>
-            </ui:FANavigationView.MenuItems>
         </ui:FANavigationView>
     </DockPanel>
 </wnd:FAAppWindow>
