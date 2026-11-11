@@ -21,6 +21,9 @@ public partial class TimerPlayerViewModel : ViewModelBase
     private IApplicationSettings ApplicationSettings { get; }
     private TimeTrackingService TimeTracking { get; }
     
+    /// <summary>
+    ///     Creates the player, following the running entry from then on.
+    /// </summary>
     public TimerPlayerViewModel(
         ILogger logger,
         FlashMessageService flashMessages,
@@ -108,12 +111,11 @@ public partial class TimerPlayerViewModel : ViewModelBase
     /// </summary>
     public async Task LoadProjectChoicesAsync()
     {
-        ProjectChoices = (await TimeTracking.GetProjectTasksAsync())
+        ProjectChoices = [.. (await TimeTracking.GetProjectTasksAsync())
             .Select(pt => new ProjectTaskViewModel(pt))
             // Projects sharing a color end up next to each other in the list
             .OrderBy(c => c.Project.Color, StringComparer.InvariantCultureIgnoreCase)
-            .ThenBy(c => c.ToString(), StringComparer.CurrentCultureIgnoreCase)
-            .ToList();
+            .ThenBy(c => c.ToString(), StringComparer.CurrentCultureIgnoreCase)];
 
         // Choices weren't loaded yet when ConnectAsync raised the change
         OnRunningEntryChanged();

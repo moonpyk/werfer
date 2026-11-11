@@ -12,6 +12,9 @@ namespace Werfer.ViewModels;
 [UsedImplicitly]
 public partial class SettingsViewModel : ViewModelBase
 {
+    /// <summary>
+    ///     Creates the page, its API key box filled with the saved one.
+    /// </summary>
     public SettingsViewModel(
         ILogger<SettingsViewModel> logger,
         IApplicationSettings applicationSettings,
@@ -27,12 +30,21 @@ public partial class SettingsViewModel : ViewModelBase
     private IApplicationSettings ApplicationSettings { get; }
     private TimeTrackingService TimeTracking { get; }
 
+    /// <summary>
+    ///     The key typed in the settings, only saved once Clockify accepted it, see <see cref="ConnectAsync" />.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasApiKey))]
     public partial string ApiKey { get; set; }
 
+    /// <summary>
+    ///     Whether a key is typed, empty or blank ones aside.
+    /// </summary>
     public bool HasApiKey => !string.IsNullOrWhiteSpace(ApiKey);
 
+    /// <summary>
+    ///     The choices of the first day of the week.
+    /// </summary>
     public DayOfWeek[] DaysOfWeek { get; } = Enum.GetValues<DayOfWeek>();
 
     /// <summary>

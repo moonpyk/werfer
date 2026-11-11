@@ -30,7 +30,9 @@ public abstract partial class TimeEntryItemViewModelBase(
     /// </summary>
     protected abstract IReadOnlyList<TimeEntry> TimeEntries { get; }
 
-    // Entries are edited one by one, a group of several is edited through its expanded lines
+    /// <summary>
+    ///     Whether the item can be edited: entries are edited one by one, a group of several through its expanded lines.
+    /// </summary>
     public bool CanEdit => TimeEntries.Count == 1;
 
     // Opens the edit sheet of the timer page

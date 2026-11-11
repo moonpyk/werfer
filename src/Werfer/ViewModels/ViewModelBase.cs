@@ -26,6 +26,9 @@ public abstract partial class ViewModelBase(
     )]
     protected ILogger Logger { get; } = logger;
 
+    /// <summary>
+    ///     The messages shown above the status bar, shared by every page.
+    /// </summary>
     public FlashMessageService FlashMessages { get; } = flashMessages;
 
     /// <summary>

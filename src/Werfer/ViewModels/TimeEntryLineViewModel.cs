@@ -13,13 +13,25 @@ public class TimeEntryLineViewModel(
     string duration
 ) : TimeEntryItemViewModelBase(timer)
 {
+    /// <summary>
+    ///     The group the entry belongs to; continuing the entry continues it.
+    /// </summary>
     public TimeEntryGroupViewModel Group { get; } = group;
 
+    /// <summary>
+    ///     The group's project and task, shared by its entries.
+    /// </summary>
     public override ProjectTaskViewModel? Choice => Group.Choice;
-
-    protected override IReadOnlyList<TimeEntry> TimeEntries { get; } = [entry];
-
+    
+    /// <summary>
+    ///     The entry's start and end times, HH:mm - HH:mm.
+    /// </summary>
     public string Range { get; } = range;
 
+    /// <summary>
+    ///     The entry's duration, hh:mm:ss.
+    /// </summary>
     public string Duration { get; } = duration;
+    
+    protected override IReadOnlyList<TimeEntry> TimeEntries { get; } = [entry];
 }

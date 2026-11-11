@@ -15,28 +15,59 @@ public partial class TimeEntryGroupViewModel(
     TimerViewModel timer
 ) : TimeEntryItemViewModelBase(timer)
 {
-    // Null: it can't be continued
+    /// <summary>
+    ///     The line's project and task; null when no longer startable (archived, done): it can't be continued.
+    /// </summary>
     public override ProjectTaskViewModel? Choice { get; } = choice;
 
+    /// <summary>
+    ///     Whether the line can be continued, see <see cref="Choice" />.
+    /// </summary>
     public bool CanContinue => Choice is not null;
 
+    /// <summary>
+    ///     The project's color, for the line's dot; null without a choice.
+    /// </summary>
     public IBrush? Brush => Choice?.Brush;
 
+    /// <summary>
+    ///     The project's color, made readable as the project's name; null without a choice.
+    /// </summary>
     public Color? Color => Choice?.Color;
 
+    /// <summary>
+    ///     The entries' shared description, null without one.
+    /// </summary>
     public string? Description { get; } = group.Description;
 
+    /// <summary>
+    ///     The description shown, a placeholder without one.
+    /// </summary>
     public string DisplayDescription => Description ?? "(no description)";
 
-    // Greyed placeholder
+    /// <summary>
+    ///     Greys the placeholder shown without a description.
+    /// </summary>
     public double DescriptionOpacity => Description is null ? 0.6 : 1;
 
+    /// <summary>
+    ///     The project's name, a placeholder without a choice.
+    /// </summary>
     public string ProjectName => Choice?.Project.Name ?? "(unknown project)";
 
+    /// <summary>
+    ///     The task's name, null without a choice.
+    /// </summary>
     public string? TaskName => Choice?.Task.Name;
 
+    /// <summary>
+    ///     The project's client, null without one.
+    /// </summary>
     public string? ClientName => Choice?.Project.ClientName;
 
+    /// <summary>
+    ///     The total of the line's entries, hh:mm:ss.
+    /// </summary>
     public string Duration { get; } = TimeEntryHistory.Format(group.Duration);
 
     /// <summary>
@@ -47,11 +78,17 @@ public partial class TimeEntryGroupViewModel(
         group.Entries.Max(e => e.TimeInterval!.End!.Value)
     );
 
+    /// <summary>
+    ///     How many entries the line groups.
+    /// </summary>
     public int Count => TimeEntries.Count;
 
     // Kept rather than capturing the constructor parameter, which the initializers above already read
     protected override IReadOnlyList<TimeEntry> TimeEntries { get; } = group.Entries;
 
+    /// <summary>
+    ///     Whether the line groups several entries: they can be shown, see <see cref="Entries" />.
+    /// </summary>
     public bool IsMultiple => Count > 1;
 
     /// <summary>

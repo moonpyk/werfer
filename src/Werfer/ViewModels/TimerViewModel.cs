@@ -20,6 +20,9 @@ public partial class TimerViewModel : ViewModelBase
     // The entry shown in the edit sheet, highlighted in the history meanwhile
     private TimeEntryItemViewModelBase? _editedItem;
 
+    /// <summary>
+    ///     Creates the page and its two parts, and ties them together, see the class summary.
+    /// </summary>
     public TimerViewModel(
         IApplicationSettings applicationSettings,
         ILogger<TimerViewModel> logger,
@@ -49,8 +52,14 @@ public partial class TimerViewModel : ViewModelBase
 
     private TimeTrackingService TimeTracking { get; }
 
+    /// <summary>
+    ///     The timer bar's part: the running entry, its start and stop.
+    /// </summary>
     public TimerPlayerViewModel Player { get; }
 
+    /// <summary>
+    ///     The history's part: the week's finished entries and total.
+    /// </summary>
     public HistoryViewModel History { get; }
 
     /// <summary>
@@ -81,9 +90,17 @@ public partial class TimerViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(CloseEditorCommand))]
     public partial bool IsSavingEdit { get; private set; }
 
-    // The bar's commands for the window's shortcuts, see its KeyBindings: none acts behind the edit sheet
+    /// <summary>
+    ///     Ctrl+Space, see the window's KeyBindings: the player's Toggle, null while the edit sheet is open.
+    /// </summary>
     public ICommand? ToggleCommand => IsEditorOpen ? null : Player.ToggleCommand;
+    /// <summary>
+    ///     Ctrl+L: the player's ClearDescription, null while the edit sheet is open.
+    /// </summary>
     public ICommand? ClearDescriptionCommand => IsEditorOpen ? null : Player.ClearDescriptionCommand;
+    /// <summary>
+    ///     Ctrl+N: the player's Reset, null while the edit sheet is open.
+    /// </summary>
     public ICommand? ResetCommand => IsEditorOpen ? null : Player.ResetCommand;
 
     private bool CanRefresh => !IsEditorOpen;

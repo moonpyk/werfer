@@ -11,6 +11,10 @@ namespace Werfer.ViewModels;
 /// </summary>
 public partial class TimeEntryEditViewModel : ObservableObject
 {
+    /// <summary>
+    ///     Fills the form from a finished entry, in local time: its times to the minute, see
+    ///     <see cref="TimeEntryHistory.EditedInterval" />. The page saves and closes it through the given callbacks.
+    /// </summary>
     public TimeEntryEditViewModel(
         TimeEntry entry,
         ProjectTaskViewModel? choice,
@@ -44,13 +48,22 @@ public partial class TimeEntryEditViewModel : ObservableObject
         SelectedChoice = choice;
     }
 
+    /// <summary>
+    ///     The entry edited, as it was when the form opened.
+    /// </summary>
     public TimeEntry Entry { get; }
 
     private Func<TimeEntryEditViewModel, Task> SaveAction { get; }
     private Action CancelAction { get; }
 
+    /// <summary>
+    ///     Feeds the project box, the timer bar's own.
+    /// </summary>
     public Func<string?, CancellationToken, Task<IEnumerable<object>>> ProjectChoicesPopulator { get; }
 
+    /// <summary>
+    ///     The entry's day, that of its start; null while the picker is cleared.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(
         nameof(Interval),
@@ -60,6 +73,9 @@ public partial class TimeEntryEditViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     public partial DateTime? Day { get; set; }
 
+    /// <summary>
+    ///     The start time as typed, see <see cref="TimeEntryHistory.TryParseTimeOfDay" />.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(
         nameof(Interval),
@@ -69,6 +85,9 @@ public partial class TimeEntryEditViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     public partial string? Start { get; set; }
 
+    /// <summary>
+    ///     The end time as typed; before the start, it falls on the next day.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(
         nameof(Interval),
@@ -78,6 +97,9 @@ public partial class TimeEntryEditViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     public partial string? End { get; set; }
 
+    /// <summary>
+    ///     The entry's description, multiline.
+    /// </summary>
     [ObservableProperty]
     public partial string? Description { get; set; }
 
@@ -88,7 +110,9 @@ public partial class TimeEntryEditViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(SelectedBrush))]
     public partial ProjectTaskViewModel? SelectedChoice { get; set; }
 
-    // Flattened, see TimerViewModel.SelectedBrush
+    /// <summary>
+    ///     The selected project's color, for the box's dot; flattened, a binding to SelectedChoice.Brush logs a warning without a choice.
+    /// </summary>
     public IBrush? SelectedBrush => SelectedChoice?.Brush;
 
     /// <summary>
@@ -107,8 +131,14 @@ public partial class TimeEntryEditViewModel : ObservableObject
             )
             : null;
 
+    /// <summary>
+    ///     Whether the times read, see <see cref="Interval" />.
+    /// </summary>
     public bool CanSave => Interval is not null;
 
+    /// <summary>
+    ///     The edited duration, hh:mm:ss; empty while the times don't read.
+    /// </summary>
     public string Duration => Interval is { } i ? TimeEntryHistory.Format(i.Duration) : string.Empty;
 
     [RelayCommand(CanExecute = nameof(CanSave))]

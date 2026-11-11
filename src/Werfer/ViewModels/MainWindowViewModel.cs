@@ -14,6 +14,9 @@ namespace Werfer.ViewModels;
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public partial class MainWindowViewModel : ViewModelBase
 {
+    /// <summary>
+    ///     Creates the shell over its two pages, and connects right away with a key saved by a previous run.
+    /// </summary>
     public MainWindowViewModel(
         ILogger<MainWindowViewModel> logger,
         FlashMessageService flashMessages,
@@ -32,6 +35,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         timeTracking.Connected += OnConnected;
         settings.PropertyChanged += OnSettingsPropertyChanged;
+
         timer.PropertyChanged += OnPagePropertyChanged;
         timer.Player.PropertyChanged += OnPagePropertyChanged;
         timer.History.PropertyChanged += OnPagePropertyChanged;
@@ -56,10 +60,19 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     public IApplicationSettings ApplicationSettings { get; }
 
+    /// <summary>
+    ///     The main page, see <see cref="TimerViewModel" />.
+    /// </summary>
     public TimerViewModel Timer { get; }
 
+    /// <summary>
+    ///     The settings page, opened from the More menu.
+    /// </summary>
     public SettingsViewModel Settings { get; }
 
+    /// <summary>
+    ///     A status message, shown in the window's status bar.
+    /// </summary>
     [ObservableProperty]
     public partial string? Status { get; private set; }
 
@@ -79,10 +92,15 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private TimeTrackingService TimeTracking { get; }
 
-    // Drives the progress ring, whichever page is working
+    /// <summary>
+    ///     Whether any page, or a part of one, is working: drives the progress ring of the status bar.
+    /// </summary>
     [ObservableProperty]
     public partial bool IsAnyPageBusy { get; private set; }
 
+    /// <summary>
+    ///     The page shown, see <see cref="CurrentPage" />.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(
         nameof(CurrentPage),
@@ -92,7 +110,9 @@ public partial class MainWindowViewModel : ViewModelBase
     )]
     public partial AppPageEnum Page { get; private set; }
 
-    // Shown through the DataTemplates declared in MainWindow.axaml
+    /// <summary>
+    ///     The view model of the page shown, mapped to its view by the DataTemplates declared in MainWindow.axaml.
+    /// </summary>
     public ViewModelBase CurrentPage => Page switch
     {
         AppPageEnum.Timer => Timer,
@@ -100,16 +120,30 @@ public partial class MainWindowViewModel : ViewModelBase
         _ => throw new ArgumentOutOfRangeException(nameof(Page), Page, null)
     };
 
+    /// <summary>
+    ///     Whether the navigation bar shows its Refresh item: only on the timer page, which it refreshes.
+    /// </summary>
     public bool ShowRefreshButton => Page == AppPageEnum.Timer;
 
-    // Shortcuts acting on the timer page's fields, see the window's KeyBindings: none while another page is shown,
-    // the cleared fields must be on screen
+    /// <summary>
+    ///     Ctrl+L, see the window's KeyBindings: the timer page's ClearDescription, null while another page is shown, the
+    ///     cleared field must be on screen.
+    /// </summary>
     public ICommand? ClearDescriptionCommand => Page == AppPageEnum.Timer ? Timer.ClearDescriptionCommand : null;
+    /// <summary>
+    ///     Ctrl+N, see the window's KeyBindings: the timer page's Reset, null while another page is shown.
+    /// </summary>
     public ICommand? ResetCommand => Page == AppPageEnum.Timer ? Timer.ResetCommand : null;
 
+    /// <summary>
+    ///     The email of the connected user, shown below their name in the More menu.
+    /// </summary>
     [ObservableProperty]
     public partial string? UserEmail { get; private set; }
 
+    /// <summary>
+    ///     Shows a page.
+    /// </summary>
     public void Navigate(AppPageEnum page)
     {
         Page = page;

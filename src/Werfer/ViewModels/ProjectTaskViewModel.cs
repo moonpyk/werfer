@@ -3,8 +3,14 @@ using Werfer.Clockify.ViewModels;
 
 namespace Werfer.ViewModels;
 
+/// <summary>
+///     A project and task an entry can be started on, with the project's color for display.
+/// </summary>
 public record ProjectTaskViewModel : ProjectTaskChoice
 {
+    /// <summary>
+    ///     Wraps a choice, its project's color parsed once; gray when Clockify's isn't a valid color.
+    /// </summary>
     public ProjectTaskViewModel(
         ProjectTaskChoice task
     ) : base(task.Project, task.Task)

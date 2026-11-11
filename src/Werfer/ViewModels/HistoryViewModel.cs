@@ -18,6 +18,9 @@ public partial class HistoryViewModel : ViewModelBase
 
     private TimeSpan _weekFinished;
 
+    /// <summary>
+    ///     Creates the history, empty until connected, reloading itself at midnight.
+    /// </summary>
     public HistoryViewModel(
         ILogger logger,
         FlashMessageService flashMessages,

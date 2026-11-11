@@ -14,12 +14,21 @@ public class TimeEntryDayViewModel(
     TimerViewModel timer
 )
 {
+    /// <summary>
+    ///     "Today", "Yesterday", or the day and month in the current culture.
+    /// </summary>
     public string Title { get; } = day.Date == today ? "Today"
         : day.Date == today.AddDays(-1) ? "Yesterday"
         : day.Date.ToString("dddd d MMM", CultureInfo.CurrentCulture).FirstCharToUpper();
 
+    /// <summary>
+    ///     The day's total as formatted string
+    /// </summary>
     public string Total { get; } = TimeEntryHistory.Format(day.Duration);
 
+    /// <summary>
+    ///     The day's lines, most recent first; a line without a startable project or task has no choice.
+    /// </summary>
     public List<TimeEntryGroupViewModel> Groups { get; } =
     [
         .. day.Groups.Select(g => new TimeEntryGroupViewModel(
