@@ -89,6 +89,7 @@ public class App : Application
             )
             .RegisterServices()
             .AddLogging(ConfigureLogging)
+            .AddHttpClient()
             // Services
             .AddSingleton<FlashMessageService>()
             // ViewModels
@@ -98,7 +99,7 @@ public class App : Application
             // Windows
             .AddSingleton<MainWindow>()
             ;
-        
+
         return services.BuildServiceProvider();
     }
 

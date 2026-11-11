@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             x:Class="Werfer.Controls.AccountCard">
+    <!-- 
+    Avatar on the left, name above the email on the right; filled from the control's properties in code, see
+    OnPropertyChanged 
+    -->
+    <UserControl.Resources>
+        <system:Double x:Key="AvatarSize">32</system:Double>
+        <CornerRadius x:Key="AvatarCornerRadius">16<!-- Half the avatar size to get a circle --></CornerRadius>
+    </UserControl.Resources>
+    <StackPanel Orientation="Horizontal" Spacing="10">
+        <!-- The picture, cut round; the Contact symbol without one -->
+        <Border
+            Width="{StaticResource AvatarSize}"
+            Height="{StaticResource AvatarSize}"
+            CornerRadius="{StaticResource AvatarCornerRadius}"
+            ClipToBounds="True"
+            VerticalAlignment="Center"
+            Background="{DynamicResource ControlFillColorSecondaryBrush}">
+            <Panel>
+                <ui:FASymbolIcon x:Name="ContactIcon" Symbol="Contact" FontSize="16" />
+                <Image
+                    x:Name="AvatarImage"
+                    Stretch="UniformToFill"
+                    />
+            </Panel>
+        </Border>
+        <StackPanel VerticalAlignment="Center">
+            <TextBlock x:Name="UserNameText" FontWeight="SemiBold" />
+            <TextBlock
+                x:Name="EmailText"
+                FontSize="12"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

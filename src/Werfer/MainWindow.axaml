@@ -5,6 +5,7 @@
                  xmlns:svc="clr-namespace:Werfer.Services"
                  xmlns:vm="clr-namespace:Werfer.ViewModels"
                  xmlns:views="clr-namespace:Werfer.Views"
+                 xmlns:ctl="clr-namespace:Werfer.Controls"
                  x:Class="Werfer.MainWindow"
                  x:DataType="vm:MainWindowViewModel"
                  Icon="avares://Werfer/Assets/Werfer.ico"
@@ -77,9 +78,9 @@
             SelectionChanged="OnNavigationSelectionChanged"
             ItemInvoked="OnNavigationItemInvoked">
             <ui:FANavigationView.MenuItems>
-                <ui:FANavigationViewItem 
-                    x:Name="TimerItem" 
-                    Content="Timer" 
+                <ui:FANavigationViewItem
+                    x:Name="TimerItem"
+                    Content="Timer"
                     Tag="{x:Static vm:AppPageEnum.Timer}">
                     <ui:FANavigationViewItem.IconSource>
                         <ui:FASymbolIconSource Symbol="Clock" />
@@ -109,7 +110,26 @@
                     AutomationProperties.Name="More">
                     <FlyoutBase.AttachedFlyout>
                         <MenuFlyout Placement="BottomEdgeAlignedRight" Closed="OnMoreMenuClosed">
-                            <MenuItem Header="Settings" Tag="{x:Static vm:AppPageEnum.Settings}" Click="OnMorePageClick">
+                            <MenuItem
+                                IsHitTestVisible="False"
+                                Focusable="False">
+                                <MenuItem.Header>
+                                    <!-- 
+                                    Pulled left over the empty icon column every menu item has (16 px icon + 12 px gap),
+                                    so the avatar lines up with the icons below 
+                                    -->
+                                    <ctl:AccountCard
+                                        Margin="-28,0,0,0"
+                                        UserName="{Binding UserName}"
+                                        Email="{Binding UserEmail}"
+                                        Avatar="{Binding Avatar}" />
+                                </MenuItem.Header>
+                            </MenuItem>
+                            <Separator />
+                            <MenuItem
+                                Header="Settings"
+                                Tag="{x:Static vm:AppPageEnum.Settings}"
+                                Click="OnMorePageClick">
                                 <MenuItem.Icon>
                                     <ui:FASymbolIcon Symbol="Settings" />
                                 </MenuItem.Icon>
