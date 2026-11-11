@@ -30,8 +30,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ApplicationSettings = applicationSettings;
         Timer = timer;
         Settings = settings;
-        CurrentPage = timer;
-
+        
         settings.PropertyChanged += (sender, e) =>
         {
             if (e.PropertyName == nameof(SettingsViewModel.WeekStart))
@@ -81,15 +80,25 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool IsAnyPageBusy { get; private set; }
 
-    // Shown through the DataTemplates declared in MainWindow.axaml
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowRefreshButton))]
-    public partial ViewModelBase CurrentPage { get; private set; }
+    [NotifyPropertyChangedFor(
+        nameof(CurrentPage), 
+        nameof(ShowRefreshButton)
+    )]
+    public partial AppPageEnum Page { get; private set; }
 
-    public bool ShowRefreshButton => CurrentPage is TimerViewModel;
-
-    public void Navigate(bool toSettings)
+    // Shown through the DataTemplates declared in MainWindow.axaml
+    public ViewModelBase CurrentPage => Page switch
     {
-        CurrentPage = toSettings ? Settings : Timer;
+        AppPageEnum.Timer => Timer,
+        AppPageEnum.Settings => Settings,
+        _ => throw new ArgumentOutOfRangeException(nameof(Page), Page, null)
+    };
+
+    public bool ShowRefreshButton => Page == AppPageEnum.Timer;
+
+    public void Navigate(AppPageEnum page)
+    {
+        Page = page;
     }
 }

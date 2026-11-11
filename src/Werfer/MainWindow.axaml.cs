@@ -1,5 +1,7 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Windowing;
@@ -144,7 +146,11 @@ public partial class MainWindow : FAAppWindow
 
     private void OnNavigationSelectionChanged(object? sender, FANavigationViewSelectionChangedEventArgs e)
     {
-        ViewModel?.Navigate(ReferenceEquals(e.SelectedItem, SettingsItem));
+        // More has no Tag: selecting it follows a navigation already done, see OnMorePageClick
+        if (e.SelectedItem is FANavigationViewItem { Tag: AppPageEnum page })
+        {
+            ViewModel?.Navigate(page);
+        }
     }
 
     private void OnFlashMessageClosed(FAInfoBar sender, FAInfoBarClosedEventArgs e)
@@ -160,6 +166,41 @@ public partial class MainWindow : FAAppWindow
         if (e.InvokedItemContainer == RefreshItem)
         {
             _ = ViewModel?.Timer.RefreshAsync();
+        }
+        else if (e.InvokedItemContainer == MoreItem)
+        {
+            FlyoutBase.ShowAttachedFlyout(MoreItem);
+        }
+    }
+
+    // A page of the More menu: More, selected by the click that opened the menu, stays selected meanwhile
+    private void OnMorePageClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem { Tag: AppPageEnum page })
+        {
+            ViewModel?.Navigate(page);
+        }
+    }
+
+    // Closed without a pick, or on a page with an item of its own: that item gets the selection back. Not when on a
+    // page of the More menu, whose item More is
+    private void OnMoreMenuClosed(object? sender, EventArgs e)
+    {
+        if (ViewModel is null)
+        {
+            return;
+        }
+
+        var items = Navigation.MenuItems
+            .Concat(Navigation.FooterMenuItems);
+        
+        var pageItem = items
+            .OfType<FANavigationViewItem>()
+            .FirstOrDefault(i => i.Tag is AppPageEnum page && page == ViewModel.Page);
+
+        if (pageItem is not null)
+        {
+            Navigation.SelectedItem = pageItem;
         }
     }
 }
