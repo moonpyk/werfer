@@ -45,6 +45,11 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
     public List<TimeEntry> Entries { get; } = [];
 
     /// <summary>
+    ///     What the projects query serves, a page at a time; whatever its filters, give them tasks to be startable
+    /// </summary>
+    public List<Project> Projects { get; } = [];
+
+    /// <summary>
     ///     Page size served whatever the one asked, like Clockify capping it without error
     /// </summary>
     public int MaxPageSize { get; set; } = int.MaxValue;
@@ -76,10 +81,7 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
             return Page<TimeEntry>(Running is null ? [] : [Running], true);
         }
 
-        var size = Math.Min(pageSize ?? 50, MaxPageSize);
-        var skip = ((page ?? 1) - 1) * size;
-
-        return Page<TimeEntry>([.. Entries.Skip(skip).Take(size)], skip + size >= Entries.Count);
+        return PageOf(Entries, page, pageSize);
     }
 
     public Task<TimeEntry> GetTimeEntryAsync(string workspaceId, string id, CancellationToken ctk = default)
@@ -143,7 +145,7 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
         CancellationToken ctk = default
     )
     {
-        throw new NotSupportedException();
+        return PageOf(Projects, page, pageSize);
     }
 
     public Task<TimeEntry> CreateTimeEntryAsync(
@@ -158,6 +160,15 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
     public Task DeleteTimeEntryAsync(string workspaceId, string id, CancellationToken ctk = default)
     {
         throw new NotSupportedException();
+    }
+
+    // The given page of items, its size capped by MaxPageSize as Clockify does; 50 when none asked, Clockify's default
+    private Task<IApiResponse<List<T>>> PageOf<T>(List<T> items, int? page, int? pageSize)
+    {
+        var size = Math.Min(pageSize ?? 50, MaxPageSize);
+        var skip = ((page ?? 1) - 1) * size;
+
+        return Page<T>([.. items.Skip(skip).Take(size)], skip + size >= items.Count);
     }
 
     private static Task<IApiResponse<List<T>>> Page<T>(List<T> items, bool last)
