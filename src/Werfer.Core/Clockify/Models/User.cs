@@ -23,4 +23,7 @@ public class User
 
     [JsonPropertyName("status")]
     public string? Status { get; set; }
+    
+    [JsonPropertyName("profilePicture")]
+    public string? ProfilePicture { get; set; }
 }
