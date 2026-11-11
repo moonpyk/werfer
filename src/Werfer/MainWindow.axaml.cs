@@ -78,7 +78,10 @@ public partial class MainWindow : FAAppWindow
             {
                 KeyModifiers: KeyModifiers.Control,
                 Key: Key.Space
-            } when ViewModel is { Timer.IsEditorOpen: false }:
+            } when ViewModel is
+            {
+                Timer.IsEditorOpen: false
+            }:
                 e.Handled = true;
 
                 // Checked before Focus(): committing the description starts an update, which sets IsBusy
@@ -89,7 +92,6 @@ public partial class MainWindow : FAAppWindow
 
                 // Commits the description being typed, it's only pushed on lost focus
                 Focus();
-                // Failures are reported by the view model's WithBusyIndicator
                 _ = ViewModel.Timer.ToggleAsync();
                 return;
 
@@ -98,11 +100,15 @@ public partial class MainWindow : FAAppWindow
             {
                 KeyModifiers: KeyModifiers.None,
                 Key: Key.F5
-            } when ViewModel is { Timer.IsEditorOpen: false }:
+            } when ViewModel is
+            {
+                Timer.IsEditorOpen: false
+            }:
+                e.Handled = true;
+
                 // Pushes the description being typed first, the refresh would overwrite it otherwise
                 Focus();
                 _ = ViewModel.Timer.RefreshAsync();
-                e.Handled = true;
                 return;
 
             // "cLear", timer page only: the cleared field must be on screen
@@ -110,11 +116,15 @@ public partial class MainWindow : FAAppWindow
             {
                 KeyModifiers: KeyModifiers.Control,
                 Key: Key.L
-            } when ViewModel is { CurrentPage: TimerViewModel { IsEditorOpen: false } timer }:
+            } when ViewModel is
+            {
+                CurrentPage: TimerViewModel { IsEditorOpen: false } timer
+            }:
+                e.Handled = true;
+
                 // Commits the text being typed first: clearing an unchanged value wouldn't reach the TextBox
                 Focus();
                 timer.Description = null;
-                e.Handled = true;
                 return;
 
             // "New": a blank, stopped timer
@@ -122,10 +132,15 @@ public partial class MainWindow : FAAppWindow
             {
                 KeyModifiers: KeyModifiers.Control,
                 Key: Key.N
-            } when ViewModel is { CurrentPage: TimerViewModel { IsEditorOpen: false } timer }:
+            } when ViewModel is
+            {
+                CurrentPage: TimerViewModel { IsEditorOpen: false } timer
+            }:
+                e.Handled = true;
+
+                // Commits the text being typed first: clearing an unchanged value wouldn't reach the TextBox
                 Focus();
                 _ = timer.ResetAsync();
-                e.Handled = true;
                 return;
 
             // Closes the edit sheet, like its Cancel button; unhandled so far, an open dropdown inside it took it first
@@ -134,14 +149,12 @@ public partial class MainWindow : FAAppWindow
                 KeyModifiers: KeyModifiers.None,
                 Key: Key.Escape
             } when ViewModel is { Timer.IsEditorOpen: true }:
-                ViewModel.Timer.CloseEditor();
                 e.Handled = true;
+                ViewModel.Timer.CloseEditor();
                 return;
-
-            default:
-                base.OnKeyDown(e);
-                break;
         }
+
+        base.OnKeyDown(e);
     }
 
     private void OnNavigationSelectionChanged(object? sender, FANavigationViewSelectionChangedEventArgs e)
@@ -193,7 +206,7 @@ public partial class MainWindow : FAAppWindow
 
         var items = Navigation.MenuItems
             .Concat(Navigation.FooterMenuItems);
-        
+
         var pageItem = items
             .OfType<FANavigationViewItem>()
             .FirstOrDefault(i => i.Tag is AppPageEnum page && page == ViewModel.Page);
