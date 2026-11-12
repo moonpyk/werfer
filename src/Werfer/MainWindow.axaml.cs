@@ -13,7 +13,7 @@ namespace Werfer;
 
 public partial class MainWindow : FAAppWindow
 {
-    // Set once Quit is picked in the confirmation, see ConfirmCloseAsync
+    // True once the user clicked Quit in the confirmation dialog, see ConfirmCloseAsync
     private bool _closeConfirmed;
 
     [UsedImplicitly]
@@ -34,7 +34,7 @@ public partial class MainWindow : FAAppWindow
 
         DataContext = ViewModel = vm;
 
-        // A page shown by a shortcut (Ctrl+,) gets its navigation item selected, as a click would
+        // When a shortcut (Ctrl+,) changes the page, select its navigation item, as a click would
         vm.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(MainWindowViewModel.Page))
@@ -55,16 +55,17 @@ public partial class MainWindow : FAAppWindow
     private void Initialize()
     {
         InitializeComponent();
-        // FAAppWindow's TitleBarBackground resource resolves to nothing, leaving its title bar panel without
-        // background: not hit-testable, so only the icon and title text could drag the window
+        // FAAppWindow's TitleBarBackground resource is empty, so the title bar has no background. Without a
+        // background it ignores the mouse, and only the icon and title text could drag the window
         TitleBar.BackgroundColor = TitleBar.InactiveBackgroundColor = Colors.Transparent;
-        // Matches the page MainWindowViewModel opens on
+        // Same page as the one MainWindowViewModel starts on
         Navigation.SelectedItem = TimerItem;
     }
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
-        // Not e.IsProgrammatic: FAAppWindow's own close button calls Close() too. A Windows shutdown mustn't wait on a dialog
+        // Our own flag, not e.IsProgrammatic: FAAppWindow's close button also calls Close() from code.
+        // No dialog when Windows shuts down, it must not wait
         if (ViewModel is { ApplicationSettings.ConfirmClose: true }
             && !_closeConfirmed
             && e.CloseReason != WindowCloseReason.OSShutdown)
@@ -74,8 +75,8 @@ public partial class MainWindow : FAAppWindow
             return;
         }
 
-        // A minimized window reports a fake far off-screen position, keep the last real one instead
-        // (also skips maximized, whose size isn't the one to restore)
+        // Saved only for a normal window: a minimized one reports a fake position far off screen, and a maximized
+        // one's size is not the size to restore
         if (ViewModel is not null && WindowState == WindowState.Normal)
         {
             var sts = ViewModel.ApplicationSettings;
@@ -86,13 +87,13 @@ public partial class MainWindow : FAAppWindow
             sts.WindowHeight = ClientSize.Height;
         }
 
-        // Also when maximized: "Don't ask again" must be kept
+        // Saved in every window state, so a "Don't ask again" ticked while maximized is kept
         ViewModel?.ApplicationSettings.TrySave();
 
         base.OnClosing(e);
     }
 
-    // Opening the dialog takes the focus off the description box, which sends a description still being typed
+    // Opening the dialog takes the focus away from the description box, which sends any description being typed
     private async Task ConfirmCloseAsync(IApplicationSettings settings)
     {
         var dontAskAgain = new CheckBox
@@ -100,7 +101,7 @@ public partial class MainWindow : FAAppWindow
             Content = "Don't ask again"
         };
 
-        // Same button layout as the delete dialog: Cancel left, the action right and default
+        // Same buttons as the delete dialog: Cancel on the left, the action on the right and pressed by Enter
         var dialog = new FAContentDialog
         {
             Title = "Exit Werfer?",
@@ -128,14 +129,14 @@ public partial class MainWindow : FAAppWindow
             settings.ConfirmClose = false;
         }
 
-        // OnClosing then saves the window and settings without asking again
+        // Close again: OnClosing sees the flag, saves the window and settings, and doesn't ask
         _closeConfirmed = true;
         Close();
     }
 
     private void OnNavigationSelectionChanged(object? sender, FANavigationViewSelectionChangedEventArgs e)
     {
-        // More has no Tag: selecting it follows a navigation already done, see OnMorePageClick
+        // More has no Tag: it only gets selected after OnMorePageClick already changed the page
         if (e.SelectedItem is FANavigationViewItem { Tag: AppPageEnum page })
         {
             ViewModel?.Navigate(page);
@@ -162,7 +163,7 @@ public partial class MainWindow : FAAppWindow
         }
     }
 
-    // A page of the More menu: More, selected by the click that opened the menu, stays selected meanwhile
+    // A page picked in the More menu. More stays selected, the click that opened the menu selected it
     private void OnMorePageClick(object? sender, RoutedEventArgs e)
     {
         if (sender is MenuItem { Tag: AppPageEnum page })
@@ -171,14 +172,13 @@ public partial class MainWindow : FAAppWindow
         }
     }
 
-    // Closed without a pick, or on a page with an item of its own: that item gets the selection back. Not when on a
-    // page of the More menu, whose item More is
+    // The More menu closed: select the item of the page shown again, in case More was selected without a pick
     private void OnMoreMenuClosed(object? sender, EventArgs e)
     {
         SelectPageItem();
     }
 
-    // The item of the page shown, More for a page of its menu
+    // Selects the navigation item of the page shown; for a page of the More menu, that is More
     private void SelectPageItem()
     {
         if (ViewModel is null)

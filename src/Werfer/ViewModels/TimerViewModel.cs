@@ -32,16 +32,16 @@ public partial class TimerViewModel : ViewModelBase
     {
         TimeTracking = timeTracking;
         Player = new TimerPlayerViewModel(
-            logger, 
-            flashMessages, 
-            applicationSettings, 
+            logger,
+            flashMessages,
+            applicationSettings,
             timeTracking
         );
         History = new HistoryViewModel(
-            logger, 
-            flashMessages, 
-            applicationSettings, 
-            timeTracking, 
+            logger,
+            flashMessages,
+            applicationSettings,
+            timeTracking,
             this
         );
 
@@ -94,10 +94,12 @@ public partial class TimerViewModel : ViewModelBase
     ///     Ctrl+Space, see the window's KeyBindings: the player's Toggle, null while the edit sheet is open.
     /// </summary>
     public ICommand? ToggleCommand => IsEditorOpen ? null : Player.ToggleCommand;
+
     /// <summary>
     ///     Ctrl+L: the player's ClearDescription, null while the edit sheet is open.
     /// </summary>
     public ICommand? ClearDescriptionCommand => IsEditorOpen ? null : Player.ClearDescriptionCommand;
+
     /// <summary>
     ///     Ctrl+N: the player's Reset, null while the edit sheet is open.
     /// </summary>
@@ -114,10 +116,7 @@ public partial class TimerViewModel : ViewModelBase
     {
         return WithBusyIndicator(async () =>
         {
-            // A description still being typed goes first, the refreshed entry would overwrite it
-            await Player.PushDescriptionAsync();
-
-            await TimeTracking.RefreshRunningEntryAsync();
+            await Player.Draft.RefreshAsync();
             await History.LoadImplAsync();
         });
     }
@@ -146,7 +145,7 @@ public partial class TimerViewModel : ViewModelBase
     public void Edit(TimeEntryItemViewModelBase item, TimeEntry entry)
     {
         SetEditedItem(item);
-        
+
         Editor = new TimeEntryEditViewModel(
             entry,
             item.Choice,

@@ -10,22 +10,17 @@ using Werfer.Utils;
 namespace Werfer.ViewModels;
 
 /// <summary>
-///     The timer bar: project, task and description of the entry being timed, its start and stop, its elapsed time.
+///     The timer bar: the project, task and description, the start and stop buttons, and the elapsed time.
+///     The fields are stored in a <see cref="TimerDraft" />, which decides what is sent to Clockify and when.
 /// </summary>
 public partial class TimerPlayerViewModel : ViewModelBase
 {
-    // Id of the entry last seen running: when it changes, that entry has finished, see EntryFinished
+    // Id of the running entry we last saw. When it changes, that entry has finished: see EntryFinished
     private string? _runningId;
-
-    // Description of the entry last seen running: the box still showing it means nothing typed is waiting to be sent
-    private string? _runningDescription;
     private IDisposable? _ticker;
-    
-    private IApplicationSettings ApplicationSettings { get; }
-    private TimeTrackingService TimeTracking { get; }
-    
+
     /// <summary>
-    ///     Creates the player, following the running entry from then on.
+    ///     Creates the timer bar. It follows the running entry from then on.
     /// </summary>
     public TimerPlayerViewModel(
         ILogger logger,
@@ -36,25 +31,31 @@ public partial class TimerPlayerViewModel : ViewModelBase
     {
         ApplicationSettings = applicationSettings;
         TimeTracking = timeTracking;
+        Draft = new TimerDraft(timeTracking);
         Elapsed = "00:00:00";
 
-        // The running entry may change from another screen, the bar follows it
+        Draft.Changed += (_, _) => OnDraftChanged();
+        // The running entry can also change from another screen: the bar updates with it
         TimeTracking.RunningEntryChanged += (_, _) => OnRunningEntryChanged();
     }
 
+    private IApplicationSettings ApplicationSettings { get; }
+    private TimeTrackingService TimeTracking { get; }
+
     /// <summary>
-    ///     Raised when the entry last seen running has finished, stopped here or elsewhere: it now belongs to the history.
+    ///     Stores the bar's fields, see <see cref="TimerDraft" />.
     /// </summary>
-    public event EventHandler? EntryFinished;
-    
+    public TimerDraft Draft { get; }
+
     /// <summary>
-    ///     Null until connected, the timer panel is disabled meanwhile
+    ///     Every project and task the user can pick. Null until connected; the timer bar is disabled until then.
     /// </summary>
     [ObservableProperty]
     public partial List<ProjectTaskViewModel>? ProjectChoices { get; private set; }
 
     /// <summary>
-    ///     Feeds the project box with at most 10 matches, the full list is too long to scroll
+    ///     Fills the project box with the matches of what is typed. Limited by the MaxProjectChoices setting, because the
+    ///     full list is too long to scroll.
     /// </summary>
     public Func<string?, CancellationToken, Task<IEnumerable<object>>> ProjectChoicesPopulator =>
         (search, _) => Task.FromResult<IEnumerable<object>>(
@@ -65,29 +66,55 @@ public partial class TimerPlayerViewModel : ViewModelBase
         ]);
 
     /// <summary>
-    ///     Pushed to the running entry when changed
+    ///     The project and task picked. Only the project box sets it, so each pick is sent to the running entry at once.
     /// </summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedBrush))]
-    public partial ProjectTaskViewModel? SelectedChoice { get; set; }
+    public ProjectTaskViewModel? SelectedChoice
+    {
+        get => Draft.Choice as ProjectTaskViewModel;
+        set
+        {
+            if (Equals(Draft.Choice, value))
+            {
+                return;
+            }
+
+            Draft.Choice = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(SelectedBrush));
+            _ = SaveDraftAsync();
+        }
+    }
 
     /// <summary>
-    ///     Flattened: a binding to SelectedChoice.Brush logs a warning whenever nothing is selected
+    ///     The picked project's color. A separate property because binding SelectedChoice.Brush logs a warning when
+    ///     nothing is picked.
     /// </summary>
     public IBrush? SelectedBrush => SelectedChoice?.Brush;
 
     /// <summary>
-    ///     Text of the project box: a null SelectedItem doesn't clear what was typed, ResetAsync empties it here
+    ///     The text typed in the project box. Clearing the pick does not clear this text, so OnDraftChanged clears it.
     /// </summary>
     [ObservableProperty]
     public partial string? ProjectSearchText { get; set; }
 
     /// <summary>
-    ///     Free text, usually a Jira ticket key. Follows the typing, but is only pushed to the running entry at given
-    ///     moments, see <see cref="PushDescriptionAsync" />: each key sent to Clockify would be too many updates
+    ///     The description. It changes with each key typed, but is sent to Clockify only when the box loses focus (see
+    ///     TimerBarView) or before stop, refresh and reset. Sending each key would make too many requests.
     /// </summary>
-    [ObservableProperty]
-    public partial string? Description { get; set; }
+    public string? Description
+    {
+        get => Draft.Description;
+        set
+        {
+            if (Draft.Description == value)
+            {
+                return;
+            }
+
+            Draft.Description = value;
+            OnPropertyChanged();
+        }
+    }
 
     /// <summary>
     ///     Indicates whether a time tracking entry is currently running.
@@ -102,7 +129,7 @@ public partial class TimerPlayerViewModel : ViewModelBase
     public partial string Elapsed { get; private set; }
 
     /// <summary>
-    ///     The running entry's time, zero when stopped; ticks every second, the week's total counts it
+    ///     Time spent on the running entry, zero when stopped. Updated every second; the week's total adds it.
     /// </summary>
     [ObservableProperty]
     public partial TimeSpan RunningElapsed { get; private set; }
@@ -110,18 +137,33 @@ public partial class TimerPlayerViewModel : ViewModelBase
     private bool CanToggle => !IsBusy;
 
     /// <summary>
-    ///     Loads the (project, task) pairs an entry can be started on, then shows the running entry with them.
+    ///     Raised when the running entry has finished, stopped here or in another app. The history then reloads to show it.
+    /// </summary>
+    public event EventHandler? EntryFinished;
+
+    /// <summary>
+    ///     Loads every project and task the user can pick. The draft then finds the running entry's project and task in it.
     /// </summary>
     public async Task LoadProjectChoicesAsync()
     {
-        ProjectChoices = [.. (await TimeTracking.GetProjectTasksAsync())
+        ProjectChoices =
+        [
+            .. (await TimeTracking.GetProjectTasksAsync())
             .Select(pt => new ProjectTaskViewModel(pt))
             // Projects sharing a color end up next to each other in the list
             .OrderBy(c => c.Project.Color, StringComparer.InvariantCultureIgnoreCase)
-            .ThenBy(c => c.ToString(), StringComparer.CurrentCultureIgnoreCase)];
+            .ThenBy(c => c.ToString(), StringComparer.CurrentCultureIgnoreCase)
+        ];
 
-        // Choices weren't loaded yet when ConnectAsync raised the change
-        OnRunningEntryChanged();
+        Draft.Choices = ProjectChoices;
+    }
+
+    /// <summary>
+    ///     Sends the fields to the running entry, with the busy indicator. See <see cref="TimerDraft.SaveAsync" />.
+    /// </summary>
+    public Task SaveDraftAsync()
+    {
+        return WithBusyIndicator(() => Draft.SaveAsync());
     }
 
     /// <summary>
@@ -132,17 +174,10 @@ public partial class TimerPlayerViewModel : ViewModelBase
     {
         return WithBusyIndicator(async () =>
         {
-            if (SelectedChoice is null)
+            if (!await Draft.StartAsync())
             {
                 FlashMessages.Push(WellKnownMessages.PickProjectFirst);
-                return;
             }
-
-            await TimeTracking.StartAsync(
-                SelectedChoice.Project.Id,
-                SelectedChoice.Task.Id,
-                Description
-            );
         });
     }
 
@@ -152,13 +187,7 @@ public partial class TimerPlayerViewModel : ViewModelBase
     [RelayCommand]
     private Task StopAsync()
     {
-        // One busy span, no flicker in between. A description still being typed goes first: once stopped, the entry
-        // can't take it anymore. Its own failure is reported by its own WithBusyIndicator, the stop still happens
-        return WithBusyIndicator(async () =>
-        {
-            await PushDescriptionAsync();
-            await TimeTracking.StopAsync();
-        });
+        return WithBusyIndicator(() => Draft.StopAsync());
     }
 
     /// <summary>
@@ -173,103 +202,46 @@ public partial class TimerPlayerViewModel : ViewModelBase
     }
 
     /// <summary>
-    ///     Back to a blank, stopped timer: stops the running entry, then clears the description and the task.
+    ///     Stops the running entry, then empties the description and the project.
     /// </summary>
     [RelayCommand]
-    private async Task ResetAsync()
+    private Task ResetAsync()
     {
-        if (IsRunning)
-        {
-            await StopAsync();
-        }
-
-        // The stop failed (already reported): clearing now would push blank fields to the still running entry
-        if (IsRunning)
-        {
-            return;
-        }
-
-        Description = null;
-        SelectedChoice = null;
-        ProjectSearchText = string.Empty;
+        return WithBusyIndicator(() => Draft.ResetAsync());
     }
 
     /// <summary>
-    ///     Clears the description, also on the running entry.
+    ///     Empties the description, and sends the empty description to the running entry.
     /// </summary>
     [RelayCommand]
     private Task ClearDescriptionAsync()
     {
         Description = null;
-        return PushDescriptionAsync();
+        return SaveDraftAsync();
     }
 
     /// <summary>
-    ///     Starts a new entry on a project, task and description, stopping the running one first.
+    ///     Stops the running entry, if any, then starts a new one with the given project, task and description.
     /// </summary>
-    public async Task ContinueAsync(ProjectTaskViewModel choice, string? description)
+    public Task ContinueAsync(ProjectTaskViewModel choice, string? description)
     {
-        // Like the start button: a second click while the first start is pending would start a second entry
-        if (IsBusy)
-        {
-            return;
-        }
-
-        if (IsRunning)
-        {
-            await StopAsync();
-        }
-
-        // Same as ResetAsync: changing the fields of a still running entry would push them to it
-        if (IsRunning)
-        {
-            return;
-        }
-
-        SelectedChoice = choice;
-        Description = description;
-        await StartAsync();
+        // Ignored while busy, like the start button: a second click during a start would start a second entry
+        return IsBusy
+            ? Task.CompletedTask
+            : WithBusyIndicator(() => Draft.ContinueAsync(choice, description));
     }
 
-    /// <summary>
-    ///     Pushes the description to the running entry, if it differs: once typed (on lost focus, see TimerBarView),
-    ///     and before an operation that would lose it.
-    /// </summary>
-    public Task PushDescriptionAsync()
+    // The draft changed its values by itself (entry loaded, cleared): tell the UI to show the new values
+    private void OnDraftChanged()
     {
-        return PushToRunningEntry(description: true);
-    }
+        OnPropertyChanged(nameof(SelectedChoice));
+        OnPropertyChanged(nameof(SelectedBrush));
+        OnPropertyChanged(nameof(Description));
 
-    // Each call only sends its own field, the others come from the running entry, so the order in which
-    // OnRunningEntryChanged refreshes them can't send a half-updated state
-    private Task PushToRunningEntry(
-        ProjectTaskViewModel? choice = null,
-        bool description = false
-    )
-    {
-        if (TimeTracking.RunningEntry is not { } running)
+        if (SelectedChoice is null)
         {
-            return Task.CompletedTask;
+            ProjectSearchText = string.Empty;
         }
-
-        var projectId = choice?.Project.Id ?? running.ProjectId;
-        var taskId = choice?.Task.Id ?? running.TaskId;
-        var text = description ? Description : running.Description;
-
-        // Skips values coming from the running entry itself, nothing to send
-        if (
-            projectId is null ||
-            taskId is null ||
-            (projectId == running.ProjectId && taskId == running.TaskId && text == running.Description))
-        {
-            return Task.CompletedTask;
-        }
-
-        return WithBusyIndicator(() => TimeTracking.UpdateRunningEntryAsync(
-            projectId,
-            taskId,
-            text
-        ));
     }
 
     private void OnRunningEntryChanged()
@@ -281,30 +253,18 @@ public partial class TimerPlayerViewModel : ViewModelBase
 
         IsRunning = running is not null;
 
-        var isNewEntry = _runningId != running?.Id;
-
-        if (_runningId is not null && isNewEntry)
+        if (_runningId is not null && _runningId != running?.Id)
         {
             EntryFinished?.Invoke(this, EventArgs.Empty);
         }
 
         _runningId = running?.Id;
 
-        // A reply arriving while the user types (an update sent by a project pick) mustn't wipe the typed text
-        var hasUnsentText = (Description?.Trim() ?? string.Empty) != (_runningDescription ?? string.Empty);
-        _runningDescription = running?.Description;
-
         if (running is null)
         {
             Elapsed = "00:00:00";
             RunningElapsed = TimeSpan.Zero;
             return;
-        }
-
-        SelectedChoice = ProjectChoices?.Find(c => c.Task.Id == running.TaskId) ?? SelectedChoice;
-        if (isNewEntry || !hasUnsentText)
-        {
-            Description = running.Description;
         }
 
         var start = running.TimeInterval?.Start ?? DateTimeOffset.UtcNow;
@@ -321,18 +281,12 @@ public partial class TimerPlayerViewModel : ViewModelBase
         void UpdateElapsed()
         {
             RunningElapsed = DateTimeOffset.UtcNow - start;
-            // Not TimeSpan's "hh", which drops whole days: a timer forgotten over a weekend would look short
+            // Not TimeSpan's "hh" format: it drops whole days, so a timer left running over a weekend would look short
             Elapsed = TimeEntryHistory.Format(RunningElapsed);
         }
     }
 
-    // Null when the box is cleared, the running task is kept
-    partial void OnSelectedChoiceChanged(ProjectTaskViewModel? value)
-    {
-        _ = PushToRunningEntry(value);
-    }
-
-    // IsBusy lives in the base class, out of [NotifyCanExecuteChangedFor]'s reach
+    // IsBusy is declared in the base class, where [NotifyCanExecuteChangedFor] can't be used: refresh the toggle here
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);

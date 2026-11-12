@@ -206,8 +206,8 @@ public class TimeTrackingService(
     ///     Changes the project, task and description of the running entry, does nothing when stopped or unchanged.
     /// </summary>
     public Task UpdateRunningEntryAsync(
-        string projectId,
-        string taskId,
+        string? projectId,
+        string? taskId,
         string? description,
         CancellationToken ctk = default
     )
@@ -225,15 +225,17 @@ public class TimeTrackingService(
     }
 
     private async Task UpdateRunningEntryCoreAsync(
-        string projectId,
-        string taskId,
+        string? projectId,
+        string? taskId,
         string? description,
         CancellationToken ctk
     )
     {
         var running = RunningEntry;
         if (running is null
-            || (running.ProjectId == projectId && running.TaskId == taskId && running.Description == description))
+            // Normalized too: Clockify sends "" for no description, which mustn't count as a change
+            || (running.ProjectId == projectId && running.TaskId == taskId &&
+                Normalize(running.Description) == description))
         {
             return;
         }
