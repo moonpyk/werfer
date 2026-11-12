@@ -16,6 +16,9 @@ public partial class TimerPlayerViewModel : ViewModelBase
 {
     // Id of the entry last seen running: when it changes, that entry has finished, see EntryFinished
     private string? _runningId;
+
+    // Description of the entry last seen running: the box still showing it means nothing typed is waiting to be sent
+    private string? _runningDescription;
     private IDisposable? _ticker;
     
     private IApplicationSettings ApplicationSettings { get; }
@@ -278,12 +281,18 @@ public partial class TimerPlayerViewModel : ViewModelBase
 
         IsRunning = running is not null;
 
-        if (_runningId is not null && _runningId != running?.Id)
+        var isNewEntry = _runningId != running?.Id;
+
+        if (_runningId is not null && isNewEntry)
         {
             EntryFinished?.Invoke(this, EventArgs.Empty);
         }
 
         _runningId = running?.Id;
+
+        // A reply arriving while the user types (an update sent by a project pick) mustn't wipe the typed text
+        var hasUnsentText = (Description?.Trim() ?? string.Empty) != (_runningDescription ?? string.Empty);
+        _runningDescription = running?.Description;
 
         if (running is null)
         {
@@ -293,7 +302,10 @@ public partial class TimerPlayerViewModel : ViewModelBase
         }
 
         SelectedChoice = ProjectChoices?.Find(c => c.Task.Id == running.TaskId) ?? SelectedChoice;
-        Description = running.Description;
+        if (isNewEntry || !hasUnsentText)
+        {
+            Description = running.Description;
+        }
 
         var start = running.TimeInterval?.Start ?? DateTimeOffset.UtcNow;
 
