@@ -13,11 +13,4 @@ namespace Werfer;
 [JsonSerializable(typeof(List<TimeEntry>))]
 [JsonSerializable(typeof(CreateTimeEntryRequest))]
 [JsonSerializable(typeof(StopTimeEntryRequest))]
-// Runtime types accepted in CustomFieldEntryRequest.Value (declared as object), others throw NotSupportedException
-[JsonSerializable(typeof(string))]
-[JsonSerializable(typeof(bool))]
-[JsonSerializable(typeof(int))]
-[JsonSerializable(typeof(double))]
-[JsonSerializable(typeof(decimal))]
-[JsonSerializable(typeof(List<string>))]
 internal partial class WerferCoreJsonContext : JsonSerializerContext;

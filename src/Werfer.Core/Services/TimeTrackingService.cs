@@ -260,7 +260,8 @@ public class TimeTrackingService(
         }
 
         // Clockify's update is a full replace, so every field we know about is resent
-        // shortcut: custom field values aren't resent, map CustomFieldValues if the workspace starts using them
+        // shortcut: custom field values aren't read nor resent, so an update clears them; read and resend Clockify's
+        // customFieldValues if the workspace starts using them
         RunningEntry = await Client.UpdateTimeEntryAsync(WorkspaceId, current.Id, new CreateTimeEntryRequest
         {
             Start = current.TimeInterval.Start,

@@ -17,66 +17,41 @@ public interface IClockifyApiClient : IClockifyRawApiClient
     private const int PageSize = 5000;
 
     /// <summary>
-    ///     Gets every project of a workspace matching the optional filters, all pages read.
+    ///     Gets every project of a workspace, all pages read.
     /// </summary>
     /// <param name="workspaceId">The ID of the workspace.</param>
-    /// <param name="name">Optional project name filter.</param>
-    /// <param name="archived">Optional filter for archived status.</param>
-    /// <param name="billable">Optional filter for billable status.</param>
-    /// <param name="clients">Optional list of client IDs to filter projects by.</param>
-    /// <param name="hydrated">Optional flag to include the tasks of each project.</param>
-    /// <param name="sortColumn">Column to sort by.</param>
-    /// <param name="sortOrder">Sort order (e.g. "ASCENDING" or "DESCENDING").</param>
-    /// <param name="ctk">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+    /// <param name="archived">Only archived projects when true, only active ones when false, all when null.</param>
+    /// <param name="hydrated">True to include the tasks of each project.</param>
+    /// <param name="ctk">Cancels the requests.</param>
     Task<List<Project>> GetProjectsAsync(
         string workspaceId,
-        string? name = null,
         bool? archived = null,
-        bool? billable = null,
-        string[]? clients = null,
         bool? hydrated = null,
-        string? sortColumn = null,
-        string? sortOrder = null,
         CancellationToken ctk = default
     )
     {
         return GetAllPagesAsync(page => GetRawProjectsAsync(
             workspaceId,
-            name,
             archived,
-            billable,
-            clients,
             hydrated,
             page,
             PageSize,
-            sortColumn,
-            sortOrder,
             ctk
         ));
     }
 
     /// <summary>
-    ///     Gets every time entry of a user matching the optional filters, all pages read.
+    ///     Gets every time entry of a user, all pages read.
     /// </summary>
     /// <param name="workspaceId">The ID of the workspace.</param>
-    /// <param name="userId">The ID of the user whose time entries to retrieve.</param>
-    /// <param name="description">Optional description filter.</param>
-    /// <param name="start">Optional start date and time filter.</param>
-    /// <param name="end">Optional end date and time filter.</param>
-    /// <param name="project">Optional project ID filter.</param>
-    /// <param name="task">Optional task ID filter.</param>
-    /// <param name="hydrated">Optional flag indicating whether to return hydrated time entry objects.</param>
-    /// <param name="inProgress">Optional flag to return only the running time entry.</param>
-    /// <param name="ctk">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+    /// <param name="userId">The ID of the user whose time entries to get.</param>
+    /// <param name="start">Only the entries started at or after this time, when set.</param>
+    /// <param name="inProgress">True to get only the running entry.</param>
+    /// <param name="ctk">Cancels the requests.</param>
     Task<List<TimeEntry>> GetTimeEntriesForUserAsync(
         string workspaceId,
         string userId,
-        string? description = null,
         DateTimeOffset? start = null,
-        DateTimeOffset? end = null,
-        string? project = null,
-        string? task = null,
-        bool? hydrated = null,
         bool? inProgress = null,
         CancellationToken ctk = default
     )
@@ -84,12 +59,7 @@ public interface IClockifyApiClient : IClockifyRawApiClient
         return GetAllPagesAsync(page => GetRawTimeEntriesForUserAsync(
             workspaceId,
             userId,
-            description,
             start,
-            end,
-            project,
-            task,
-            hydrated,
             inProgress,
             page,
             PageSize,

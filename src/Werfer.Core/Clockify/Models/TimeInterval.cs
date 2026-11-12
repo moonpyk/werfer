@@ -11,7 +11,4 @@ public class TimeInterval
 
     [JsonPropertyName("end")]
     public DateTimeOffset? End { get; set; }
-
-    [JsonPropertyName("duration")]
-    public string? Duration { get; set; }
 }

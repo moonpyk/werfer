@@ -20,9 +20,6 @@ public class User
 
     [JsonPropertyName("defaultWorkspace")]
     public string? DefaultWorkspace { get; set; }
-
-    [JsonPropertyName("status")]
-    public string? Status { get; set; }
     
     [JsonPropertyName("profilePicture")]
     public string? ProfilePicture { get; set; }

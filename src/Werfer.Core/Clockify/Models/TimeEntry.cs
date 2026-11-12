@@ -12,9 +12,6 @@ public class TimeEntry
     [JsonPropertyName("description")]
     public string? Description { get; set; }
 
-    [JsonPropertyName("userId")]
-    public string? UserId { get; set; }
-
     [JsonPropertyName("billable")]
     public bool Billable { get; set; }
 
@@ -24,23 +21,11 @@ public class TimeEntry
     [JsonPropertyName("taskId")]
     public string? TaskId { get; set; }
 
-    [JsonPropertyName("workspaceId")]
-    public string? WorkspaceId { get; set; }
-
     [JsonPropertyName("timeInterval")]
     public TimeInterval? TimeInterval { get; set; }
 
     [JsonPropertyName("tagIds")]
     public List<string>? TagIds { get; set; }
-
-    [JsonPropertyName("customFieldValues")]
-    public List<CustomFieldValue>? CustomFieldValues { get; set; }
-
-    [JsonPropertyName("type")]
-    public string? Type { get; set; }
-
-    [JsonPropertyName("kioskId")]
-    public string? KioskId { get; set; }
 
     /// <summary>
     ///     Werfer helper, not part of Clockify's API: entries with the same key show as one history line. Clockify sends "" or

@@ -20,32 +20,22 @@ public interface IClockifyRawApiClient
     Task<User> GetCurrentUserAsync(CancellationToken ctk = default);
 
     /// <summary>
-    ///     Gets projects for a workspace based on optional filtering and pagination criteria.
+    ///     Gets one page of the projects of a workspace.
     /// </summary>
     /// <param name="workspaceId">The ID of the workspace.</param>
-    /// <param name="name">Optional project name filter.</param>
-    /// <param name="archived">Optional filter for archived status.</param>
-    /// <param name="billable">Optional filter for billable status.</param>
-    /// <param name="clients">Optional list of client IDs to filter projects by.</param>
-    /// <param name="hydrated">Optional flag to include the tasks of each project.</param>
-    /// <param name="page">Page number for pagination (1-based).</param>
-    /// <param name="pageSize">Number of items per page.</param>
-    /// <param name="sortColumn">Column to sort by.</param>
-    /// <param name="sortOrder">Sort order (e.g. "ASCENDING" or "DESCENDING").</param>
-    /// <param name="ctk">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-    /// <returns>One page of the projects matching the criteria, its Last-Page header tells whether more follow.</returns>
+    /// <param name="archived">Only archived projects when true, only active ones when false, all when null.</param>
+    /// <param name="hydrated">True to include the tasks of each project.</param>
+    /// <param name="page">Page number, 1-based.</param>
+    /// <param name="pageSize">Number of projects per page; Clockify may serve fewer.</param>
+    /// <param name="ctk">Cancels the request.</param>
+    /// <returns>One page of projects. Its Last-Page header tells whether more pages follow.</returns>
     [Get("/workspaces/{workspaceId}/projects")]
     Task<IApiResponse<List<Project>>> GetRawProjectsAsync(
         string workspaceId,
-        [Query] string? name = null,
         [Query] bool? archived = null,
-        [Query] bool? billable = null,
-        [Query(CollectionFormat.Multi)] string[]? clients = null,
         [Query] bool? hydrated = null,
         [Query] int? page = null,
         [AliasAs("page-size")] int? pageSize = null,
-        [AliasAs("sort-column")] string? sortColumn = null,
-        [AliasAs("sort-order")] string? sortOrder = null,
         CancellationToken ctk = default);
 
     /// <summary>
@@ -63,31 +53,21 @@ public interface IClockifyRawApiClient
     );
 
     /// <summary>
-    ///     Gets time entries for a specific user within a workspace based on optional filtering and pagination criteria.
+    ///     Gets one page of the time entries of a user, most recent first.
     /// </summary>
     /// <param name="workspaceId">The ID of the workspace.</param>
-    /// <param name="userId">The ID of the user whose time entries to retrieve.</param>
-    /// <param name="description">Optional description filter.</param>
-    /// <param name="start">Optional start date and time filter.</param>
-    /// <param name="end">Optional end date and time filter.</param>
-    /// <param name="project">Optional project ID filter.</param>
-    /// <param name="task">Optional task ID filter.</param>
-    /// <param name="hydrated">Optional flag indicating whether to return hydrated time entry objects.</param>
-    /// <param name="inProgress">Optional flag to return only the running time entry.</param>
-    /// <param name="page">Page number for pagination (1-based).</param>
-    /// <param name="pageSize">Number of items per page.</param>
-    /// <param name="ctk">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-    /// <returns>One page of the time entries matching the criteria, its Last-Page header tells whether more follow.</returns>
+    /// <param name="userId">The ID of the user whose time entries to get.</param>
+    /// <param name="start">Only the entries started at or after this time, when set.</param>
+    /// <param name="inProgress">True to get only the running entry.</param>
+    /// <param name="page">Page number, 1-based.</param>
+    /// <param name="pageSize">Number of entries per page; Clockify may serve fewer.</param>
+    /// <param name="ctk">Cancels the request.</param>
+    /// <returns>One page of entries. Its Last-Page header tells whether more pages follow.</returns>
     [Get("/workspaces/{workspaceId}/user/{userId}/time-entries")]
     Task<IApiResponse<List<TimeEntry>>> GetRawTimeEntriesForUserAsync(
         string workspaceId,
         string userId,
-        [Query] string? description = null,
         [Query] DateTimeOffset? start = null,
-        [Query] DateTimeOffset? end = null,
-        [Query] string? project = null,
-        [Query] string? task = null,
-        [Query] bool? hydrated = null,
         [AliasAs("in-progress")] bool? inProgress = null,
         [Query] int? page = null,
         [AliasAs("page-size")] int? pageSize = null,

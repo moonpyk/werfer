@@ -26,7 +26,4 @@ public class CreateTimeEntryRequest
 
     [JsonPropertyName("tagIds")]
     public List<string>? TagIds { get; set; }
-
-    [JsonPropertyName("customFields")]
-    public List<CustomFieldEntryRequest>? CustomFields { get; set; }
 }

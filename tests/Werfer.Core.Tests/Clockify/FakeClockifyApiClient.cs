@@ -68,12 +68,7 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
     public Task<IApiResponse<List<TimeEntry>>> GetRawTimeEntriesForUserAsync(
         string workspaceId,
         string userId,
-        string? description = null,
         DateTimeOffset? start = null,
-        DateTimeOffset? end = null,
-        string? project = null,
-        string? task = null,
-        bool? hydrated = null,
         bool? inProgress = null,
         int? page = null,
         int? pageSize = null,
@@ -137,15 +132,10 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
 
     public Task<IApiResponse<List<Project>>> GetRawProjectsAsync(
         string workspaceId,
-        string? name = null,
         bool? archived = null,
-        bool? billable = null,
-        string[]? clients = null,
         bool? hydrated = null,
         int? page = null,
         int? pageSize = null,
-        string? sortColumn = null,
-        string? sortOrder = null,
         CancellationToken ctk = default
     )
     {

@@ -12,9 +12,6 @@ public class ProjectTask
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 
-    [JsonPropertyName("projectId")]
-    public string? ProjectId { get; set; }
-
     [JsonPropertyName("status")]
     public string? Status { get; set; }
 }
