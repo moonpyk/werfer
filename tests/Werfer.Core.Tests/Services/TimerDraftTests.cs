@@ -63,18 +63,62 @@ public class TimerDraftTests
         var entry = RunningEntry();
         entry.Description = "";
         var (client, _, draft) = await ConnectedAsync(entry);
+        var reads = client.RunningReads;
 
         await draft.SaveAsync(TestContext.Current.CancellationToken);
 
-        Assert.Equal(0, client.TimeEntryReads);
+        Assert.Equal(reads, client.RunningReads);
         Assert.Empty(client.Updates);
+    }
+
+    [Fact]
+    public async Task Refresh_SaveFails_KeepsWhatIsTyped()
+    {
+        var (client, _, draft) = await ConnectedAsync(RunningEntry());
+        client.UpdateException = new HttpRequestException("Network down");
+
+        draft.Description = "JIRA-2 typed";
+        await Assert.ThrowsAsync<HttpRequestException>(() => draft.RefreshAsync(TestContext.Current.CancellationToken));
+
+        // Reloading the entry as Clockify has it would put back JIRA-1: what was typed would be lost
+        Assert.Equal("JIRA-2 typed", draft.Description);
+    }
+
+    [Fact]
+    public async Task Stop_SaveFails_StillStops()
+    {
+        var (client, service, draft) = await ConnectedAsync(RunningEntry());
+        client.UpdateException = new HttpRequestException("Network down");
+
+        draft.Description = "JIRA-2 typed";
+        await Assert.ThrowsAsync<HttpRequestException>(() => draft.StopAsync(TestContext.Current.CancellationToken));
+
+        // The user asked to stop: the timer mustn't keep running because the description couldn't be sent
+        Assert.Null(service.RunningEntry);
+        Assert.Equal("JIRA-2 typed", draft.Description);
+    }
+
+    [Fact]
+    public async Task Reset_StopFails_KeepsTheFields()
+    {
+        var (client, service, draft) = await ConnectedAsync(RunningEntry());
+        client.StopException = new HttpRequestException("Network down");
+        var choice = draft.Choice;
+
+        draft.Description = "JIRA-2 typed";
+        await Assert.ThrowsAsync<HttpRequestException>(() => draft.ResetAsync(TestContext.Current.CancellationToken));
+
+        // Still running: emptied fields would be sent to it on the next save
+        Assert.NotNull(service.RunningEntry);
+        Assert.Equal("JIRA-2 typed", draft.Description);
+        Assert.Equal(choice, draft.Choice);
     }
 
     // The draft exists before connecting, as in the app: connecting loads the running entry into it
     private static async Task<(FakeClockifyApiClient Client, TimeTrackingService Service, TimerDraft Draft)>
         ConnectedAsync(TimeEntry running)
     {
-        var client = new FakeClockifyApiClient { Running = running, Current = running };
+        var client = new FakeClockifyApiClient { Running = running };
         var service = new TimeTrackingService(client, Options.Create(new ClockifyOptions()));
         var draft = new TimerDraft(service);
 

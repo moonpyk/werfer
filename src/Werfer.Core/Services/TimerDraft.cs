@@ -130,15 +130,19 @@ public class TimerDraft
     /// </summary>
     public async Task RefreshAsync(CancellationToken ctk = default)
     {
+        var saved = false;
+
         try
         {
             await SaveAsync(ctk);
+            saved = true;
         }
         finally
         {
             await Service.RefreshRunningEntryAsync(ctk);
 
-            if (Service.RunningEntry is { } running)
+            // After a failed save, the draft still holds what was typed: taking Clockify's values would lose it
+            if (saved && Service.RunningEntry is { } running)
             {
                 Load(running);
             }

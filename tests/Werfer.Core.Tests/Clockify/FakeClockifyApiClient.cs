@@ -19,20 +19,23 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
     public TimeEntry? Running { get; set; }
 
     /// <summary>
-    ///     What re-reading the entry returns, e.g. a stopped copy when another client stopped it
-    /// </summary>
-    public TimeEntry? Current { get; set; }
-
-    /// <summary>
     ///     When set, the stop waits for it: lets a test queue another call behind a stop in progress
     /// </summary>
     public TaskCompletionSource? StopGate { get; set; }
 
     public Exception? StopException { get; set; }
 
+    /// <summary>
+    ///     When set, updating an entry fails with it, e.g. the network dropping while the description is sent
+    /// </summary>
+    public Exception? UpdateException { get; set; }
+
     public List<(string Id, CreateTimeEntryRequest Request)> Updates { get; } = [];
 
-    public int TimeEntryReads { get; private set; }
+    /// <summary>
+    ///     How many times the in-progress query was made: on connection, refresh, and before each update
+    /// </summary>
+    public int RunningReads { get; private set; }
 
     /// <summary>
     ///     When set, loading the user fails with it, e.g. a 401 for a rejected API key
@@ -79,16 +82,11 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
     {
         if (inProgress == true)
         {
+            RunningReads++;
             return Page<TimeEntry>(Running is null ? [] : [Running], true);
         }
 
         return PageOf(Entries, page, pageSize);
-    }
-
-    public Task<TimeEntry> GetTimeEntryAsync(string workspaceId, string id, CancellationToken ctk = default)
-    {
-        TimeEntryReads++;
-        return Task.FromResult(Current ?? throw new InvalidOperationException("No entry to re-read"));
     }
 
     public Task<TimeEntry> UpdateTimeEntryAsync(
@@ -98,6 +96,11 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
         CancellationToken ctk = default
     )
     {
+        if (UpdateException is not null)
+        {
+            throw UpdateException;
+        }
+
         Updates.Add((id, request));
 
         return Task.FromResult(new TimeEntry

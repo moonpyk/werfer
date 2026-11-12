@@ -22,8 +22,28 @@ public class TimeTrackingServiceTests
     public async Task Update_EntryStoppedElsewhere_SendsNothingAndClearsRunning()
     {
         var (client, service) = await ConnectedWithRunningEntryAsync();
-        // Another client stopped it: a PUT without end would restart it
-        client.Current = RunningEntry(Started.AddHours(1));
+        // Another app stopped it: a PUT without end would restart it
+        client.Running = null;
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.UpdateRunningEntryAsync(
+            "p2",
+            "t2",
+            "JIRA-2",
+            TestContext.Current.CancellationToken
+        ));
+
+        Assert.Empty(client.Updates);
+        Assert.Null(service.RunningEntry);
+    }
+
+    [Fact]
+    public async Task Update_AnotherEntryStartedElsewhere_SendsNothingAndClearsRunning()
+    {
+        var (client, service) = await ConnectedWithRunningEntryAsync();
+        // Another app stopped it and started a new one: the update must not land on either
+        var other = RunningEntry();
+        other.Id = "e2";
+        client.Running = other;
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.UpdateRunningEntryAsync(
             "p2",
@@ -94,6 +114,7 @@ public class TimeTrackingServiceTests
     public async Task Update_Unchanged_SendsNothing(string description)
     {
         var (client, service) = await ConnectedWithRunningEntryAsync();
+        var reads = client.RunningReads;
 
         await service.UpdateRunningEntryAsync(
             "p1",
@@ -103,7 +124,7 @@ public class TimeTrackingServiceTests
         );
 
         Assert.Empty(client.Updates);
-        Assert.Equal(0, client.TimeEntryReads);
+        Assert.Equal(reads, client.RunningReads);
     }
 
     [Fact]
@@ -201,7 +222,6 @@ public class TimeTrackingServiceTests
         ConnectedWithRunningEntryAsync()
     {
         var client = new FakeClockifyApiClient { Running = RunningEntry() };
-        client.Current = client.Running;
 
         var service = new TimeTrackingService(client, Options.Create(new ClockifyOptions()));
         await service.ConnectAsync("api-key");

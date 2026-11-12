@@ -63,20 +63,6 @@ public interface IClockifyRawApiClient
     );
 
     /// <summary>
-    ///     Gets a specific time entry by ID within a workspace.
-    /// </summary>
-    /// <param name="workspaceId">The ID of the workspace.</param>
-    /// <param name="id">The ID of the time entry to retrieve.</param>
-    /// <param name="ctk">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-    /// <returns>The time entry details.</returns>
-    [Get("/workspaces/{workspaceId}/time-entries/{id}")]
-    Task<TimeEntry> GetTimeEntryAsync(
-        string workspaceId,
-        string id,
-        CancellationToken ctk = default
-    );
-
-    /// <summary>
     ///     Gets time entries for a specific user within a workspace based on optional filtering and pagination criteria.
     /// </summary>
     /// <param name="workspaceId">The ID of the workspace.</param>

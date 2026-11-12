@@ -241,14 +241,19 @@ public class TimeTrackingService(
             return;
         }
 
-        // Read it again: it may have been stopped or edited in another app, and a PUT without an end would restart it
-        var current = await Client.GetTimeEntryAsync(
-            WorkspaceId,
-            running.Id,
-            ctk
-        );
+        // Read it again: it may have been stopped or edited in another app, and a PUT without an end would restart it.
+        // Through the in-progress query, not GET /time-entries/{id}: Clockify answered that one with 403 Forbidden
+        var current = (
+            await Client.GetTimeEntriesForUserAsync(
+                WorkspaceId,
+                CurrentUser.Id,
+                inProgress: true,
+                ctk: ctk
+            )
+        ).FirstOrDefault();
 
-        if (current.TimeInterval is not { End: null })
+        // Nothing runs anymore, or another entry was started since
+        if (current?.Id != running.Id || current.TimeInterval is not { End: null })
         {
             RunningEntry = null;
             throw new InvalidOperationException("The timer was stopped from another client, changes not saved");
