@@ -43,7 +43,7 @@ public class App : Application
         var crashLogger = Services.GetRequiredService<ILogger<App>>();
 
         // Without these an exception on the UI thread kills the app with nothing logged
-        // Qualified: inside an AvaloniaObject, Dispatcher is the instance property
+        // Dispatcher.UIThread written in full: inside an AvaloniaObject, Dispatcher alone means the instance property
         Dispatcher.UIThread.UnhandledException += (_, e) =>
         {
             crashLogger.LogCritical(

@@ -9,7 +9,7 @@ namespace Werfer.ViewModels;
 public record ProjectTaskViewModel : ProjectTaskChoice
 {
     /// <summary>
-    ///     Wraps a choice, its project's color parsed once; gray when Clockify's isn't a valid color.
+    ///     Wraps a choice and parses its project's color once. Gray when Clockify's color isn't valid.
     /// </summary>
     public ProjectTaskViewModel(
         ProjectTaskChoice task
@@ -26,12 +26,12 @@ public record ProjectTaskViewModel : ProjectTaskChoice
     public Color Color { get; }
 
     /// <summary>
-    ///     Kept as is for the dot
+    ///     The project's color as is, for the dot (not adjusted for contrast)
     /// </summary>
     public IBrush Brush => field ??= new SolidColorBrush(Color);
 
     /// <summary>
-    ///     Text shown and matched by the autocomplete
+    ///     Text shown in the autocomplete list, and matched against what is typed
     /// </summary>
     public override string ToString()
     {

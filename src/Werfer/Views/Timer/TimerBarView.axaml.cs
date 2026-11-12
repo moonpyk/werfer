@@ -14,7 +14,7 @@ public partial class TimerBarView : UserControl
         InitializeComponent();
     }
 
-    // Typed: now it goes to the running entry
+    // The user is done typing: send the description to the running entry
     private void OnDescriptionLostFocus(object? sender, RoutedEventArgs e)
     {
         _ = (DataContext as TimerPlayerViewModel)?.SaveDraftAsync();

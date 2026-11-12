@@ -4,7 +4,7 @@ using Werfer.Clockify.Models;
 namespace Werfer.Services;
 
 /// <summary>
-///     Finished entries sharing project, task and description on the same day, shown as one line.
+///     Finished entries of one day with the same project, task and description, shown as one history line.
 /// </summary>
 public record TimeEntryGroup(
     string? ProjectId,
@@ -40,7 +40,8 @@ public static class TimeEntryHistory
 {
     /// <summary>
     ///     Midnight, in <paramref name="zone" />, of the last <paramref name="firstDay" /> on or before
-    ///     <paramref name="now" />. Its offset is the one in effect that midnight, which may differ from now's (DST).
+    ///     <paramref name="now" />. Its UTC offset is the one at that midnight, which can differ from
+    ///     now's because of daylight saving time.
     /// </summary>
     public static DateTimeOffset StartOfWeek(
         DateTimeOffset now,
@@ -55,8 +56,8 @@ public static class TimeEntryHistory
     }
 
     /// <summary>
-    ///     Start and end of an entry edited as a day plus two times of day in <paramref name="zone" />. An end before the
-    ///     start falls on the next day. A time left as shown, to the minute, keeps <paramref name="original" />'s
+    ///     Start and end of an edited entry, from its day and two times of day in <paramref name="zone" />. An end before the
+    ///     start means the next day. A time the user didn't change (shown to the minute) keeps <paramref name="original" />'s
     ///     seconds: re-saving an entry mustn't change its duration.
     /// </summary>
     public static TimeRange EditedInterval(
@@ -108,7 +109,7 @@ public static class TimeEntryHistory
     }
 
     /// <summary>
-    ///     HH:mm, the way <see cref="TryParseTimeOfDay" /> reads it back.
+    ///     Formats a time as HH:mm, which <see cref="TryParseTimeOfDay" /> can read back.
     /// </summary>
     public static string FormatTimeOfDay(TimeOnly time)
     {
@@ -116,7 +117,7 @@ public static class TimeEntryHistory
     }
 
     /// <summary>
-    ///     hh:mm:ss with hours past 24, a week total often is.
+    ///     Formats a duration as hh:mm:ss, with hours going past 24: a week's total often does.
     /// </summary>
     public static string Format(TimeSpan duration)
     {
@@ -167,7 +168,7 @@ public static class TimeEntryExtensions
         }
 
         /// <summary>
-        ///     Total of the finished entries, a running one counts for nothing.
+        ///     Total duration of the finished entries. A running entry counts as zero.
         /// </summary>
         public TimeSpan Sum()
         {

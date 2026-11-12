@@ -9,14 +9,14 @@ using Werfer.Services;
 namespace Werfer.ViewModels;
 
 /// <summary>
-///     Change notification plus the busy flag and error reporting shared by every page.
+///     Base of every page's view model: change notification, the busy flag, and error reporting.
 /// </summary>
 public abstract partial class ViewModelBase(
     ILogger logger,
     FlashMessageService flashMessages
 ) : ObservableObject
 {
-    // Operations can overlap (a history reload during a stop): busy until the last one ends
+    // Several operations can run at once (a history reload during a stop): busy until the last one ends
     private int _busyCount;
 
     [SuppressMessage(

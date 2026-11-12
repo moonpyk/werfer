@@ -6,7 +6,7 @@
              x:Class="Werfer.Views.Timer.HistoryView"
              x:DataType="vm:HistoryViewModel">
     <UserControl.Resources>
-        <!-- Empty state logo: the white one on a dark theme; the black one otherwise, light or any other theme -->
+        <!-- Logo shown when the history is empty: the white one on the dark theme, the black one on any other -->
         <ResourceDictionary>
             <!-- ReSharper disable Xaml.RedundantResource -->
             <ResourceDictionary.ThemeDictionaries>
@@ -38,9 +38,9 @@
             </Grid>
         </Border>
 
-        <!-- 
-        One cell for the empty state and the list, one shown at a time: the logo is centered in the whole area.
-        A DockPanel child that isn't last docks left instead, against the edge 
+        <!--
+        The empty-state logo and the list share one cell, only one shows at a time, so the logo is centered in the whole
+        area. As a DockPanel child that isn't the last one, it would be docked against the left edge instead
         -->
         <Panel>
             <Image

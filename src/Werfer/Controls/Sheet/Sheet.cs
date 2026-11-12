@@ -135,7 +135,8 @@ public class Sheet : ContentControl
     private Panel? _root;
     private Border? _sheet;
 
-    // Cancelled by the next transition: also releases the values the previous one holds (FillMode.Forward)
+    // Cancelled when the next transition starts. That also releases the values the previous animation kept
+    // (FillMode.Forward)
     private CancellationTokenSource? _transition;
 
     static Sheet()
@@ -463,7 +464,8 @@ public class Sheet : ContentControl
         );
     }
 
-    // Shows the root then slides in, or slides out then hides it; a transition started meanwhile takes over
+    // Opening: shows the root, then slides in. Closing: slides out, then hides the root. A new transition started
+    // meanwhile replaces this one
     private async Task TransitionAsync(bool open)
     {
         if (_root is null)
@@ -471,7 +473,7 @@ public class Sheet : ContentControl
             return;
         }
 
-        // Also when not animated: a held FadeOut or SlideOut value would leave the opened sheet transparent
+        // Also when not animated: a value kept by a previous FadeOut or SlideOut would leave the opened sheet invisible
         _transition?.Cancel();
         var transition = _transition = new CancellationTokenSource();
 
@@ -546,8 +548,8 @@ public class Sheet : ContentControl
         _backdrop?.Background = BackdropBrush ?? (Placement == SheetPlacement.Top ? TopBackdrop : BottomBackdrop);
     }
 
-    // Moves the focus into the sheet, off the content it covers. Posted: its content is laid out (and templated) once
-    // shown, not yet when the sheet opens
+    // Moves the focus into the sheet, off the content it covers. Posted to the dispatcher: the content gets its
+    // layout (and template) only once shown, which is after the sheet opens
     private void FocusFirstElement()
     {
         Dispatcher.UIThread.Post(() =>

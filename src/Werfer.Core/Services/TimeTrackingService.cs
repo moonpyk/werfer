@@ -19,8 +19,9 @@ public class TimeTrackingService(
 )
 {
     /// <summary>
-    ///     One operation at a time: overlapping calls would act on a stale RunningEntry, e.g. a description
-    ///     update finishing after a stop and restarting the entry. Waiting is async, so queued calls don't block the UI
+    ///     Runs one operation at a time. Overlapping calls would act on an outdated RunningEntry: for example, a
+    ///     description update finishing after a stop would restart the entry. Waiting is async, so queued calls don't block
+    ///     the UI
     /// </summary>
     private SemaphoreSlim Operations { get; } = new(1, 1);
 
@@ -67,7 +68,7 @@ public class TimeTrackingService(
     {
         return ExclusiveAsync(async () =>
         {
-            // Same instance the auth handler reads, so the next call uses the new key
+            // The auth handler reads this same options instance, so the next call uses the new key
             var previousKey = Options.Value.ApiKey;
             Options.Value.ApiKey = apiKey.Trim();
 
@@ -77,7 +78,7 @@ public class TimeTrackingService(
             }
             catch
             {
-                // A rejected key mustn't replace the one the current session (and its running timer) works with
+                // A rejected key must not replace the key the current session (and its running timer) uses
                 Options.Value.ApiKey = previousKey;
                 throw;
             }
@@ -93,7 +94,7 @@ public class TimeTrackingService(
     }
 
     /// <summary>
-    ///     Picks up the entry running on Clockify, it may have been started or stopped from elsewhere.
+    ///     Reloads the running entry from Clockify: it may have been started or stopped in another app.
     /// </summary>
     public Task RefreshRunningEntryAsync(CancellationToken ctk = default)
     {
@@ -102,7 +103,7 @@ public class TimeTrackingService(
 
     private async Task LoadRunningEntryAsync(CancellationToken ctk)
     {
-        // Filtered on in-progress: the latest entry by start may be a finished one added by hand later in the day
+        // Asks for the in-progress entry only: the latest entry by start time may be a finished one added by hand
         var last = (
             await Client.GetTimeEntriesForUserAsync(
                 WorkspaceId,
@@ -116,11 +117,11 @@ public class TimeTrackingService(
     }
 
     /// <summary>
-    ///     The user's entries started since <paramref name="start" />, running one included.
+    ///     The user's entries started since <paramref name="start" />, including the running one.
     /// </summary>
     public Task<List<TimeEntry>> GetTimeEntriesSinceAsync(DateTimeOffset start, CancellationToken ctk = default)
     {
-        // Read only, no lock: it would queue behind (and delay) a start or stop for nothing
+        // Read only, so no lock: it would wait behind a start or stop for no reason
         return Client.GetTimeEntriesForUserAsync(
             WorkspaceId,
             CurrentUser.Id,
@@ -195,7 +196,7 @@ public class TimeTrackingService(
             }
             catch (ApiException e) when (e.StatusCode == HttpStatusCode.NotFound)
             {
-                // Nothing running anymore, already stopped from another client: the goal is reached
+                // Nothing runs anymore, it was already stopped in another app: that's what we wanted
             }
 
             RunningEntry = null;
@@ -212,7 +213,7 @@ public class TimeTrackingService(
         CancellationToken ctk = default
     )
     {
-        // Checked once the lock is held, against the entry as the previous operation left it
+        // Compared once the lock is held, against the entry as the previous operation left it
         return ExclusiveAsync(
             () => UpdateRunningEntryCoreAsync(
                 projectId,
@@ -240,7 +241,7 @@ public class TimeTrackingService(
             return;
         }
 
-        // Re-read it: it may have been stopped or edited from another client, and a PUT without end would restart it
+        // Read it again: it may have been stopped or edited in another app, and a PUT without an end would restart it
         var current = await Client.GetTimeEntryAsync(
             WorkspaceId,
             running.Id,

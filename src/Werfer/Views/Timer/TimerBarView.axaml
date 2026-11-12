@@ -4,7 +4,7 @@
              xmlns:vm="clr-namespace:Werfer.ViewModels"
              x:Class="Werfer.Views.Timer.TimerBarView"
              x:DataType="vm:TimerPlayerViewModel">
-    <!-- What you work on on the left, the big action button on the right -->
+    <!-- Project, task and description on the left, the start/stop button on the right -->
     <Grid
         Margin="8"
         ColumnDefinitions="*,Auto">
@@ -34,9 +34,11 @@
                 </AutoCompleteBox.InnerLeftContent>
             </AutoCompleteBox>
 
-            <!-- Enter adds a line; \n rather than Windows' \r\n, so the text compares equal to what Clockify sends back.
-                 Grows with its lines, about 6 at most, then scrolls so the history below keeps its room. The view model
-                 follows the typing; the running entry gets the text on lost focus, see OnDescriptionLostFocus -->
+            <!--
+            Enter adds a line. Line breaks are \n rather than Windows' \r\n, so the text compares equal to what Clockify
+            sends back. Grows with its lines up to about 6, then scrolls, so the history below keeps its space. The text
+            goes to the running entry when the box loses focus, see OnDescriptionLostFocus
+            -->
             <TextBox
                 Grid.Row="1"
                 Text="{Binding Description}"

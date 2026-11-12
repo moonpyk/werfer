@@ -5,7 +5,7 @@
              xmlns:controls="clr-namespace:Werfer.Controls"
              x:Class="Werfer.Views.Edit.TimeEntryEditView"
              x:DataType="vm:TimeEntryEditViewModel">
-    <!-- Day, start > end and duration, description, project / task -->
+    <!-- Layout: the day, start and end with the duration, the description, then the project and task -->
     <StackPanel Spacing="8">
         <CalendarDatePicker SelectedDate="{Binding Day}" HorizontalAlignment="Stretch" />
 
@@ -39,8 +39,8 @@
                     IsVisible="{Binding SelectedChoice, Converter={x:Static ObjectConverters.IsNotNull}}" />
             </AutoCompleteBox.InnerLeftContent>
         </AutoCompleteBox>
-        
-        <!-- Multiline like the timer bar's, same \n line breaks so the text compares equal to what Clockify sends back -->
+
+        <!-- Multiline like the timer bar's description, with the same \n line breaks, so the text compares equal to what Clockify sends back -->
         <TextBox
             Text="{Binding Description}"
             PlaceholderText="What did you work on?"

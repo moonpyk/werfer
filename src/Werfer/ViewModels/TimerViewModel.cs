@@ -10,18 +10,19 @@ using Werfer.Services;
 namespace Werfer.ViewModels;
 
 /// <summary>
-///     Main page: the timer bar and the week's history, each its own view model, and the edit sheet over them. Holds
-///     what ties them together: loading on connection, a finished entry joining the history, the week's total
-///     counting the running entry, a history line continued in the bar, the shortcuts blocked behind the sheet.
+///     Main page: the timer bar and the week's history (each has its own view model), and the edit sheet over them.
+///     Handles what links them: loading on connection, a finished entry added to the history, the week's total
+///     including the running entry, a history line continued in the bar, and the shortcuts disabled while the sheet
+///     is open.
 /// </summary>
 [UsedImplicitly]
 public partial class TimerViewModel : ViewModelBase
 {
-    // The entry shown in the edit sheet, highlighted in the history meanwhile
+    // The item open in the edit sheet, highlighted in the history while the sheet is open
     private TimeEntryItemViewModelBase? _editedItem;
 
     /// <summary>
-    ///     Creates the page and its two parts, and ties them together, see the class summary.
+    ///     Creates the page and its two parts, and links them, see the class summary.
     /// </summary>
     public TimerViewModel(
         IApplicationSettings applicationSettings,
@@ -53,23 +54,23 @@ public partial class TimerViewModel : ViewModelBase
     private TimeTrackingService TimeTracking { get; }
 
     /// <summary>
-    ///     The timer bar's part: the running entry, its start and stop.
+    ///     The timer bar: the running entry, its start and stop.
     /// </summary>
     public TimerPlayerViewModel Player { get; }
 
     /// <summary>
-    ///     The history's part: the week's finished entries and total.
+    ///     The history: the week's finished entries and total.
     /// </summary>
     public HistoryViewModel History { get; }
 
     /// <summary>
-    ///     The edit sheet's form; kept once closed, set anew by <see cref="Edit" />
+    ///     The form in the edit sheet. Kept after the sheet closes, replaced by <see cref="Edit" />
     /// </summary>
     [ObservableProperty]
     public partial TimeEntryEditViewModel? Editor { get; private set; }
 
     /// <summary>
-    ///     Bound both ways to the sheet, which closes itself on a click outside
+    ///     True while the edit sheet is open. Bound both ways: the sheet closes itself on a click outside
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(
@@ -84,24 +85,25 @@ public partial class TimerViewModel : ViewModelBase
     public partial bool IsEditorOpen { get; set; }
 
     /// <summary>
-    ///     While the edit sheet's changes are being sent: it can't be closed meanwhile, closing wouldn't stop them
+    ///     True while the edit sheet's changes are being sent. The sheet can't be closed then: closing wouldn't stop the
+    ///     request
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CloseEditorCommand))]
     public partial bool IsSavingEdit { get; private set; }
 
     /// <summary>
-    ///     Ctrl+Space, see the window's KeyBindings: the player's Toggle, null while the edit sheet is open.
+    ///     Ctrl+Space, see the window's KeyBindings: the timer bar's Toggle. Null while the edit sheet is open.
     /// </summary>
     public ICommand? ToggleCommand => IsEditorOpen ? null : Player.ToggleCommand;
 
     /// <summary>
-    ///     Ctrl+L: the player's ClearDescription, null while the edit sheet is open.
+    ///     Ctrl+L: the timer bar's ClearDescription. Null while the edit sheet is open.
     /// </summary>
     public ICommand? ClearDescriptionCommand => IsEditorOpen ? null : Player.ClearDescriptionCommand;
 
     /// <summary>
-    ///     Ctrl+N: the player's Reset, null while the edit sheet is open.
+    ///     Ctrl+N: the timer bar's Reset. Null while the edit sheet is open.
     /// </summary>
     public ICommand? ResetCommand => IsEditorOpen ? null : Player.ResetCommand;
 
@@ -109,7 +111,7 @@ public partial class TimerViewModel : ViewModelBase
     private bool CanCloseEditor => IsEditorOpen && !IsSavingEdit;
 
     /// <summary>
-    ///     Fetches the running entry and the week's history, they may have changed elsewhere.
+    ///     Reloads the running entry and the week's history from Clockify: they may have changed in another app.
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanRefresh))]
     public Task RefreshAsync()
@@ -157,7 +159,8 @@ public partial class TimerViewModel : ViewModelBase
     }
 
     /// <summary>
-    ///     Closes the edit sheet without saving: Cancel, Escape; a click outside closes it through the binding.
+    ///     Closes the edit sheet without saving, for Cancel and Escape. A click outside closes it through the IsEditorOpen
+    ///     binding.
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanCloseEditor))]
     public void CloseEditor()
@@ -188,7 +191,7 @@ public partial class TimerViewModel : ViewModelBase
 
             try
             {
-                // An archived project isn't among the choices: none picked keeps the entry's own
+                // No project picked (an archived one isn't in the list): keep the entry's own project and task
                 await TimeTracking.UpdateTimeEntryAsync(
                     form.Entry,
                     range,
@@ -202,13 +205,15 @@ public partial class TimerViewModel : ViewModelBase
                 IsSavingEdit = false;
             }
 
-            // Only once saved: on failure (reported by WithBusyIndicator) the sheet stays open, nothing typed is lost
+            // Closed only once saved: if saving fails (WithBusyIndicator reports it), the sheet stays open and nothing
+            // typed is lost
             CloseEditor();
             await History.LoadImplAsync();
         });
     }
 
-    // Connection happens from the settings page: the projects first, then the history, which needs their names
+    // Connected, at startup or from the settings page: load the projects first, then the history, which needs
+    // their names
     private void OnConnected(object? sender, EventArgs e)
     {
         _ = WithBusyIndicator(async () =>
@@ -219,13 +224,13 @@ public partial class TimerViewModel : ViewModelBase
         });
     }
 
-    // Stopped here or elsewhere: the entry now belongs to the history
+    // An entry finished, stopped here or in another app: reload the history to show it
     private void OnEntryFinished(object? sender, EventArgs e)
     {
         _ = History.LoadAsync();
     }
 
-    // The week's total counts the running entry, second by second
+    // The week's total includes the running entry: pass on its time every second
     private void OnPlayerPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(TimerPlayerViewModel.RunningElapsed))

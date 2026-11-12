@@ -17,7 +17,7 @@ public class ClockifyAuthHeaderHandler(
         // ReSharper disable once InvertIf : Clutter
         if (!request.Headers.Contains("X-Api-Key"))
         {
-            // Checked per call, not at registration: a GUI sets the key after startup
+            // Checked on each call, not at registration: the app sets the key after startup
             if (string.IsNullOrWhiteSpace(Options.ApiKey))
             {
                 throw new InvalidOperationException("Clockify ApiKey is not configured");

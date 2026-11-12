@@ -43,8 +43,8 @@ public class TimeEntry
     public string? KioskId { get; set; }
 
     /// <summary>
-    ///     Werfer helper, not part of Clockify's API: entries sharing it show as one history line. Clockify sends "" or
-    ///     null for no description, both give the same key
+    ///     Werfer helper, not part of Clockify's API: entries with the same key show as one history line. Clockify sends "" or
+    ///     null for no description, and both give the same key
     /// </summary>
     [JsonIgnore]
     public (string? ProjectId, string? TaskId, string? Description) WerferGroupingKey =>

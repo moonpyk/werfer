@@ -4,15 +4,16 @@
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
              x:Class="Werfer.Controls.AccountCard">
     <!-- 
-    Avatar on the left, name above the email on the right; filled from the control's properties in code, see
+    Avatar on the left, name above the email on the right. The texts and the picture are set in code, see
     OnPropertyChanged 
     -->
     <UserControl.Resources>
         <system:Double x:Key="AvatarSize">32</system:Double>
-        <CornerRadius x:Key="AvatarCornerRadius">16<!-- Half the avatar size to get a circle --></CornerRadius>
+        <CornerRadius x:Key="AvatarCornerRadius">
+            16<!-- Half the avatar size to get a circle --></CornerRadius>
     </UserControl.Resources>
     <StackPanel Orientation="Horizontal" Spacing="10">
-        <!-- The picture, cut round; the Contact symbol without one -->
+        <!-- The profile picture in a circle, or the Contact symbol when there is none -->
         <Border
             Width="{StaticResource AvatarSize}"
             Height="{StaticResource AvatarSize}"
@@ -24,12 +25,11 @@
                 <ui:FASymbolIcon x:Name="ContactIcon" Symbol="Contact" FontSize="16" />
                 <Image
                     x:Name="AvatarImage"
-                    Stretch="UniformToFill"
-                    />
+                    Stretch="UniformToFill" />
             </Panel>
         </Border>
         <!-- 
-        Width capped: the card sets the menu's width, a long email pushed its shortcuts far right 
+        Max width: the card sets the width of the More menu, and a long email pushed the shortcuts far to the right 
         -->
         <StackPanel VerticalAlignment="Center" MaxWidth="160">
             <TextBlock x:Name="UserNameText" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />

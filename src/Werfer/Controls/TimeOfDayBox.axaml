@@ -19,8 +19,8 @@
         </Style>
     </UserControl.Styles>
 
-    <!-- Typed rather than TimePicker, whose flyout takes no keyboard input; no mask, the hour's leading 0 is optional.
-         The chevrons change the time by a minute (Tag), repeating while held -->
+    <!-- A text box rather than a TimePicker, whose flyout can't be typed in. No input mask: the hour's leading 0 is optional.
+         The chevrons change the time by one minute (their Tag), and repeat while held -->
     <TextBox
         Text="{Binding $parent[controls:TimeOfDayBox].Text}"
         MaxLength="5"

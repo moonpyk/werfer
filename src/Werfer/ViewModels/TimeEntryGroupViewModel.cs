@@ -6,8 +6,8 @@ using Werfer.Services;
 namespace Werfer.ViewModels;
 
 /// <summary>
-///     One line of the history: entries of a day sharing project, task and description. Its actions go through the
-///     timer page, so the card binds them directly.
+///     One line of the history: the entries of one day with the same project, task and description. Its commands
+///     call the timer page, so the card can bind to them directly.
 /// </summary>
 public partial class TimeEntryGroupViewModel(
     TimeEntryGroup group,
@@ -16,7 +16,8 @@ public partial class TimeEntryGroupViewModel(
 ) : TimeEntryItemViewModelBase(timer)
 {
     /// <summary>
-    ///     The line's project and task; null when no longer startable (archived, done): it can't be continued.
+    ///     The line's project and task. Null when they can't be started anymore (archived, done): the line can't be
+    ///     continued then.
     /// </summary>
     public override ProjectTaskViewModel? Choice { get; } = choice;
 
@@ -31,7 +32,7 @@ public partial class TimeEntryGroupViewModel(
     public IBrush? Brush => Choice?.Brush;
 
     /// <summary>
-    ///     The project's color, made readable as the project's name; null without a choice.
+    ///     The project's color, for the project's name (the view adjusts it to stay readable). Null without a choice.
     /// </summary>
     public Color? Color => Choice?.Color;
 
@@ -46,7 +47,7 @@ public partial class TimeEntryGroupViewModel(
     public string DisplayDescription => Description ?? "(no description)";
 
     /// <summary>
-    ///     Greys the placeholder shown without a description.
+    ///     Opacity that greys out the placeholder shown when there is no description.
     /// </summary>
     public double DescriptionOpacity => Description is null ? 0.6 : 1;
 
@@ -71,7 +72,7 @@ public partial class TimeEntryGroupViewModel(
     public string Duration { get; } = TimeEntryHistory.Format(group.Duration);
 
     /// <summary>
-    ///     From the first start to the last end of the group's entries
+    ///     Time range of the group, from its first start to its last end
     /// </summary>
     public string Range { get; } = FormatRange(
         group.Entries.Min(e => e.TimeInterval!.Start),
@@ -83,17 +84,18 @@ public partial class TimeEntryGroupViewModel(
     /// </summary>
     public int Count => TimeEntries.Count;
 
-    // Kept rather than capturing the constructor parameter, which the initializers above already read
+    // Stored in a property rather than captured from the constructor parameter, which the initializers above
+    // already read
     protected override IReadOnlyList<TimeEntry> TimeEntries { get; } = group.Entries;
 
     /// <summary>
-    ///     Whether the line groups several entries: they can be shown, see <see cref="Entries" />.
+    ///     True when the line has several entries, which the user can expand, see <see cref="Entries" />.
     /// </summary>
     public bool IsMultiple => Count > 1;
 
     /// <summary>
-    ///     Shown when the group is expanded, most recent first like the groups. Built on first read: lines point back
-    ///     to their group, which an initializer can't reference
+    ///     The entries listed when the group is expanded, most recent first like the groups. Built on first read,
+    ///     because each line points back to its group, and an initializer can't use this
     /// </summary>
     public List<TimeEntryLineViewModel> Entries => field ??=
     [

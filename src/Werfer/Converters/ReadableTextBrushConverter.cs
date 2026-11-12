@@ -10,8 +10,9 @@ namespace Werfer.Converters;
 
 /// <summary>
 ///     Turns a color into a text brush readable on the background of the control drawing it, see
-///     <see cref="ReadableColor.EnsureContrast" />. Bound values: the color, the control itself, then the control's
-///     ActualThemeVariant, which only makes the binding re-run when the theme changes.
+///     <see cref="ReadableColor.EnsureContrast" />. Takes three bound values: the color, the control itself, then the
+///     control's
+///     ActualThemeVariant, which isn't read: it is only there so the binding runs again when the theme changes.
 /// </summary>
 public class ReadableTextBrushConverter : IMultiValueConverter
 {
@@ -20,7 +21,7 @@ public class ReadableTextBrushConverter : IMultiValueConverter
 
     public static ReadableTextBrushConverter Instance { get; } = new();
 
-    // Shared by every project: few distinct colors times the themes, so it stays small (UI thread only)
+    // Cache shared by every project. Few colors times few themes, so it stays small. Only used on the UI thread
     private Dictionary<(Color Text, Color Background), IBrush> Brushes { get; } = new();
 
     /// <inheritdoc />

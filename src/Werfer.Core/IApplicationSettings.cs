@@ -12,8 +12,7 @@ public interface IApplicationSettings
     string? ApiKey { get; set; }
 
     /// <summary>
-    ///     Gets or sets the maximum number of project choices that can be displayed or selected
-    ///     in the timer control.
+    ///     Gets or sets the maximum number of matches the project box lists.
     /// </summary>
     int MaxProjectChoices { get; set; }
 
@@ -45,7 +44,7 @@ public interface IApplicationSettings
     double? WindowHeight { get; set; }
 
     /// <summary>
-    ///     Gets or sets the first day of the week the history totals start from; the current culture's until set
+    ///     Gets or sets the first day of the history's week. Until the user picks one, the current culture's first day
     /// </summary>
     DayOfWeek WeekStart { get; set; }
 

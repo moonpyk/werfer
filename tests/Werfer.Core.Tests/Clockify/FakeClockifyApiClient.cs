@@ -45,12 +45,13 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
     public List<TimeEntry> Entries { get; } = [];
 
     /// <summary>
-    ///     What the projects query serves, a page at a time; whatever its filters, give them tasks to be startable
+    ///     What the projects query serves, a page at a time, whatever the filters. Give the projects tasks, or nothing
+    ///     can be started
     /// </summary>
     public List<Project> Projects { get; } = [];
 
     /// <summary>
-    ///     Page size served whatever the one asked, like Clockify capping it without error
+    ///     Page size actually served, whatever size is asked: Clockify also caps it without an error
     /// </summary>
     public int MaxPageSize { get; set; } = int.MaxValue;
 

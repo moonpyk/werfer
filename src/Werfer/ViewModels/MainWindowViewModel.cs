@@ -10,13 +10,13 @@ using Werfer.Services;
 namespace Werfer.ViewModels;
 
 /// <summary>
-///     Window shell: holds both pages and the one currently shown.
+///     The main window: holds both pages and knows which one is shown.
 /// </summary>
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public partial class MainWindowViewModel : ViewModelBase
 {
     /// <summary>
-    ///     Creates the shell over its two pages, and connects right away with a key saved by a previous run.
+    ///     Creates the window's view model with its two pages, and connects right away if an API key was saved before.
     /// </summary>
     public MainWindowViewModel(
         ILogger<MainWindowViewModel> logger,
@@ -42,8 +42,8 @@ public partial class MainWindowViewModel : ViewModelBase
         timer.History.PropertyChanged += OnPagePropertyChanged;
         settings.PropertyChanged += OnPagePropertyChanged;
 
-        // A key saved by a previous run connects right away, the timer page fills in once it's done
-        // The only message not caused by a user action: without a valid key the app can't do anything
+        // With an API key saved before, connect right away; the timer page fills in once connected
+        // This is the only message not caused by a user action: without a valid key the app can't do anything
         if (settings.HasApiKey)
         {
             _ = settings.ConnectAsync();
@@ -77,7 +77,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public partial string? Status { get; private set; }
 
     /// <summary>
-    ///     As set in Clockify's profile, shown above the email (<see cref="Status" />) in the More menu
+    ///     The user's name, as set in their Clockify profile. Shown above the email in the More menu
     /// </summary>
     [ObservableProperty]
     public partial string? UserName { get; private set; }
@@ -93,7 +93,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private TimeTrackingService TimeTracking { get; }
 
     /// <summary>
-    ///     Whether any page, or a part of one, is working: drives the progress ring of the status bar.
+    ///     True while any page, or part of a page, is busy: shows the progress ring in the status bar.
     /// </summary>
     [ObservableProperty]
     public partial bool IsAnyPageBusy { get; private set; }
@@ -126,8 +126,8 @@ public partial class MainWindowViewModel : ViewModelBase
     public bool ShowRefreshButton => Page == AppPageEnum.Timer;
 
     /// <summary>
-    ///     Ctrl+L, see the window's KeyBindings: the timer page's ClearDescription, null while another page is shown, the
-    ///     cleared field must be on screen.
+    ///     Ctrl+L, see the window's KeyBindings: the timer page's ClearDescription. Null while another page is shown, so
+    ///     the shortcut only works when the field it clears is on screen.
     /// </summary>
     public ICommand? ClearDescriptionCommand => Page == AppPageEnum.Timer ? Timer.ClearDescriptionCommand : null;
 
@@ -143,7 +143,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public partial string? UserEmail { get; private set; }
 
     /// <summary>
-    ///     Shows a page; as a command for its shortcuts (Ctrl+, for the settings).
+    ///     Shows a page. Also a command, for the keyboard shortcuts (Ctrl+, for the settings).
     /// </summary>
     [RelayCommand]
     public void Navigate(AppPageEnum page)
@@ -160,7 +160,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _ = LoadAvatarAsync(TimeTracking.User?.ProfilePicture);
     }
 
-    // The first day of the week changed: the history's week moves with it
+    // The first day of the week changed: reload the history for the new week
     private void OnSettingsPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(SettingsViewModel.WeekStart))
@@ -169,7 +169,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    // Drives the progress ring, whichever page is working
+    // Shows the progress ring when any page is busy, and passes on the timer page's shortcut changes
     private void OnPagePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         switch (e.PropertyName)
@@ -178,7 +178,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 IsAnyPageBusy = Timer.IsBusy || Timer.Player.IsBusy || Timer.History.IsBusy || Settings.IsBusy;
                 break;
 
-            // The timer page's shortcuts follow its edit sheet, see TimerViewModel
+            // The timer page's shortcuts change when its edit sheet opens or closes, see TimerViewModel
             case nameof(TimerViewModel.ClearDescriptionCommand):
             case nameof(TimerViewModel.ResetCommand):
                 OnPropertyChanged(e.PropertyName);
@@ -186,7 +186,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    // Best effort: an unreachable or undecodable picture (an SVG one, say) keeps the generic icon
+    // Best effort: if the picture can't be downloaded or decoded (an SVG, for example), the generic icon stays
     private async Task LoadAvatarAsync(string? url)
     {
         var prev = Avatar;
@@ -209,8 +209,8 @@ public partial class MainWindowViewModel : ViewModelBase
             await strm.CopyToAsync(ms);
             ms.Position = 0;
 
-            // Decoded at twice its 32 px display size, sharp on a 200 % screen
-            // a fraction of what the full picture's memory can be
+            // Decoded at 64 px, twice its 32 px display size: sharp on a 200 % screen, and much less memory than
+            // the full-size picture
             Avatar = Bitmap.DecodeToWidth(
                 ms,
                 64

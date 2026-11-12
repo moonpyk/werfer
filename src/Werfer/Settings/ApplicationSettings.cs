@@ -176,7 +176,7 @@ public partial class ApplicationSettings : IApplicationSettings
 
         try
         {
-            // One assignment swaps every persisted value at once
+            // Replaces all saved values in one assignment: a load that fails halfway changes nothing
             _persisted = JsonSerializer.Deserialize(
                 File.ReadAllText(FilePath),
                 SettingsJsonContext.Default.PersistedSettings
@@ -266,12 +266,12 @@ public partial class ApplicationSettings : IApplicationSettings
         [JsonPropertyName("window:height")]
         public double? WindowHeight { get; set; }
 
-        // Null until picked in the settings, so a culture change still applies
+        // Null until the user picks a day in the settings; until then the culture's first day is used, even if it changes
         [JsonPropertyName("history:week_start")]
         public DayOfWeek? WeekStart { get; set; }
     }
 
-    // Nested so it can see the private PersistedSettings; source-generated because reflection-based JSON is off under NativeAOT
+    // Nested, so it can access the private PersistedSettings. Source-generated, because NativeAOT has no reflection-based JSON
     [JsonSourceGenerationOptions(WriteIndented = true)]
     [JsonSerializable(typeof(PersistedSettings))]
     private partial class SettingsJsonContext : JsonSerializerContext;

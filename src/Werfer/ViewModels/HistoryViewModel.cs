@@ -13,13 +13,13 @@ public partial class HistoryViewModel : ViewModelBase
     // Day the history was last loaded for
     private DateOnly _date;
 
-    // Numbers the loads, see LoadImplAsync
+    // Incremented by each load, so only the latest load shows its result, see LoadImplAsync
     private int _loadGeneration;
 
     private TimeSpan _weekFinished;
 
     /// <summary>
-    ///     Creates the history, empty until connected, reloading itself at midnight.
+    ///     Creates the history. It stays empty until connected, and reloads itself at midnight.
     /// </summary>
     public HistoryViewModel(
         ILogger logger,
@@ -34,7 +34,7 @@ public partial class HistoryViewModel : ViewModelBase
         Page = page;
         WeekTotal = "00:00:00";
 
-        // "Today" and the week move at midnight, the app often stays open across it
+        // "Today" and the week change at midnight, and the app often stays open past it
         DispatcherTimer.Run(() =>
         {
             if (Days is not null && DateOnly.FromDateTime(DateTime.Now) != _date)
@@ -49,11 +49,11 @@ public partial class HistoryViewModel : ViewModelBase
     private IApplicationSettings ApplicationSettings { get; }
     private TimeTrackingService TimeTracking { get; }
 
-    // The history's lines act through it: continue, edit, delete
+    // The timer page: the history's lines call it to continue, edit or delete an entry
     private TimerViewModel Page { get; }
 
     /// <summary>
-    ///     The project and task choices, to name the entries' ones; null until connected, nothing loads meanwhile
+    ///     Every project and task, to show the names of the entries' ones. Null until connected; nothing loads until then
     /// </summary>
     public List<ProjectTaskViewModel>? Choices { get; set; }
 
@@ -65,12 +65,12 @@ public partial class HistoryViewModel : ViewModelBase
     public partial List<TimeEntryDayViewModel>? Days { get; private set; }
 
     /// <summary>
-    ///     Nothing to list yet: not connected, loading or an empty week; the view shows a logo instead
+    ///     True when there is nothing to list: not connected, loading, or no entry this week. The view then shows a logo
     /// </summary>
     public bool IsEmpty => Days is not { Count: > 0 };
 
     /// <summary>
-    ///     Finished entries of the week plus the running one, ticks with it
+    ///     The week's total: finished entries plus the running one. Updated every second while it runs
     /// </summary>
     [ObservableProperty]
     public partial string WeekTotal { get; private set; }
@@ -115,7 +115,7 @@ public partial class HistoryViewModel : ViewModelBase
     }
 
     /// <summary>
-    ///     <see cref="LoadAsync" /> without its busy indicator, for a caller already showing its own.
+    ///     <see cref="LoadAsync" />, without the busy indicator: for a caller that already shows its own.
     /// </summary>
     public async Task LoadImplAsync()
     {
@@ -128,7 +128,7 @@ public partial class HistoryViewModel : ViewModelBase
         var now = DateTimeOffset.Now;
         var today = DateOnly.FromDateTime(now.Date);
 
-        // Set before the request: a failed load is reported once, not retried every minute by the date check
+        // Set before the request, so a failed load is reported once, not retried every minute by the midnight check
         _date = today;
 
         var load = Interlocked.Increment(ref _loadGeneration);
@@ -137,8 +137,8 @@ public partial class HistoryViewModel : ViewModelBase
             TimeEntryHistory.StartOfWeek(now, ApplicationSettings.WeekStart, zone)
         );
 
-        // Loads overlap (a stop, F5, a save): the last one started wins, not the last one to answer, which may
-        // predate a save and show the entry unchanged
+        // Several loads can run at once (a stop, F5, a save). Only the last one started shows its result: the last one
+        // to answer may have started before a save, and would show the entry unchanged
         if (load != _loadGeneration)
         {
             return;

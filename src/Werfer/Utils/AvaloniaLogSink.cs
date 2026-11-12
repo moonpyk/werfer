@@ -15,7 +15,7 @@ public class AvaloniaLogSink(
 {
     private ILoggerFactory LoggerFactory { get; } = loggerFactory;
 
-    // Avalonia checks IsEnabled very often, a dozen areas at most so this stays small
+    // Avalonia calls IsEnabled very often, hence this cache. It stays small: there are a dozen areas at most
     private ConcurrentDictionary<string, ILogger> Loggers { get; } = new();
 
     /// <inheritdoc />
@@ -46,7 +46,8 @@ public class AvaloniaLogSink(
 
         try
         {
-            // Avalonia templates use named placeholders, which ILogger also understands; the source tells which control logged
+            // Avalonia's message templates use named placeholders, which ILogger understands too.
+            // The source tells which control logged the message.
             logger.Log(
                 ToLogLevel(level),
                 "{Source}: " + messageTemplate,

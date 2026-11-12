@@ -17,7 +17,7 @@
                  CanMaximize="False"
                  Topmost="{Binding Settings.Topmost}">
     <!-- Page view models are mapped to their views here, no reflection-based ViewLocator (NativeAOT) -->
-    <!-- Shortcuts; their conditions (no edit sheet open, timer page, ...) are the commands' CanExecute -->
+    <!-- Keyboard shortcuts. A shortcut does nothing while its command is null or can't execute (edit sheet open, another page shown...) -->
     <Window.KeyBindings>
         <KeyBinding Gesture="Ctrl+Space" Command="{Binding Timer.ToggleCommand}" />
         <!-- Fetches the running entry and the week's history, they may have changed elsewhere -->
@@ -25,7 +25,7 @@
         <KeyBinding Gesture="Ctrl+L" Command="{Binding ClearDescriptionCommand}" />
         <!-- "New": a blank, stopped timer -->
         <KeyBinding Gesture="Ctrl+N" Command="{Binding ResetCommand}" />
-        <!-- Closes the edit sheet, like its Cancel button; an open dropdown inside it takes Escape first -->
+        <!-- Closes the edit sheet, like its Cancel button. An open dropdown in the sheet gets Escape first -->
         <KeyBinding Gesture="Escape" Command="{Binding Timer.CloseEditorCommand}" />
         <!-- Ctrl+, : the usual settings shortcut (VS Code, Teams, macOS) -->
         <KeyBinding
@@ -68,7 +68,7 @@
             </Grid>
         </Border>
 
-        <!-- Docked after the status bar, so stacked right above it. Closing an info bar removes its message, the same message can then be pushed again -->
+        <!-- Declared after the status bar, so it sits right above it. Closing an info bar removes its message, so the same message can be shown again later -->
         <ItemsControl
             DockPanel.Dock="Bottom"
             Margin="8,0,8,4"
@@ -105,7 +105,7 @@
                 </ui:FANavigationViewItem>
             </ui:FANavigationView.MenuItems>
             <ui:FANavigationView.FooterMenuItems>
-                <!-- Action, not a page: invoking it doesn't change the selection -->
+                <!-- An action, not a page: clicking it doesn't change the selected item -->
                 <ui:FANavigationViewItem
                     ToolTip.Tip="Fetch the running entry and the history from Clockify (F5)"
                     x:Name="RefreshItem"
@@ -117,9 +117,9 @@
                     </ui:FANavigationViewItem.IconSource>
                 </ui:FANavigationViewItem>
                 <!--
-                Menu of the pages without an item of their own. Selectable: FluentAvalonia reverts a selection from code
-                of a SelectsOnInvoked="False" item, More couldn't stay selected while on one of its pages. Its selection
-                is undone if the menu closes without a pick, see OnMoreMenuClosed
+                Menu of the pages that have no item of their own. More is selectable because FluentAvalonia undoes a
+                selection made from code on a SelectsOnInvoked="False" item, so More could not stay selected while one
+                of its pages is shown. If the menu closes without a pick, the selection goes back, see OnMoreMenuClosed
                 -->
                 <ui:FANavigationViewItem
                     x:Name="MoreItem"
@@ -131,11 +131,12 @@
                                 IsHitTestVisible="False"
                                 Focusable="False">
                                 <MenuItem.Header>
-                                    <!-- 
-                                    Pulled left over the empty icon column every menu item has (16 px icon + 12 px gap),
-                                    so the avatar lines up with the icons below. Pushed right over the shortcut column too
-                                    (24 px gap + "Ctrl+,"): the header column, shared with Settings, is then that much
-                                    narrower and its shortcut closer
+                                    <!--
+                                    Moved 28 px left, over the empty icon column every menu item has (16 px icon + 12 px
+                                    gap), so the avatar lines up with the icons below. Also stretched 56 px right, over
+                                    the shortcut column (24 px gap + "Ctrl+,"), empty on this line: the label column,
+                                    shared with the Settings line, gets 56 px narrower, and the Settings shortcut moves
+                                    closer to its label
                                     -->
                                     <ctl:AccountCard
                                         Margin="-28,0,-56,0"

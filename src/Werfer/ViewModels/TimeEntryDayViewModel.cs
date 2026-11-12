@@ -5,7 +5,7 @@ using Werfer.Utils;
 namespace Werfer.ViewModels;
 
 /// <summary>
-///     A day of the history with its total, finished entries only.
+///     One day of the history, with its total. Finished entries only.
 /// </summary>
 public class TimeEntryDayViewModel(
     TimeEntryDay day,
@@ -27,7 +27,7 @@ public class TimeEntryDayViewModel(
     public string Total { get; } = TimeEntryHistory.Format(day.Duration);
 
     /// <summary>
-    ///     The day's lines, most recent first; a line without a startable project or task has no choice.
+    ///     The day's lines, most recent first. A line whose project or task can't be started anymore has a null Choice.
     /// </summary>
     public List<TimeEntryGroupViewModel> Groups { get; } =
     [

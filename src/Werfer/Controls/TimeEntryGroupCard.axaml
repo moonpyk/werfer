@@ -6,7 +6,10 @@
              x:Class="Werfer.Controls.TimeEntryGroupCard"
              x:DataType="vm:TimeEntryGroupViewModel">
     <UserControl.Resources>
-        <!-- Entry menu, opened by the three dots and by a right click on the card or line; one instance per use -->
+        <!-- 
+        Menu of an entry, opened by the three dots button or a right click on the card or line. 
+        Each card or line gets its own instance 
+        -->
         <MenuFlyout x:Key="EntryMenu" x:Shared="False">
             <MenuItem
                 x:DataType="vm:TimeEntryItemViewModelBase"
@@ -37,17 +40,17 @@
             <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
         </Style>
-        <!-- An entry of an expanded group, a darker card inside the group's -->
+        <!-- One entry of an expanded group: a darker card inside the group's card -->
         <Style Selector="Border.entryLine">
             <Setter Property="Margin" Value="0,0,0,4" />
             <Setter Property="Padding" Value="12,4,4,4" />
             <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
             <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
-            <!-- Transparent until edited, so the accent border doesn't shift the content -->
+            <!-- The border is always there, transparent until the entry is edited, so the accent border doesn't move the content -->
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="Transparent" />
         </Style>
-        <!-- A click on the background edits the entry, see OnEntryPointerReleased; not a group of several -->
+        <!-- A click on the background edits the entry (see OnEntryPointerReleased). Not for a group of several entries, edited line by line -->
         <Style Selector="Border.entryCard.editable, Border.entryLine.editable">
             <Setter Property="Cursor" Value="Hand" />
         </Style>
@@ -55,18 +58,19 @@
         <Style Selector="Border.entryCard.editing, Border.entryLine.editing">
             <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
         </Style>
-        <!-- Slight highlight on hover, the theme's own hover fills -->
+        <!-- Slight highlight on hover, with the theme's own hover colors -->
         <Style Selector="Border.entryCard:pointerover">
             <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
         </Style>
         <Style Selector="Border.entryLine:pointerover">
             <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
         </Style>
-        <!-- 
-        Square play button, the theme's corner radius like the three dots, hidden until its card or line is hovered; Opacity rather than IsVisible keeps its room,
-        so the layout doesn't jump. Also shown when tabbed to: :focus-visible, not the card's :focus-within, which
-        the three dots button keeps after a click and its menu closed. The group's is matched as a direct child,
-        hovering the group card mustn't show the play buttons of all its lines 
+        <!--
+        Square play button with the theme's corner radius, like the three dots. Hidden until its card or line is
+        hovered, with Opacity rather than IsVisible so it keeps its space and the layout doesn't jump. Also shown when
+        reached with Tab (:focus-visible); not with the card's :focus-within, which stays on after the three dots menu
+        closes. The group's button is matched as a direct child, so hovering the group card doesn't show the buttons of
+        all its lines
         -->
         <Style Selector="Border.entryCard Button.continue">
             <Setter Property="Width" Value="28" />
@@ -96,7 +100,7 @@
             ContextFlyout="{StaticResource EntryMenu}" PointerReleased="OnEntryPointerReleased">
         <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto"
               RowDefinitions="Auto,Auto">
-            <!-- Entry count, toggles the entries of the group -->
+            <!-- Number of entries in the group; a click shows or hides them -->
             <ToggleButton
                 x:Name="CountToggle"
                 Grid.Column="0"
@@ -146,7 +150,7 @@
                                IsVisible="{Binding ClientName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 </StackPanel>
             </StackPanel>
-            <!-- Same project, task and description, as a new entry; only shown on hover, see entryCard -->
+            <!-- Starts a new entry with the same project, task and description. Only shown on hover, see the entryCard style -->
             <Button
                 Grid.Column="2"
                 Grid.Row="0"
@@ -201,7 +205,7 @@
                                            Text="{Binding Range}"
                                            FontFeatures="+tnum"
                                            VerticalAlignment="Center" />
-                                <!-- Continues the group: its entries share project, task and description -->
+                                <!-- Continues the whole group: its entries all have the same project, task and description -->
                                 <Button
                                     Grid.Column="1"
                                     ToolTip.Tip="Continue"

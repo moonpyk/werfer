@@ -3,7 +3,7 @@ using FluentAvalonia.UI.Controls;
 namespace Werfer.Services;
 
 /// <summary>
-///     The flash messages shown from several places, or pushed and removed by identity: one instance each.
+///     Flash messages used in several places, or removed later by reference: each one is a single shared instance.
 /// </summary>
 public static class WellKnownMessages
 {

@@ -13,7 +13,7 @@ namespace Werfer.ViewModels;
 public partial class SettingsViewModel : ViewModelBase
 {
     /// <summary>
-    ///     Creates the page, its API key box filled with the saved one.
+    ///     Creates the page, with the saved API key in its key box.
     /// </summary>
     public SettingsViewModel(
         ILogger<SettingsViewModel> logger,
@@ -38,7 +38,7 @@ public partial class SettingsViewModel : ViewModelBase
     public partial string ApiKey { get; set; }
 
     /// <summary>
-    ///     Whether a key is typed, empty or blank ones aside.
+    ///     True when a key is typed (blank text doesn't count).
     /// </summary>
     public bool HasApiKey => !string.IsNullOrWhiteSpace(ApiKey);
 
@@ -48,7 +48,7 @@ public partial class SettingsViewModel : ViewModelBase
     public DayOfWeek[] DaysOfWeek { get; } = Enum.GetValues<DayOfWeek>();
 
     /// <summary>
-    ///     First day of the history's week, saved as soon as picked; the timer page reloads its history on change
+    ///     First day of the history's week, saved as soon as it is picked. The timer page then reloads its history
     /// </summary>
     public DayOfWeek WeekStart
     {
@@ -67,7 +67,7 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     /// <summary>
-    ///     Keeps the window above the others, saved as soon as changed; the window binds to it
+    ///     Keeps the window above the others. Saved as soon as it changes; the window binds to it, so it applies at once
     /// </summary>
     public bool Topmost
     {
@@ -86,7 +86,8 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     /// <summary>
-    ///     Asks before closing the window, saved as soon as changed; also turned off from the dialog itself
+    ///     Asks for confirmation before closing the window. Saved as soon as it changes. The dialog's "Don't ask again"
+    ///     also turns it off
     /// </summary>
     public bool ConfirmClose
     {
@@ -146,7 +147,8 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnApiKeyChanged(string value)
     {
         _ = value;
-        // Only raised here: a typed key isn't verified yet, ConnectAsync clears it once Clockify accepts one
+        // Only turned on here, for a blank key: a typed key isn't checked yet. ConnectAsync turns it off once Clockify
+        // accepts a key
         if (!HasApiKey)
         {
             NeedsAttention = true;

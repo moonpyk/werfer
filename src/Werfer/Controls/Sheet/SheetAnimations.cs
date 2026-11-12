@@ -3,14 +3,15 @@ using JetBrains.Annotations;
 namespace Werfer.Controls.Sheet;
 
 /// <summary>
-///     The transitions a <see cref="Sheet" /> animates; flags, to keep one direction only.
+///     Which transitions of a <see cref="Sheet" /> are animated. Flags, so opening and closing can be turned on
+///     separately.
 /// </summary>
 [Flags]
 [PublicAPI]
 public enum SheetAnimations
 {
     /// <summary>
-    ///     Shown and hidden at once.
+    ///     No animation: the sheet shows and hides instantly.
     /// </summary>
     None = 0,
 

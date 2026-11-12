@@ -27,7 +27,7 @@ public partial class TimeOfDayBox : UserControl
         set => SetValue(TextProperty, value);
     }
 
-    // Wraps around midnight; an unreadable time is left for the user to fix
+    // Wraps around midnight (23:59 plus one minute gives 00:00). A time that can't be read is left for the user to fix
     private void OnSpin(object? sender, RoutedEventArgs e)
     {
         if (TimeEntryHistory.TryParseTimeOfDay(Text, out var time))

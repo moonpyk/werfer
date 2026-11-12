@@ -8,8 +8,8 @@
              x:DataType="vm:TimerViewModel">
     <Panel>
         <!--
-        The timer bar on top, sized by its content (the description grows with its lines), the week's history takes the
-        rest; both bind to this page's view model. Disabled until connected and the projects are loaded
+        The timer bar on top, as tall as its content (the description grows with its lines); the week's history fills
+        the rest. Disabled until connected and the projects are loaded
         -->
         <Grid
             RowDefinitions="Auto,*"
@@ -18,7 +18,7 @@
             <timer:HistoryView Grid.Row="1" DataContext="{Binding History}" />
         </Grid>
 
-        <!-- Edit sheet, modal; Escape closes it, see MainWindow.OnKeyDown -->
+        <!-- Edit sheet, modal. Escape closes it, see the window's KeyBindings -->
         <sheet:Sheet
             IsOpen="{Binding IsEditorOpen}"
             IsLightDismissEnabled="{Binding !IsSavingEdit}"
