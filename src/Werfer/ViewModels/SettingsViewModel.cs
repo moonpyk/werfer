@@ -62,11 +62,45 @@ public partial class SettingsViewModel : ViewModelBase
 
             ApplicationSettings.WeekStart = value;
             OnPropertyChanged();
+            Save();
+        }
+    }
 
-            if (!ApplicationSettings.TrySave())
+    /// <summary>
+    ///     Keeps the window above the others, saved as soon as changed; the window binds to it
+    /// </summary>
+    public bool Topmost
+    {
+        get => ApplicationSettings.Topmost;
+        set
+        {
+            if (value == ApplicationSettings.Topmost)
             {
-                FlashMessages.Push(WellKnownMessages.SettingsNotSaved);
+                return;
             }
+
+            ApplicationSettings.Topmost = value;
+            OnPropertyChanged();
+            Save();
+        }
+    }
+
+    /// <summary>
+    ///     Asks before closing the window, saved as soon as changed; also turned off from the dialog itself
+    /// </summary>
+    public bool ConfirmClose
+    {
+        get => ApplicationSettings.ConfirmClose;
+        set
+        {
+            if (value == ApplicationSettings.ConfirmClose)
+            {
+                return;
+            }
+
+            ApplicationSettings.ConfirmClose = value;
+            OnPropertyChanged();
+            Save();
         }
     }
 
@@ -97,11 +131,16 @@ public partial class SettingsViewModel : ViewModelBase
             NeedsAttention = false;
 
             ApplicationSettings.ApiKey = ApiKey;
-            if (!ApplicationSettings.TrySave())
-            {
-                FlashMessages.Push(WellKnownMessages.SettingsNotSaved);
-            }
+            Save();
         });
+    }
+
+    private void Save()
+    {
+        if (!ApplicationSettings.TrySave())
+        {
+            FlashMessages.Push(WellKnownMessages.SettingsNotSaved);
+        }
     }
 
     partial void OnApiKeyChanged(string value)

@@ -85,6 +85,13 @@ public partial class ApplicationSettings : IApplicationSettings
     }
 
     /// <inheritdoc />
+    public bool ConfirmClose
+    {
+        get => _persisted.ConfirmClose;
+        set => _persisted.ConfirmClose = value;
+    }
+
+    /// <inheritdoc />
     public int? WindowX
     {
         get => _persisted.WindowX;
@@ -242,6 +249,10 @@ public partial class ApplicationSettings : IApplicationSettings
         [JsonPropertyName("window:topmost")]
         [DefaultValue(false)]
         public bool Topmost { get; set; }
+
+        [JsonPropertyName("window:confirm_close")]
+        [DefaultValue(true)]
+        public bool ConfirmClose { get; set; } = true;
 
         [JsonPropertyName("window:x")]
         public int? WindowX { get; set; }

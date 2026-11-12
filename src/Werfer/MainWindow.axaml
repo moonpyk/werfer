@@ -15,7 +15,7 @@
                  MinHeight="300"
                  WindowStartupLocation="CenterScreen"
                  CanMaximize="False"
-                 Topmost="{Binding ApplicationSettings.Topmost}">
+                 Topmost="{Binding Settings.Topmost}">
     <!-- Page view models are mapped to their views here, no reflection-based ViewLocator (NativeAOT) -->
     <!-- Shortcuts; their conditions (no edit sheet open, timer page, ...) are the commands' CanExecute -->
     <Window.KeyBindings>
@@ -27,6 +27,11 @@
         <KeyBinding Gesture="Ctrl+N" Command="{Binding ResetCommand}" />
         <!-- Closes the edit sheet, like its Cancel button; an open dropdown inside it takes Escape first -->
         <KeyBinding Gesture="Escape" Command="{Binding Timer.CloseEditorCommand}" />
+        <!-- Ctrl+, : the usual settings shortcut (VS Code, Teams, macOS) -->
+        <KeyBinding
+            Gesture="Ctrl+OemComma"
+            Command="{Binding NavigateCommand}"
+            CommandParameter="{x:Static vm:AppPageEnum.Settings}" />
     </Window.KeyBindings>
 
     <Window.DataTemplates>
@@ -140,6 +145,7 @@
                             <Separator />
                             <MenuItem
                                 Header="Settings"
+                                InputGesture="Ctrl+OemComma"
                                 Tag="{x:Static vm:AppPageEnum.Settings}"
                                 Click="OnMorePageClick">
                                 <MenuItem.Icon>

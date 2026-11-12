@@ -1,24 +1,76 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="clr-namespace:Werfer.ViewModels"
              x:Class="Werfer.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
-    <StackPanel Margin="12" Spacing="8">
-        <TextBlock Text="Clockify API key" />
-        <TextBox
-            Text="{Binding ApiKey}"
-            PasswordChar="•"
-            PlaceholderText="Paste your API key" />
-        <Button
-            Content="Save and connect"
-            Command="{Binding ConnectCommand}"
-            IsEnabled="{Binding !IsBusy}"
-            IsDefault="True" />
+    <UserControl.Styles>
+        <!-- Section titles, as in the Windows settings -->
+        <Style Selector="TextBlock.section">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,16,0,4" />
+        </Style>
+    </UserControl.Styles>
 
-        <TextBlock Text="First day of the week" Margin="0,8,0,0" />
-        <ComboBox
-            ItemsSource="{Binding DaysOfWeek}"
-            SelectedItem="{Binding WeekStart}"
-            MinWidth="160" />
-    </StackPanel>
+    <ScrollViewer>
+        <StackPanel Margin="12,0,12,12" Spacing="4">
+            <TextBlock Classes="section" Text="Clockify" />
+            <ui:FASettingsExpander
+                Header="API key"
+                Description="Found in Clockify, under Profile settings"
+                IsExpanded="True">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="Permissions" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpanderItem>
+                    <StackPanel Spacing="8">
+                        <TextBox
+                            Text="{Binding ApiKey}"
+                            PasswordChar="•"
+                            PlaceholderText="Paste your API key" />
+                        <Button
+                            Content="Save and connect"
+                            Command="{Binding ConnectCommand}"
+                            IsEnabled="{Binding !IsBusy}"
+                            IsDefault="True" />
+                    </StackPanel>
+                </ui:FASettingsExpanderItem>
+            </ui:FASettingsExpander>
+
+            <TextBlock Classes="section" Text="History" />
+            <ui:FASettingsExpander Header="First day of the week">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="Calendar" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ComboBox
+                        ItemsSource="{Binding DaysOfWeek}"
+                        SelectedItem="{Binding WeekStart}"
+                        MinWidth="140" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+
+            <TextBlock Classes="section" Text="Window" />
+            <ui:FASettingsExpander
+                Header="Always on top"
+                Description="Keeps the timer in sight, above the other windows">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="Pin" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding Topmost}" OnContent="" OffContent="" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+            <ui:FASettingsExpander
+                Header="Ask before closing"
+                Description="A description still being typed may not reach Clockify">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="Dismiss" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding ConfirmClose}" OnContent="" OffContent="" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

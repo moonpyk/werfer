@@ -13,6 +13,9 @@ namespace Werfer;
 
 public partial class MainWindow : FAAppWindow
 {
+    // Set once Quit is picked in the confirmation, see ConfirmCloseAsync
+    private bool _closeConfirmed;
+
     [UsedImplicitly]
     [Obsolete("Designer only, the running app must go through the view model constructor", true)]
     public MainWindow()
@@ -30,6 +33,15 @@ public partial class MainWindow : FAAppWindow
         Initialize();
 
         DataContext = ViewModel = vm;
+
+        // A page shown by a shortcut (Ctrl+,) gets its navigation item selected, as a click would
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(MainWindowViewModel.Page))
+            {
+                SelectPageItem();
+            }
+        };
 
         this.RestoreSize(
             vm.ApplicationSettings
@@ -52,6 +64,16 @@ public partial class MainWindow : FAAppWindow
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
+        // Not e.IsProgrammatic: FAAppWindow's own close button calls Close() too. A Windows shutdown mustn't wait on a dialog
+        if (ViewModel is { ApplicationSettings.ConfirmClose: true }
+            && !_closeConfirmed
+            && e.CloseReason != WindowCloseReason.OSShutdown)
+        {
+            e.Cancel = true;
+            _ = ConfirmCloseAsync(ViewModel.ApplicationSettings);
+            return;
+        }
+
         // A minimized window reports a fake far off-screen position, keep the last real one instead
         // (also skips maximized, whose size isn't the one to restore)
         if (ViewModel is not null && WindowState == WindowState.Normal)
@@ -62,10 +84,53 @@ public partial class MainWindow : FAAppWindow
             sts.WindowY = Position.Y;
             sts.WindowWidth = ClientSize.Width;
             sts.WindowHeight = ClientSize.Height;
-            sts.TrySave();
         }
 
+        // Also when maximized: "Don't ask again" must be kept
+        ViewModel?.ApplicationSettings.TrySave();
+
         base.OnClosing(e);
+    }
+
+    // Opening the dialog takes the focus off the description box, which sends a description still being typed
+    private async Task ConfirmCloseAsync(IApplicationSettings settings)
+    {
+        var dontAskAgain = new CheckBox
+        {
+            Content = "Don't ask again"
+        };
+
+        // Same button layout as the delete dialog: Cancel left, the action right and default
+        var dialog = new FAContentDialog
+        {
+            Title = "Exit Werfer?",
+            Content = new StackPanel
+            {
+                Spacing = 12,
+                Children =
+                {
+                    new TextBlock { Text = "A description still being typed may not reach Clockify." },
+                    dontAskAgain
+                }
+            },
+            PrimaryButtonText = "Cancel",
+            SecondaryButtonText = "Quit",
+            DefaultButton = FAContentDialogButton.Secondary
+        };
+
+        if (await dialog.ShowAsync() != FAContentDialogResult.Secondary)
+        {
+            return;
+        }
+
+        if (dontAskAgain.IsChecked == true)
+        {
+            settings.ConfirmClose = false;
+        }
+
+        // OnClosing then saves the window and settings without asking again
+        _closeConfirmed = true;
+        Close();
     }
 
     private void OnNavigationSelectionChanged(object? sender, FANavigationViewSelectionChangedEventArgs e)
@@ -110,6 +175,12 @@ public partial class MainWindow : FAAppWindow
     // page of the More menu, whose item More is
     private void OnMoreMenuClosed(object? sender, EventArgs e)
     {
+        SelectPageItem();
+    }
+
+    // The item of the page shown, More for a page of its menu
+    private void SelectPageItem()
+    {
         if (ViewModel is null)
         {
             return;
@@ -118,13 +189,8 @@ public partial class MainWindow : FAAppWindow
         var items = Navigation.MenuItems
             .Concat(Navigation.FooterMenuItems);
 
-        var pageItem = items
+        Navigation.SelectedItem = items
             .OfType<FANavigationViewItem>()
-            .FirstOrDefault(i => i.Tag is AppPageEnum page && page == ViewModel.Page);
-
-        if (pageItem is not null)
-        {
-            Navigation.SelectedItem = pageItem;
-        }
+            .FirstOrDefault(i => i.Tag is AppPageEnum page && page == ViewModel.Page) ?? MoreItem;
     }
 }

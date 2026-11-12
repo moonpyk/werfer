@@ -23,6 +23,11 @@ public interface IApplicationSettings
     bool Topmost { get; set; }
 
     /// <summary>
+    ///     Gets or sets whether closing the window asks for confirmation first
+    /// </summary>
+    bool ConfirmClose { get; set; }
+
+    /// <summary>
     ///     Gets or sets the window position, in screen pixels, at the last close; null until it has been saved once
     /// </summary>
     int? WindowX { get; set; }

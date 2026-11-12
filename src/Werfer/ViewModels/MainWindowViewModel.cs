@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Windows.Input;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Werfer.Services;
@@ -54,9 +55,8 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    ///     Bound directly by the window (Topmost, ...).
-    ///     shortcut: settings don't raise change notifications, values are read once; implement INotifyPropertyChanged
-    ///     on ApplicationSettings once the settings page can change them
+    ///     Read by the window for its size, position and close confirmation. It raises no change notifications: a
+    ///     setting the window must follow live goes through <see cref="SettingsViewModel" />, like Topmost
     /// </summary>
     public IApplicationSettings ApplicationSettings { get; }
 
@@ -130,6 +130,7 @@ public partial class MainWindowViewModel : ViewModelBase
     ///     cleared field must be on screen.
     /// </summary>
     public ICommand? ClearDescriptionCommand => Page == AppPageEnum.Timer ? Timer.ClearDescriptionCommand : null;
+
     /// <summary>
     ///     Ctrl+N, see the window's KeyBindings: the timer page's Reset, null while another page is shown.
     /// </summary>
@@ -142,8 +143,9 @@ public partial class MainWindowViewModel : ViewModelBase
     public partial string? UserEmail { get; private set; }
 
     /// <summary>
-    ///     Shows a page.
+    ///     Shows a page; as a command for its shortcuts (Ctrl+, for the settings).
     /// </summary>
+    [RelayCommand]
     public void Navigate(AppPageEnum page)
     {
         Page = page;
@@ -188,9 +190,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task LoadAvatarAsync(string? url)
     {
         var prev = Avatar;
-        
+
         Avatar = null;
-        
+
         prev?.Dispose();
 
         if (string.IsNullOrWhiteSpace(url))
@@ -202,23 +204,23 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             using var client = HttpClientFactory.CreateClient();
             await using var strm = await client.GetStreamAsync(url);
-            
+
             var ms = new MemoryStream();
             await strm.CopyToAsync(ms);
             ms.Position = 0;
-            
+
             // Decoded at twice its 32 px display size, sharp on a 200 % screen
             // a fraction of what the full picture's memory can be
             Avatar = Bitmap.DecodeToWidth(
-                ms, 
+                ms,
                 64
             );
         }
         catch (Exception e)
         {
             Logger.LogWarning(
-                e, 
-                "Could not load the profile picture {Url}", 
+                e,
+                "Could not load the profile picture {Url}",
                 url
             );
         }
