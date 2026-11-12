@@ -24,18 +24,18 @@ public class TimerDraft
     /// </summary>
     public TimerDraft(TimeTrackingService timeTracking)
     {
-        TimeTracking = timeTracking;
+        Service = timeTracking;
 
-        TimeTracking.RunningEntryChanged += (_, _) =>
+        Service.RunningEntryChanged += (_, _) =>
         {
-            if (TimeTracking.RunningEntry is { } running && running.Id != _loadedEntryId)
+            if (Service.RunningEntry is { } running && running.Id != _loadedEntryId)
             {
                 Load(running);
             }
         };
     }
 
-    private TimeTrackingService TimeTracking { get; }
+    private TimeTrackingService Service { get; }
 
     /// <summary>
     ///     Every project and task the user can pick. The running entry's project and task are looked up here.
@@ -48,7 +48,7 @@ public class TimerDraft
             field = value;
 
             // On connection, the running entry arrives before this list: look up its project and task again
-            if (TimeTracking.RunningEntry is { } running)
+            if (Service.RunningEntry is { } running)
             {
                 Choice = FindChoice(running);
                 Changed?.Invoke(this, EventArgs.Empty);
@@ -78,12 +78,12 @@ public class TimerDraft
     /// </summary>
     public Task SaveAsync(CancellationToken ctk = default)
     {
-        if (TimeTracking.RunningEntry is not { } running)
+        if (Service.RunningEntry is not { } running)
         {
             return Task.CompletedTask;
         }
 
-        return TimeTracking.UpdateRunningEntryAsync(
+        return Service.UpdateRunningEntryAsync(
             Choice?.Project.Id ?? running.ProjectId,
             Choice?.Task.Id ?? running.TaskId,
             Description,
@@ -101,7 +101,7 @@ public class TimerDraft
             return false;
         }
 
-        await TimeTracking.StartAsync(
+        await Service.StartAsync(
             choice.Project.Id,
             choice.Task.Id,
             Description,
@@ -121,7 +121,7 @@ public class TimerDraft
         }
         finally
         {
-            await TimeTracking.StopAsync(ctk);
+            await Service.StopAsync(ctk);
         }
     }
 
@@ -136,9 +136,9 @@ public class TimerDraft
         }
         finally
         {
-            await TimeTracking.RefreshRunningEntryAsync(ctk);
+            await Service.RefreshRunningEntryAsync(ctk);
 
-            if (TimeTracking.RunningEntry is { } running)
+            if (Service.RunningEntry is { } running)
             {
                 Load(running);
             }
@@ -150,7 +150,7 @@ public class TimerDraft
     /// </summary>
     public async Task ResetAsync(CancellationToken ctk = default)
     {
-        if (TimeTracking.RunningEntry is not null)
+        if (Service.RunningEntry is not null)
         {
             await StopAsync(ctk);
         }
@@ -169,7 +169,7 @@ public class TimerDraft
         CancellationToken ctk = default
     )
     {
-        if (TimeTracking.RunningEntry is not null)
+        if (Service.RunningEntry is not null)
         {
             await StopAsync(ctk);
         }
