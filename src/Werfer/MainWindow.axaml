@@ -133,10 +133,12 @@
                                 <MenuItem.Header>
                                     <!-- 
                                     Pulled left over the empty icon column every menu item has (16 px icon + 12 px gap),
-                                    so the avatar lines up with the icons below 
+                                    so the avatar lines up with the icons below. Pushed right over the shortcut column too
+                                    (24 px gap + "Ctrl+,"): the header column, shared with Settings, is then that much
+                                    narrower and its shortcut closer
                                     -->
                                     <ctl:AccountCard
-                                        Margin="-28,0,0,0"
+                                        Margin="-28,0,-56,0"
                                         UserName="{Binding UserName}"
                                         Email="{Binding UserEmail}"
                                         Avatar="{Binding Avatar}" />

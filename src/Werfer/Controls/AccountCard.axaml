@@ -28,11 +28,15 @@
                     />
             </Panel>
         </Border>
-        <StackPanel VerticalAlignment="Center">
-            <TextBlock x:Name="UserNameText" FontWeight="SemiBold" />
+        <!-- 
+        Width capped: the card sets the menu's width, a long email pushed its shortcuts far right 
+        -->
+        <StackPanel VerticalAlignment="Center" MaxWidth="160">
+            <TextBlock x:Name="UserNameText" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
             <TextBlock
                 x:Name="EmailText"
                 FontSize="12"
+                TextTrimming="CharacterEllipsis"
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
         </StackPanel>
     </StackPanel>
