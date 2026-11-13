@@ -32,6 +32,8 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
 
     public List<(string Id, CreateTimeEntryRequest Request)> Updates { get; } = [];
 
+    public List<CreateTimeEntryRequest> Creates { get; } = [];
+
     /// <summary>
     ///     How many times the in-progress query was made: on connection, refresh, and before each update
     /// </summary>
@@ -148,7 +150,18 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
         CancellationToken ctk = default
     )
     {
-        throw new NotSupportedException();
+        Creates.Add(request);
+
+        Running = new TimeEntry
+        {
+            Id = $"new{Creates.Count}",
+            ProjectId = request.ProjectId,
+            TaskId = request.TaskId,
+            Description = request.Description,
+            TimeInterval = new TimeInterval { Start = request.Start }
+        };
+
+        return Task.FromResult(Running);
     }
 
     public Task DeleteTimeEntryAsync(string workspaceId, string id, CancellationToken ctk = default)

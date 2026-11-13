@@ -30,7 +30,7 @@ public partial class TimerPlayerViewModel : ViewModelBase
     {
         ApplicationSettings = applicationSettings;
         TimeTracking = timeTracking;
-        Draft = new TimerDraft(timeTracking);
+        Draft = new TimerDraft(timeTracking, applicationSettings);
         Elapsed = "00:00:00";
 
         Draft.Changed += (_, _) => OnDraftChanged();
@@ -168,7 +168,11 @@ public partial class TimerPlayerViewModel : ViewModelBase
         {
             if (!await Draft.StartAsync())
             {
-                FlashMessages.Push(WellKnownMessages.PickProjectFirst);
+                // With the default on, the user expected it to be used: say why it wasn't
+                FlashMessages.Push(ApplicationSettings.DefaultChoiceEnabled
+                    ? WellKnownMessages.DefaultChoiceUnavailable
+                    : WellKnownMessages.PickProjectFirst
+                );
             }
         });
     }

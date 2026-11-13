@@ -1,12 +1,14 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="clr-namespace:Werfer.ViewModels"
              xmlns:cv="clr-namespace:Werfer.Converters"
              xmlns:ctl="clr-namespace:Werfer.Controls"
              x:Class="Werfer.Controls.ProjectTaskSelector">
-    <UserControl.Resources>
-        <!-- A suggestion: a colored dot, the project in its color, then the task -->
-        <DataTemplate x:Key="ProjectTaskTemplate" x:DataType="vm:ProjectTaskViewModel">
+    <!-- The suggestions, one template per kind of item: the dropdown picks it by the item's type -->
+    <UserControl.DataTemplates>
+        <!-- A project and task: a colored dot, the project in its color, then the task -->
+        <DataTemplate DataType="vm:ProjectTaskViewModel">
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <Ellipse Width="10" Height="10" Fill="{Binding Brush}" VerticalAlignment="Center" />
                 <TextBlock Text="{Binding Project.Name}" FontWeight="SemiBold">
@@ -22,7 +24,14 @@
                 <TextBlock Text="{Binding Task.Name}" Opacity="0.8" />
             </StackPanel>
         </DataTemplate>
-    </UserControl.Resources>
+        <!-- The last used project and task, in the settings' default project box -->
+        <DataTemplate DataType="vm:LastUsedChoice">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <ui:FASymbolIcon Symbol="Clock" FontSize="12" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding}" FontStyle="Italic" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.DataTemplates>
 
     <AutoCompleteBox
         AsyncPopulator="{Binding $parent[ctl:ProjectTaskSelector].AsyncPopulator}"
@@ -31,7 +40,6 @@
         FilterMode="None"
         MinimumPrefixLength="3"
         PlaceholderText="Project / Task"
-        ItemTemplate="{StaticResource ProjectTaskTemplate}"
         HorizontalAlignment="Stretch">
         <AutoCompleteBox.InnerLeftContent>
             <!-- The picked project's color, set in code: a binding to SelectedItem.Brush warns while nothing is picked -->

@@ -14,8 +14,8 @@ public partial class ProjectTaskSelector : UserControl
         AsyncPopulatorProperty = AvaloniaProperty.Register<ProjectTaskSelector,
             Func<string?, CancellationToken, Task<IEnumerable<object>>>?>(nameof(AsyncPopulator));
 
-    public static readonly StyledProperty<ProjectTaskViewModel?> SelectedItemProperty =
-        AvaloniaProperty.Register<ProjectTaskSelector, ProjectTaskViewModel?>(
+    public static readonly StyledProperty<object?> SelectedItemProperty =
+        AvaloniaProperty.Register<ProjectTaskSelector, object?>(
             nameof(SelectedItem),
             defaultBindingMode: BindingMode.TwoWay
         );
@@ -41,9 +41,10 @@ public partial class ProjectTaskSelector : UserControl
     }
 
     /// <summary>
-    ///     The project and task picked; null while nothing is picked or the user is typing.
+    ///     The item picked: a <see cref="ProjectTaskViewModel" />, or any other item the populator gives, such as
+    ///     <see cref="LastUsedChoice" />. Null while nothing is picked or the user is typing.
     /// </summary>
-    public ProjectTaskViewModel? SelectedItem
+    public object? SelectedItem
     {
         get => GetValue(SelectedItemProperty);
         set => SetValue(SelectedItemProperty, value);
@@ -64,8 +65,9 @@ public partial class ProjectTaskSelector : UserControl
 
         if (change.Property == SelectedItemProperty)
         {
-            Dot.Fill = SelectedItem?.Brush;
-            Dot.IsVisible = SelectedItem is not null;
+            var choice = SelectedItem as ProjectTaskViewModel;
+            Dot.Fill = choice?.Brush;
+            Dot.IsVisible = choice is not null;
         }
     }
 }

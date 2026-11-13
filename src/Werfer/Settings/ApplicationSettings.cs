@@ -85,6 +85,27 @@ public partial class ApplicationSettings : IApplicationSettings
     }
 
     /// <inheritdoc />
+    public bool DefaultChoiceEnabled
+    {
+        get => _persisted.DefaultChoiceEnabled;
+        set => _persisted.DefaultChoiceEnabled = value;
+    }
+
+    /// <inheritdoc />
+    public string? DefaultProjectId
+    {
+        get => _persisted.DefaultProjectId;
+        set => _persisted.DefaultProjectId = value;
+    }
+
+    /// <inheritdoc />
+    public string? DefaultTaskId
+    {
+        get => _persisted.DefaultTaskId;
+        set => _persisted.DefaultTaskId = value;
+    }
+
+    /// <inheritdoc />
     public bool ConfirmClose
     {
         get => _persisted.ConfirmClose;
@@ -253,6 +274,17 @@ public partial class ApplicationSettings : IApplicationSettings
         [JsonPropertyName("window:confirm_close")]
         [DefaultValue(true)]
         public bool ConfirmClose { get; set; } = true;
+
+        [JsonPropertyName("timer:default_enabled")]
+        [DefaultValue(false)]
+        public bool DefaultChoiceEnabled { get; set; }
+
+        // Both null: the last used project and task
+        [JsonPropertyName("timer:default_project")]
+        public string? DefaultProjectId { get; set; }
+
+        [JsonPropertyName("timer:default_task")]
+        public string? DefaultTaskId { get; set; }
 
         [JsonPropertyName("window:x")]
         public int? WindowX { get; set; }

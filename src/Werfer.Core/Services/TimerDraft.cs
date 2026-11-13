@@ -22,9 +22,13 @@ public class TimerDraft
     /// <summary>
     ///     Creates the draft. It takes the values of each new running entry from then on.
     /// </summary>
-    public TimerDraft(TimeTrackingService timeTracking)
+    public TimerDraft(
+        TimeTrackingService timeTracking, 
+        IApplicationSettings settings
+    )
     {
         Service = timeTracking;
+        Settings = settings;
 
         Service.RunningEntryChanged += (_, _) =>
         {
@@ -36,6 +40,7 @@ public class TimerDraft
     }
 
     private TimeTrackingService Service { get; }
+    private IApplicationSettings Settings { get; }
 
     /// <summary>
     ///     Every project and task the user can pick. The running entry's project and task are looked up here.
@@ -92,10 +97,22 @@ public class TimerDraft
     }
 
     /// <summary>
-    ///     Starts an entry with the draft's values. Returns false, and starts nothing, when no project is picked.
+    ///     Starts an entry with the draft's values. With no project picked, takes the default project and task when
+    ///     the setting is on. Returns false, and starts nothing, when there is still no project.
     /// </summary>
     public async Task<bool> StartAsync(CancellationToken ctk = default)
     {
+        if (Choice is null && Settings.DefaultChoiceEnabled)
+        {
+            Choice = await FindDefaultChoiceAsync(ctk);
+
+            // Only when found: the UI would otherwise clear a search the user typed in the project box
+            if (Choice is not null)
+            {
+                Changed?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
         if (Choice is not { } choice)
         {
             return false;
@@ -195,9 +212,27 @@ public class TimerDraft
 
     private ProjectTaskChoice? FindChoice(TimeEntry entry)
     {
+        return FindChoice(entry.ProjectId, entry.TaskId);
+    }
+
+    private ProjectTaskChoice? FindChoice(string? projectId, string? taskId)
+    {
         return Choices.FirstOrDefault(c =>
-            c.Project.Id == entry.ProjectId &&
-            c.Task.Id == entry.TaskId
+            c.Project.Id == projectId &&
+            c.Task.Id == taskId
         );
+    }
+
+    // Null when the default isn't among the choices anymore (archived, done), or there is no last entry
+    private async Task<ProjectTaskChoice?> FindDefaultChoiceAsync(CancellationToken ctk)
+    {
+        if (Settings.DefaultTaskId is { } taskId)
+        {
+            return FindChoice(Settings.DefaultProjectId, taskId);
+        }
+
+        return await Service.GetLastTimeEntryAsync(ctk) is { } last
+            ? FindChoice(last)
+            : null;
     }
 }

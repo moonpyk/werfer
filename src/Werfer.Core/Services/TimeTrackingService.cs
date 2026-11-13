@@ -131,6 +131,24 @@ public class TimeTrackingService(
     }
 
     /// <summary>
+    ///     The user's most recent entry, running or not; null when there is none.
+    /// </summary>
+    public async Task<TimeEntry?> GetLastTimeEntryAsync(CancellationToken ctk = default)
+    {
+        // One page of one entry: Clockify serves the most recent first
+        using var response = await Client.GetRawTimeEntriesForUserAsync(
+            WorkspaceId,
+            CurrentUser.Id,
+            page: 1,
+            pageSize: 1,
+            ctk: ctk
+        );
+        await response.EnsureSuccessfulAsync();
+
+        return response.Content?.FirstOrDefault();
+    }
+
+    /// <summary>
     ///     Deletes finished entries, one by one: a failure leaves the earlier ones deleted.
     /// </summary>
     public async Task DeleteTimeEntriesAsync(IEnumerable<string> ids, CancellationToken ctk = default)

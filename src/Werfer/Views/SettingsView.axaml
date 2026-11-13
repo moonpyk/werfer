@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="clr-namespace:Werfer.ViewModels"
+             xmlns:ctl="clr-namespace:Werfer.Controls"
              x:Class="Werfer.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
     <UserControl.Styles>
@@ -48,6 +49,31 @@
                         SelectedItem="{Binding WeekStart}"
                         MinWidth="140" />
                 </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+
+            <TextBlock Classes="section" Text="Timer" />
+            <ui:FASettingsExpander
+                Header="Default project and task"
+                Description="Used when the timer starts with no project picked"
+                IsExpanded="True">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="Play" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding DefaultChoiceEnabled}" OnContent="" OffContent="" />
+                </ui:FASettingsExpander.Footer>
+                <ui:FASettingsExpanderItem>
+                    <StackPanel Spacing="4" IsEnabled="{Binding DefaultChoiceEnabled}">
+                        <ctl:ProjectTaskSelector
+                            AsyncPopulator="{Binding DefaultChoicesPopulator}"
+                            SelectedItem="{Binding DefaultChoice}" />
+                        <TextBlock
+                            Text="Type 3 letters to search a project or task, or &quot;last&quot; for the last used one."
+                            TextWrapping="Wrap"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </ui:FASettingsExpanderItem>
             </ui:FASettingsExpander>
 
             <TextBlock Classes="section" Text="Window" />

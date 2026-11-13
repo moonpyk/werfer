@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Werfer.Clockify;
 using Werfer.Clockify.Models;
+using Werfer.Clockify.ViewModels;
 
 namespace Werfer.Services;
 
@@ -116,15 +117,124 @@ public class TimerDraftTests
 
     // The draft exists before connecting, as in the app: connecting loads the running entry into it
     private static async Task<(FakeClockifyApiClient Client, TimeTrackingService Service, TimerDraft Draft)>
-        ConnectedAsync(TimeEntry running)
+        ConnectedAsync(TimeEntry? running, FakeApplicationSettings? settings = null)
     {
         var client = new FakeClockifyApiClient { Running = running };
         var service = new TimeTrackingService(client, Options.Create(new ClockifyOptions()));
-        var draft = new TimerDraft(service);
+        var draft = new TimerDraft(service, settings ?? new FakeApplicationSettings());
 
         await service.ConnectAsync("api-key", TestContext.Current.CancellationToken);
 
         return (client, service, draft);
+    }
+
+    [Fact]
+    public async Task Start_NoChoice_DefaultOff_StartsNothing()
+    {
+        var (client, _, draft) = await StoppedWithChoicesAsync(new FakeApplicationSettings());
+
+        Assert.False(await draft.StartAsync(TestContext.Current.CancellationToken));
+        Assert.Empty(client.Creates);
+    }
+
+    [Fact]
+    public async Task Start_NoChoice_StartsOnTheDefaultProjectAndTask()
+    {
+        var (client, _, draft) = await StoppedWithChoicesAsync(new FakeApplicationSettings
+        {
+            DefaultChoiceEnabled = true,
+            DefaultProjectId = "p2",
+            DefaultTaskId = "t2"
+        });
+
+        Assert.True(await draft.StartAsync(TestContext.Current.CancellationToken));
+
+        var request = Assert.Single(client.Creates);
+        Assert.Equal(("p2", "t2"), (request.ProjectId, request.TaskId));
+        // The bar shows what the timer runs on
+        Assert.Equal("t2", draft.Choice?.Task.Id);
+    }
+
+    [Fact]
+    public async Task Start_NoChoice_LastUsed_StartsOnTheLastEntrysProjectAndTask()
+    {
+        var (client, _, draft) = await StoppedWithChoicesAsync(new FakeApplicationSettings
+        {
+            DefaultChoiceEnabled = true
+        });
+        // Most recent first, as Clockify serves them
+        client.Entries.Add(Entry("old2", "p2", "t2"));
+        client.Entries.Add(Entry("old1", "p1", "t1"));
+
+        Assert.True(await draft.StartAsync(TestContext.Current.CancellationToken));
+
+        var request = Assert.Single(client.Creates);
+        Assert.Equal(("p2", "t2"), (request.ProjectId, request.TaskId));
+    }
+
+    [Fact]
+    public async Task Start_DefaultNotStartableAnymore_StartsNothing()
+    {
+        // An archived project or a done task is no longer among the choices
+        var (client, _, draft) = await StoppedWithChoicesAsync(new FakeApplicationSettings
+        {
+            DefaultChoiceEnabled = true,
+            DefaultProjectId = "archived",
+            DefaultTaskId = "t9"
+        });
+        var changes = 0;
+        draft.Changed += (_, _) => changes++;
+
+        Assert.False(await draft.StartAsync(TestContext.Current.CancellationToken));
+        Assert.Empty(client.Creates);
+        // Nothing changed: the UI must not clear a search typed in the project box
+        Assert.Equal(0, changes);
+    }
+
+    [Fact]
+    public async Task Start_WithAChoice_IgnoresTheDefault()
+    {
+        var (client, _, draft) = await StoppedWithChoicesAsync(new FakeApplicationSettings
+        {
+            DefaultChoiceEnabled = true,
+            DefaultProjectId = "p2",
+            DefaultTaskId = "t2"
+        });
+        draft.Choice = draft.Choices[0];
+
+        Assert.True(await draft.StartAsync(TestContext.Current.CancellationToken));
+
+        Assert.Equal("t1", Assert.Single(client.Creates).TaskId);
+    }
+
+    // Nothing running, two startable pairs: p1/t1 and p2/t2
+    private static async Task<(FakeClockifyApiClient Client, TimeTrackingService Service, TimerDraft Draft)>
+        StoppedWithChoicesAsync(FakeApplicationSettings settings)
+    {
+        var connected = await ConnectedAsync(null, settings);
+        connected.Draft.Choices = [Choice("p1", "t1"), Choice("p2", "t2")];
+
+        return connected;
+    }
+
+    private static ProjectTaskChoice Choice(string projectId, string taskId)
+    {
+        return new ProjectTaskChoice(new Project { Id = projectId }, new ProjectTask { Id = taskId });
+    }
+
+    private static TimeEntry Entry(string id, string projectId, string taskId)
+    {
+        return new TimeEntry
+        {
+            Id = id,
+            ProjectId = projectId,
+            TaskId = taskId,
+            TimeInterval = new TimeInterval
+            {
+                Start = DateTimeOffset.UtcNow.AddHours(-2),
+                End = DateTimeOffset.UtcNow.AddHours(-1)
+            }
+        };
     }
 
     private static TimeEntry RunningEntry()

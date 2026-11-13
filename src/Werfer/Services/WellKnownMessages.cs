@@ -40,4 +40,12 @@ public static class WellKnownMessages
         "Pick a project and a task first",
         Severity: FAInfoBarSeverity.Warning
     );
+
+    /// <summary>
+    ///     Start pressed with no project picked, and the default one can't be started: archived, done, or no last entry.
+    /// </summary>
+    public static FlashMessage DefaultChoiceUnavailable { get; } = new(
+        "The default project and task can't be started anymore, pick one",
+        Severity: FAInfoBarSeverity.Warning
+    );
 }

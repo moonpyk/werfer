@@ -22,6 +22,19 @@ public interface IApplicationSettings
     bool Topmost { get; set; }
 
     /// <summary>
+    ///     Gets or sets whether a timer started with no project picked uses the default project and task
+    /// </summary>
+    bool DefaultChoiceEnabled { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the default project; null, with <see cref="DefaultTaskId" />, means the last used project and task
+    /// </summary>
+    string? DefaultProjectId { get; set; }
+
+    /// <inheritdoc cref="DefaultProjectId" />
+    string? DefaultTaskId { get; set; }
+
+    /// <summary>
     ///     Gets or sets whether closing the window asks for confirmation first
     /// </summary>
     bool ConfirmClose { get; set; }
