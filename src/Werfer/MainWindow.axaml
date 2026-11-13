@@ -16,7 +16,6 @@
                  WindowStartupLocation="CenterScreen"
                  CanMaximize="False"
                  Topmost="{Binding Settings.Topmost}">
-    <!-- Page view models are mapped to their views here, no reflection-based ViewLocator (NativeAOT) -->
     <!-- Keyboard shortcuts. A shortcut does nothing while its command is null or can't execute (edit sheet open, another page shown...) -->
     <Window.KeyBindings>
         <KeyBinding Gesture="Ctrl+Space" Command="{Binding Timer.ToggleCommand}" />
@@ -34,14 +33,6 @@
             CommandParameter="{x:Static vm:AppPageEnum.Settings}" />
     </Window.KeyBindings>
 
-    <Window.DataTemplates>
-        <DataTemplate DataType="vm:TimerViewModel">
-            <views:TimerView />
-        </DataTemplate>
-        <DataTemplate DataType="vm:SettingsViewModel">
-            <views:SettingsView />
-        </DataTemplate>
-    </Window.DataTemplates>
     <DockPanel>
         <Border
             DockPanel.Dock="Bottom"
@@ -91,9 +82,24 @@
             PaneDisplayMode="Top"
             IsBackButtonVisible="False"
             IsSettingsVisible="False"
-            Content="{Binding CurrentPage}"
             SelectionChanged="OnNavigationSelectionChanged"
             ItemInvoked="OnNavigationItemInvoked">
+            <!--
+            Both pages stay alive, the one not shown is only hidden. A page view removed from the window loses its data
+            context on the way out, and the project box then cleared its pick in the view model
+            -->
+            <ui:FANavigationView.Content>
+                <Panel>
+                    <Panel
+                        IsVisible="{Binding Page, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:AppPageEnum.Timer}}">
+                        <views:TimerView DataContext="{Binding Timer}" />
+                    </Panel>
+                    <Panel
+                        IsVisible="{Binding Page, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:AppPageEnum.Settings}}">
+                        <views:SettingsView DataContext="{Binding Settings}" />
+                    </Panel>
+                </Panel>
+            </ui:FANavigationView.Content>
             <ui:FANavigationView.MenuItems>
                 <ui:FANavigationViewItem
                     x:Name="TimerItem"

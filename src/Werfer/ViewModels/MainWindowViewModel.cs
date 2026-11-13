@@ -99,26 +99,15 @@ public partial class MainWindowViewModel : ViewModelBase
     public partial bool IsAnyPageBusy { get; private set; }
 
     /// <summary>
-    ///     The page shown, see <see cref="CurrentPage" />.
+    ///     The page shown; the window keeps both page views and only shows this one's.
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(
-        nameof(CurrentPage),
         nameof(ShowRefreshButton),
         nameof(ClearDescriptionCommand),
         nameof(ResetCommand)
     )]
     public partial AppPageEnum Page { get; private set; }
-
-    /// <summary>
-    ///     The view model of the page shown, mapped to its view by the DataTemplates declared in MainWindow.axaml.
-    /// </summary>
-    public ViewModelBase CurrentPage => Page switch
-    {
-        AppPageEnum.Timer => Timer,
-        AppPageEnum.Settings => Settings,
-        _ => throw new ArgumentOutOfRangeException(nameof(Page), Page, null)
-    };
 
     /// <summary>
     ///     Whether the navigation bar shows its Refresh item: only on the timer page, which it refreshes.
