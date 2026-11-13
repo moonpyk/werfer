@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Werfer.ViewModels"
+             xmlns:cv="clr-namespace:Werfer.Converters"
+             xmlns:ctl="clr-namespace:Werfer.Controls"
+             x:Class="Werfer.Controls.ProjectTaskSelector">
+    <UserControl.Resources>
+        <!-- A suggestion: a colored dot, the project in its color, then the task -->
+        <DataTemplate x:Key="ProjectTaskTemplate" x:DataType="vm:ProjectTaskViewModel">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Ellipse Width="10" Height="10" Fill="{Binding Brush}" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Project.Name}" FontWeight="SemiBold">
+                    <TextBlock.Foreground>
+                        <MultiBinding
+                            Converter="{x:Static cv:ReadableTextBrushConverter.Instance}">
+                            <Binding Path="Color" />
+                            <Binding RelativeSource="{RelativeSource Self}" />
+                            <Binding Path="ActualThemeVariant" RelativeSource="{RelativeSource Self}" />
+                        </MultiBinding>
+                    </TextBlock.Foreground>
+                </TextBlock>
+                <TextBlock Text="{Binding Task.Name}" Opacity="0.8" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <AutoCompleteBox
+        AsyncPopulator="{Binding $parent[ctl:ProjectTaskSelector].AsyncPopulator}"
+        SelectedItem="{Binding $parent[ctl:ProjectTaskSelector].SelectedItem, Mode=TwoWay}"
+        Text="{Binding $parent[ctl:ProjectTaskSelector].Text, Mode=TwoWay}"
+        FilterMode="None"
+        MinimumPrefixLength="3"
+        PlaceholderText="Project / Task"
+        ItemTemplate="{StaticResource ProjectTaskTemplate}"
+        HorizontalAlignment="Stretch">
+        <AutoCompleteBox.InnerLeftContent>
+            <!-- The picked project's color, set in code: a binding to SelectedItem.Brush warns while nothing is picked -->
+            <Ellipse
+                x:Name="Dot"
+                Width="10"
+                Height="10"
+                Margin="8,0,0,0"
+                IsVisible="False" />
+        </AutoCompleteBox.InnerLeftContent>
+    </AutoCompleteBox>
+</UserControl>

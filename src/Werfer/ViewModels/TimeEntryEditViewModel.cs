@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Werfer.Clockify.Models;
@@ -108,14 +107,7 @@ public partial class TimeEntryEditViewModel : ObservableObject
     ///     The project and task picked. Null keeps the entry's own, for example an archived project, which isn't in the list
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedBrush))]
     public partial ProjectTaskViewModel? SelectedChoice { get; set; }
-
-    /// <summary>
-    ///     The picked project's color, for the dot in the box. A separate property because binding SelectedChoice.Brush
-    ///     logs a warning when nothing is picked.
-    /// </summary>
-    public IBrush? SelectedBrush => SelectedChoice?.Brush;
 
     /// <summary>
     ///     The edited start and end. Null while the date is cleared or a time can't be read, see <see cref="CanSave" />

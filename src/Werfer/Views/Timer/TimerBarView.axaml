@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="clr-namespace:Werfer.ViewModels"
+             xmlns:ctl="clr-namespace:Werfer.Controls"
              x:Class="Werfer.Views.Timer.TimerBarView"
              x:DataType="vm:TimerPlayerViewModel">
     <!-- Project, task and description on the left, the start/stop button on the right -->
@@ -14,25 +15,11 @@
             RowSpacing="8"
             Margin="0,0,12,0">
             <!-- Project and task, also editable while the timer runs -->
-            <AutoCompleteBox
+            <ctl:ProjectTaskSelector
                 Grid.Row="0"
                 AsyncPopulator="{Binding ProjectChoicesPopulator}"
                 SelectedItem="{Binding SelectedChoice}"
-                Text="{Binding ProjectSearchText, Mode=TwoWay}"
-                FilterMode="None"
-                MinimumPrefixLength="3"
-                PlaceholderText="Project / Task"
-                ItemTemplate="{StaticResource ProjectTaskTemplate}"
-                HorizontalAlignment="Stretch">
-                <AutoCompleteBox.InnerLeftContent>
-                    <Ellipse
-                        Width="10"
-                        Height="10"
-                        Margin="8,0,0,0"
-                        Fill="{Binding SelectedBrush}"
-                        IsVisible="{Binding SelectedChoice, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                </AutoCompleteBox.InnerLeftContent>
-            </AutoCompleteBox>
+                Text="{Binding ProjectSearchText}" />
 
             <!--
             Enter adds a line. Line breaks are \n rather than Windows' \r\n, so the text compares equal to what Clockify

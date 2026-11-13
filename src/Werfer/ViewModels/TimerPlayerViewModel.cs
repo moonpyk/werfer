@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -80,16 +79,9 @@ public partial class TimerPlayerViewModel : ViewModelBase
 
             Draft.Choice = value;
             OnPropertyChanged();
-            OnPropertyChanged(nameof(SelectedBrush));
             _ = SaveDraftAsync();
         }
     }
-
-    /// <summary>
-    ///     The picked project's color. A separate property because binding SelectedChoice.Brush logs a warning when
-    ///     nothing is picked.
-    /// </summary>
-    public IBrush? SelectedBrush => SelectedChoice?.Brush;
 
     /// <summary>
     ///     The text typed in the project box. Clearing the pick does not clear this text, so OnDraftChanged clears it.
@@ -235,7 +227,6 @@ public partial class TimerPlayerViewModel : ViewModelBase
     private void OnDraftChanged()
     {
         OnPropertyChanged(nameof(SelectedChoice));
-        OnPropertyChanged(nameof(SelectedBrush));
         OnPropertyChanged(nameof(Description));
 
         if (SelectedChoice is null)
