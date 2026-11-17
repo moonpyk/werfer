@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Logging;
@@ -106,20 +105,17 @@ public class App : Application
     private static void ConfigureLogging(ILoggingBuilder builder)
     {
         builder.ClearProviders()
-            // A switch created by name only defaults to Off and lets nothing through
-            .AddTraceSource(new SourceSwitch("slclockify")
-            {
-                Level = SourceLevels.Warning
-            })
-#if DEBUG
-            .AddDebug()
-#endif
             .AddSerilog(
                 new LoggerConfiguration()
 #if DEBUG
                     .MinimumLevel.Information()
 #else
                     .MinimumLevel.Warning()
+#endif
+#if DEBUG
+                    .WriteTo.Debug()
+#else
+                    .WriteTo.Trace()
 #endif
                     .WriteTo.File(
                         Path.Combine(ApplicationPath, "logs", "werfer-.log"),
