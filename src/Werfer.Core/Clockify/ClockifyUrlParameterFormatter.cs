@@ -9,8 +9,8 @@ public class ClockifyUrlParameterFormatter : DefaultUrlParameterFormatter
 {
     /// <inheritdoc />
     public override string? Format(
-        object? value,
-        ICustomAttributeProvider attributeProvider,
+        object? value, 
+        IParameterAttributeProvider attributeProvider, 
         Type type
     )
     {
