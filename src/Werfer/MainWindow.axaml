@@ -135,7 +135,8 @@
                         <MenuFlyout Placement="BottomEdgeAlignedRight" Closed="OnMoreMenuClosed">
                             <MenuItem
                                 IsHitTestVisible="False"
-                                Focusable="False">
+                                Focusable="False"
+                                IsVisible="{Binding DisplayCurrentUser}">
                                 <MenuItem.Header>
                                     <!--
                                     Moved 28 px left, over the empty icon column every menu item has (16 px icon + 12 px
@@ -151,7 +152,8 @@
                                         Avatar="{Binding Avatar}" />
                                 </MenuItem.Header>
                             </MenuItem>
-                            <Separator />
+                            <Separator
+                                IsVisible="{Binding DisplayCurrentUser}" />
                             <MenuItem
                                 Header="Settings"
                                 InputGesture="Ctrl+OemComma"

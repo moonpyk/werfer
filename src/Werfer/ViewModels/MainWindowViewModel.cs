@@ -129,7 +129,13 @@ public partial class MainWindowViewModel : ViewModelBase
     ///     The email of the connected user, shown below their name in the More menu.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayCurrentUser))]
     public partial string? UserEmail { get; private set; }
+
+    /// <summary>
+    ///     Indicates whether the current user has an email address available, user information to be shown
+    /// </summary>
+    public bool DisplayCurrentUser => !string.IsNullOrEmpty(UserEmail);
 
     /// <summary>
     ///     Shows a page. Also a command, for the keyboard shortcuts (Ctrl+, for the settings).
