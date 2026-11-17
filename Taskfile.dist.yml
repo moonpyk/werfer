@@ -7,13 +7,23 @@ tasks:
 
   publish-classic:
     desc: Publishes the classic version of the application
-    cmd: dotnet publish src/Werfer -c {{.DOTNET_CONFIGURATION}} -r {{.DOTNET_RID}} -o .publish/{{.DOTNET_RID}}
-  
+    cmd: dotnet publish src/Werfer
+      -c {{.DOTNET_CONFIGURATION}}
+      -r {{.DOTNET_RID}}
+      -p:PublishSingleFile=true
+      -p:SelfContained=false
+      -o .publish/{{.DOTNET_RID}}
+
   publish-aot:
     desc: Publishes the AOT version of the application
-    cmd: dotnet publish src/Werfer 
-      -c {{.DOTNET_CONFIGURATION}} 
-      -r {{.DOTNET_RID}} 
-      -p:PublishAot=true 
+    cmd: dotnet publish src/Werfer
+      -c {{.DOTNET_CONFIGURATION}}
+      -r {{.DOTNET_RID}}
+      -p:PublishAot=true
       -p:TrimmerSingleWarn=false
       -o .publish/{{.DOTNET_RID}}-aot
+
+  clean-pdb:
+    desc: Cleans PDBs from publish directories
+    cmds:
+      - rm -f .publish/*/*.pdb
