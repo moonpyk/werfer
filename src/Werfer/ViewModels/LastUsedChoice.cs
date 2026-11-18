@@ -9,6 +9,9 @@ public sealed class LastUsedChoice
     {
     }
 
+    /// <summary>
+    ///     The only instance: the box lists it as one item and finds it again by reference once picked
+    /// </summary>
     public static LastUsedChoice Instance { get; } = new();
 
     /// <summary>

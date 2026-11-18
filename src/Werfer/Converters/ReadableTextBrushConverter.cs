@@ -19,6 +19,9 @@ public class ReadableTextBrushConverter : IMultiValueConverter
     // FluentAvalonia's window background
     private const string BackgroundResourceKey = "SolidBackgroundFillColorBase";
 
+    /// <summary>
+    ///     The instance the views use through x:Static, so every binding shares its brush cache
+    /// </summary>
     public static ReadableTextBrushConverter Instance { get; } = new();
 
     // Cache shared by every project. Few colors times few themes, so it stays small. Only used on the UI thread
