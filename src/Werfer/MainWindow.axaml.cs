@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
@@ -13,6 +14,8 @@ namespace Werfer;
 
 public partial class MainWindow : FAAppWindow
 {
+    private IApplicationSettings Settings { get; } = null!;
+
     // True once the user clicked Quit in the confirmation dialog, see ConfirmCloseAsync
     private bool _closeConfirmed;
 
@@ -33,6 +36,7 @@ public partial class MainWindow : FAAppWindow
         Initialize();
 
         DataContext = ViewModel = vm;
+        Settings = vm.ApplicationSettings;
 
         // When a shortcut (Ctrl+,) changes the page, select its navigation item, as a click would
         vm.PropertyChanged += (_, e) =>
@@ -51,7 +55,7 @@ public partial class MainWindow : FAAppWindow
     }
 
     private MainWindowViewModel? ViewModel { get; }
-
+    
     private void Initialize()
     {
         InitializeComponent();
@@ -60,6 +64,33 @@ public partial class MainWindow : FAAppWindow
         TitleBar.BackgroundColor = TitleBar.InactiveBackgroundColor = Colors.Transparent;
         // Same page as the one MainWindowViewModel starts on
         Navigation.SelectedItem = TimerItem;
+    }
+    
+    public void ShowFromTray()
+    {
+        Show();
+
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+        }
+
+        Activate();
+    }
+
+    // Minimize to tray: a minimized window leaves the taskbar, the tray icon of App brings it back
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+
+        if (
+            change.Property == WindowStateProperty && 
+            WindowState == WindowState.Minimized &&
+            Settings.MinimizeToTray
+        )
+        {
+            Hide();
+        }
     }
 
     protected override void OnClosing(WindowClosingEventArgs e)

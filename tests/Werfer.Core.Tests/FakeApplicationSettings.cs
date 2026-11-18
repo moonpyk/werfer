@@ -12,6 +12,7 @@ internal sealed class FakeApplicationSettings : IApplicationSettings
     public string? DefaultProjectId { get; set; }
     public string? DefaultTaskId { get; set; }
     public bool ConfirmClose { get; set; }
+    public bool MinimizeToTray { get; set; }
     public int? WindowX { get; set; }
     public int? WindowY { get; set; }
     public double? WindowWidth { get; set; }

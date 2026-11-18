@@ -58,12 +58,20 @@ public class App : Application
             );
         };
 
+        // For the tray icon, shown only while MinimizeToTray is on
+        DataContext = Services.GetRequiredService<SettingsViewModel>();
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = Services.GetRequiredService<MainWindow>();
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private void OnTrayShowClick(object? sender, EventArgs e)
+    {
+        Services?.GetService<MainWindow>()?.ShowFromTray();
     }
 
     private static ServiceProvider ConfigureServices()

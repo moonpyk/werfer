@@ -1,7 +1,9 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:sty="using:FluentAvalonia.Styling"
+             xmlns:vm="clr-namespace:Werfer.ViewModels"
              x:Class="Werfer.App"
+             x:DataType="vm:SettingsViewModel"
              Name="Werfer"
              RequestedThemeVariant="Default">
     <Application.Styles>
@@ -14,4 +16,21 @@
             <Setter Property="FocusAdorner" Value="{x:Null}" />
         </Style>
     </Application.Styles>
+
+    <!-- Minimizing the main window hides it from the taskbar, this icon brings it back -->
+    <TrayIcon.Icons>
+        <TrayIcons>
+            <TrayIcon 
+                Icon="/Assets/Werfer.ico" 
+                ToolTipText="Werfer"
+                IsVisible="{Binding MinimizeToTray}"
+                Clicked="OnTrayShowClick">
+                <TrayIcon.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Show" Click="OnTrayShowClick" />
+                    </NativeMenu>
+                </TrayIcon.Menu>
+            </TrayIcon>
+        </TrayIcons>
+    </TrayIcon.Icons>
 </Application>

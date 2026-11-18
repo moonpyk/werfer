@@ -113,6 +113,13 @@ public partial class ApplicationSettings : IApplicationSettings
     }
 
     /// <inheritdoc />
+    public bool MinimizeToTray
+    {
+        get => _persisted.MinimizeToTray;
+        set => _persisted.MinimizeToTray = value;
+    }
+
+    /// <inheritdoc />
     public int? WindowX
     {
         get => _persisted.WindowX;
@@ -274,6 +281,10 @@ public partial class ApplicationSettings : IApplicationSettings
         [JsonPropertyName("window:confirm_close")]
         [DefaultValue(true)]
         public bool ConfirmClose { get; set; } = true;
+
+        [JsonPropertyName("window:tray_minimize")]
+        [DefaultValue(true)]
+        public bool MinimizeToTray { get; set; } = false;
 
         [JsonPropertyName("timer:default_enabled")]
         [DefaultValue(false)]

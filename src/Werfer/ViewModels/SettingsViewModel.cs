@@ -180,6 +180,26 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     /// <summary>
+    ///     Minimizing hides the window behind a tray icon. Saved as soon as it changes; the tray icon binds to it, so
+    ///     it shows or hides at once
+    /// </summary>
+    public bool MinimizeToTray
+    {
+        get => ApplicationSettings.MinimizeToTray;
+        set
+        {
+            if (value == ApplicationSettings.MinimizeToTray)
+            {
+                return;
+            }
+
+            ApplicationSettings.MinimizeToTray = value;
+            OnPropertyChanged();
+            Save();
+        }
+    }
+
+    /// <summary>
     ///     Shows a badge on the settings item: no key, or the last connection failed.
     /// </summary>
     [ObservableProperty]

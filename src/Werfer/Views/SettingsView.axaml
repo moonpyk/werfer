@@ -97,6 +97,16 @@
                     <ToggleSwitch IsChecked="{Binding ConfirmClose}" OnContent="" OffContent="" />
                 </ui:FASettingsExpander.Footer>
             </ui:FASettingsExpander>
+            <ui:FASettingsExpander
+                Header="Minimize to tray"
+                Description="Minimizing hides the window, the icon in the notification area brings it back">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="ChevronDown" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding MinimizeToTray}" OnContent="" OffContent="" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

@@ -40,6 +40,11 @@ public interface IApplicationSettings
     bool ConfirmClose { get; set; }
 
     /// <summary>
+    ///     Gets or sets whether minimizing the window hides it in the notification area, behind a tray icon
+    /// </summary>
+    bool MinimizeToTray { get; set; }
+
+    /// <summary>
     ///     Gets or sets the window position, in screen pixels, at the last close; null until it has been saved once
     /// </summary>
     int? WindowX { get; set; }
