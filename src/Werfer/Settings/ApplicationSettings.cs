@@ -170,6 +170,21 @@ public partial class ApplicationSettings : IApplicationSettings
             ));
             sb.AppendLine();
 
+            if (!OperatingSystem.IsWindows())
+            {
+                // Outside Windows the API key is stored in clear: only the user may read the file. Set before the
+                // first write, so the key never sits in a file others can read
+                if (!File.Exists(FilePath))
+                {
+                    File.Create(FilePath).Dispose();
+                }
+
+                File.SetUnixFileMode(
+                    FilePath, 
+                    UnixFileMode.UserRead | UnixFileMode.UserWrite
+                );
+            }
+
             File.WriteAllText(
                 FilePath,
                 sb.ToString()
