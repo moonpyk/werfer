@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Logging;
 using Avalonia.Markup.Xaml;
@@ -10,6 +11,7 @@ using Werfer.DataProtection;
 using Werfer.Services;
 using Werfer.Settings;
 using Werfer.Utils;
+using Werfer.Utils.Taskbar;
 using Werfer.ViewModels;
 
 namespace Werfer;
@@ -64,6 +66,14 @@ public class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = Services.GetRequiredService<MainWindow>();
+
+            if (TrayIcon.GetIcons(this) is [var tray])
+            {
+                tray.FollowTaskbarTheme(
+                    Services.GetRequiredService<ITaskbarThemeProvider>(),
+                    desktop.MainWindow
+                );
+            }
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -83,6 +93,10 @@ public class App : Application
             .AddSingleton<IDataProtectionProvider>(_ => OperatingSystem.IsWindows()
                 ? WindowsDataProtectionProvider.Instance
                 : PassThroughDataProtectionProvider.Instance
+            )
+            .AddSingleton<ITaskbarThemeProvider>(_ => OperatingSystem.IsWindows()
+                ? WindowsTaskbarThemeProvider.Instance
+                : DefaultTaskbarThemeProvider.Instance
             )
             .AddSingleton<IApplicationSettings>(sp =>
                 ApplicationSettings.Current
