@@ -18,7 +18,7 @@
             <TextBlock Classes="section" Text="Clockify" />
             <ui:FASettingsExpander
                 Header="API key"
-                Description="Found in Clockify, under Profile settings"
+                Description="Connects Werfer to your account"
                 IsExpanded="True">
                 <ui:FASettingsExpander.IconSource>
                     <ui:FASymbolIconSource Symbol="Permissions" />
@@ -29,11 +29,22 @@
                             Text="{Binding ApiKey}"
                             PasswordChar="•"
                             PlaceholderText="Paste your API key" />
-                        <Button
-                            Content="Save and connect"
-                            Command="{Binding ConnectCommand}"
-                            IsEnabled="{Binding !IsBusy}"
-                            IsDefault="True" />
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <HyperlinkButton
+                                Grid.Column="0"
+                                NavigateUri="https://app.clockify.me/manage-api-keys"
+                                VerticalAlignment="Center"
+                                Content="Get an API key"
+                                />
+                            <Panel Grid.Column="1" />
+                            <Button
+                                Grid.Column="2"
+                                Command="{Binding ConnectCommand}"
+                                IsEnabled="{Binding !IsBusy}"
+                                IsDefault="True" 
+                                Content="Save and connect">
+                            </Button>
+                        </Grid>
                     </StackPanel>
                 </ui:FASettingsExpanderItem>
             </ui:FASettingsExpander>
