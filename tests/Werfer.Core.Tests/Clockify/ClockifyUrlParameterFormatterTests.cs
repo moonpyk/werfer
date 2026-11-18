@@ -1,3 +1,5 @@
+using Refit;
+
 namespace Werfer.Clockify;
 
 public class ClockifyUrlParameterFormatterTests
@@ -18,7 +20,7 @@ public class ClockifyUrlParameterFormatterTests
 
         var formatted = new ClockifyUrlParameterFormatter().Format(
             weekStart,
-            typeof(ClockifyUrlParameterFormatterTests),
+            GeneratedParameterAttributeProvider.Empty,
             typeof(DateTimeOffset)
         );
 

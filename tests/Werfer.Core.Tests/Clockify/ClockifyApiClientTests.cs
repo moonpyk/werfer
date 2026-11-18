@@ -40,8 +40,9 @@ public class ClockifyApiClientTests
     private static (RecordingHandler Handler, IClockifyApiClient Client) Create()
     {
         var handler = new RecordingHandler();
-        var client = RestService.For<IClockifyApiClient>(
-            new HttpClient(handler) { BaseAddress = new Uri("https://api.clockify.me/api/v1") }
+        var client = RestService.ForGenerated<IClockifyApiClient>(
+            new HttpClient(handler) { BaseAddress = new Uri("https://api.clockify.me/api/v1") },
+            WerferCoreJsonContext.Default
         );
 
         return (handler, client);

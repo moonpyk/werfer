@@ -16,4 +16,9 @@
         <PackageReference Include="Refit.HttpClientFactory" Version="17.0.0" />
         <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" />
     </ItemGroup>
+
+    <ItemGroup>
+        <!-- The client tests need WerferCoreJsonContext: Refit 17 has no reflection-based JSON by default -->
+        <InternalsVisibleTo Include="Werfer.Core.Tests" />
+    </ItemGroup>
 </Project>
