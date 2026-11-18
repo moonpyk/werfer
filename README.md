@@ -7,7 +7,7 @@ Werfer was born out of frustration. Hopefully it makes the people who use it a l
 ## Keyboard shortcuts
 
 | Shortcut     | Action                                                                                              |
-|--------------|-----------------------------------------------------------------------------------------------------|
+| ------------ | --------------------------------------------------------------------------------------------------- |
 | `Ctrl+Space` | Start the timer, or stop it when it runs                                                            |
 | `F5`         | Fetch the running entry and the week's history from Clockify (they may have changed elsewhere)      |
 | `Ctrl+L`     | Clear the description (timer page)                                                                  |
@@ -38,3 +38,7 @@ Werfer starts and stops entries, nothing more. These will not be added, whatever
 ## Pronunciation
 
 The app name comes from the German word _Werfer_ (as in _Flammenwerfer_), which is pronounced _verfeur_ in French.
+
+## Sponsor
+
+The development of Werfer is sponsored by [repply](https://www.repply.fr), my employer, who gave me some time and resources to work on it.
