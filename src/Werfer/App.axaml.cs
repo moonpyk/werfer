@@ -80,9 +80,8 @@ public class App : Application
 
         services
             .RegisterClockifyClient()
-            // OperatingSystem.IsWindows, not Environment.OSVersion: the platform analyzer only understands this guard
             .AddSingleton<IDataProtectionProvider>(_ => OperatingSystem.IsWindows()
-                ? new WindowsDataProtectionProvider()
+                ? WindowsDataProtectionProvider.Instance
                 : PassThroughDataProtectionProvider.Instance
             )
             .AddSingleton<IApplicationSettings>(sp =>

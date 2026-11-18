@@ -11,6 +11,9 @@ public class PassThroughDataProtectionProvider : IDataProtectionProvider
     {
     }
 
+    /// <summary>
+    ///     The only instance: it holds no state, registered as the data protection provider outside Windows
+    /// </summary>
     public static IDataProtectionProvider Instance { get; } = new PassThroughDataProtectionProvider();
 
     /// <inheritdoc />

@@ -15,6 +15,15 @@ namespace Werfer.Utils;
 [SupportedOSPlatform("windows")]
 public class WindowsDataProtectionProvider : IDataProtectionProvider
 {
+    private WindowsDataProtectionProvider()
+    {
+    }
+
+    /// <summary>
+    ///     The only instance: it holds no state, registered as the data protection provider on Windows
+    /// </summary>
+    public static IDataProtectionProvider Instance { get; } = new WindowsDataProtectionProvider();
+
     /// <inheritdoc />
     public byte[] Protect(byte[] plaintext, byte[] entropy)
     {
