@@ -2,6 +2,8 @@
 
 Werfer is a Clockify client that sucks less, simply _werfing_ time-tracking entries.
 
+Werfer was born out of frustration. Hopefully it makes the people who use it a little happier.
+
 ## Keyboard shortcuts
 
 | Shortcut     | Action                                                                                              |
@@ -20,3 +22,19 @@ The description being typed is saved first, so `Ctrl+Space` right after typing k
   `TrimmerSingleWarn=false`) reports known, accepted warnings, e.g. Serilog's IL2072 in
   `PropertyValueConverter.CreatePropertyValue` (`{@Object}` destructuring, unused here). The CI should
   compare them against a committed baseline and fail on any new one, instead of hiding them.
+
+## Out of scope
+
+Werfer starts and stops entries, nothing more. These will not be added, whatever other desktop clients do:
+
+- **Automatic time tracking:** recording which apps and websites are used to suggest entries. Logging everything
+  someone does on their computer is intrusive, not far from spying on them: a time tracker has no business doing it.
+- **Idle detection:** asking what to do with the time spent away from the keyboard.
+- **Pomodoro timer and break reminders.**
+- **Screenshots and activity monitoring.**
+- **Reports, invoices, expenses, approvals and scheduling:** the Clockify web app does them.
+- **Offline mode:** starting a timer without network and syncing later. Merging entries changed on both sides is a minefield.
+
+## Pronunciation
+
+The app name comes from the German word _Werfer_ (as in _Flammenwerfer_), which is pronounced _verfeur_ in French.
