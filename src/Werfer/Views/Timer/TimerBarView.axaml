@@ -82,8 +82,10 @@
             </SplitButton.Resources>
             <SplitButton.Flyout>
                 <Flyout Placement="BottomEdgeAlignedRight" Opening="OnStartFlyoutOpening">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Started at" />
+                    <StackPanel Spacing="8" Margin="2">
+                        <TextBlock
+                            Text="Started at"
+                            FontWeight="SemiBold" />
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <ctl:TimeOfDayBox
                                 Text="{Binding StartTime}"
