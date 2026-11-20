@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Werfer.ViewModels"
+             xmlns:ctl="clr-namespace:Werfer.Controls"
+             x:Class="Werfer.Views.Edit.TimeEntrySplitView"
+             x:DataType="vm:TimeEntrySplitViewModel">
+    <!-- 
+    Layout: the split time, then the slider between the entry's start and end, with each part's duration below 
+    -->
+    <StackPanel Spacing="12">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+            <TextBlock Text="Split at" VerticalAlignment="Center" />
+            <ctl:TimeOfDayBox Text="{Binding SplitAt}" Width="96" />
+        </StackPanel>
+
+        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12">
+            <TextBlock
+                Grid.Column="0"
+                Text="{Binding StartText}"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                VerticalAlignment="Center" />
+            <!-- One step per minute -->
+            <Slider
+                Grid.Row="0"
+                Grid.Column="1"
+                Minimum="0"
+                Maximum="{Binding SliderMaximum}"
+                Value="{Binding SliderValue}"
+                TickFrequency="1"
+                IsSnapToTickEnabled="True" />
+            <TextBlock
+                Grid.Row="0"
+                Grid.Column="2"
+                Text="{Binding EndText}"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                VerticalAlignment="Center" />
+
+            <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,*">
+                <TextBlock
+                    Grid.Column="0"
+                    Text="{Binding FirstDuration}"
+                    FontFeatures="+tnum"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    HorizontalAlignment="Center" />
+                <TextBlock
+                    Grid.Column="1"
+                    Text="{Binding SecondDuration}"
+                    FontFeatures="+tnum"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    HorizontalAlignment="Center" />
+            </Grid>
+        </Grid>
+    </StackPanel>
+</UserControl>

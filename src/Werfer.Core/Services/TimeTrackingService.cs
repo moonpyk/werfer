@@ -364,6 +364,47 @@ public class TimeTrackingService(
         }, ctk), ctk);
     }
 
+    /// <summary>
+    ///     Cuts a finished entry in two at <paramref name="at" />, strictly inside it: the entry ends there, and a copy
+    ///     of it, same project, task, description, billable flag and tags, runs from there to the original end.
+    /// </summary>
+    public Task SplitTimeEntryAsync(TimeEntry entry, DateTimeOffset at, CancellationToken ctk = default)
+    {
+        var interval = entry.TimeInterval;
+        if (interval?.End is not { } end || at <= interval.Start || at >= end)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(at), 
+                at,
+                "The split must fall strictly inside a finished entry"
+            );
+        }
+
+        // Clockify can't split: two requests. The update comes first because sending it again changes nothing: after a
+        // failure, the sheet stays open and Save again finishes the job. Created first, the second half would be
+        // created twice
+        return ExclusiveAsync(async () =>
+        {
+            await Client.UpdateTimeEntryAsync(WorkspaceId, entry.Id, CopyOf(entry, interval.Start, at), ctk);
+            await Client.CreateTimeEntryAsync(WorkspaceId, CopyOf(entry, at, end), ctk);
+        }, ctk);
+    }
+
+    // The entry's fields between other times. Clockify's update is a full replace, see UpdateRunningEntryCoreAsync
+    private static CreateTimeEntryRequest CopyOf(TimeEntry entry, DateTimeOffset start, DateTimeOffset end)
+    {
+        return new CreateTimeEntryRequest
+        {
+            Start = start,
+            End = end,
+            ProjectId = entry.ProjectId,
+            TaskId = entry.TaskId,
+            Billable = entry.Billable,
+            TagIds = entry.TagIds,
+            Description = Normalize(entry.Description)
+        };
+    }
+
     private Task ExclusiveAsync(Func<Task> action, CancellationToken ctk)
     {
         return ExclusiveAsync(async () =>

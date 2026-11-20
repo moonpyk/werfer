@@ -1,5 +1,4 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using Werfer.Clockify.Models;
 using Werfer.Services;
 
@@ -8,7 +7,7 @@ namespace Werfer.ViewModels;
 /// <summary>
 ///     The edit form of one finished entry, in local time.
 /// </summary>
-public partial class TimeEntryEditViewModel : ObservableObject
+public partial class TimeEntryEditViewModel : SheetFormViewModel
 {
     /// <summary>
     ///     Fills the form from a finished entry, in local time, with its times cut to the minute (see
@@ -21,21 +20,11 @@ public partial class TimeEntryEditViewModel : ObservableObject
         Func<string?, CancellationToken, Task<IEnumerable<object>>> projectChoicesPopulator,
         Func<TimeEntryEditViewModel, Task> save,
         Action cancel
-    )
+    ) : base(cancel)
     {
         Entry = entry;
         ProjectChoicesPopulator = projectChoicesPopulator;
         SaveAction = save;
-        CancelAction = cancel;
-
-        // Cancel is disabled while saving: it would only close the sheet, not stop the update already sent
-        SaveCommand.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName == nameof(SaveCommand.IsRunning))
-            {
-                CancelCommand.NotifyCanExecuteChanged();
-            }
-        };
 
         var start = entry.TimeInterval!.Start.ToLocalTime();
         var end = entry.TimeInterval.End!.Value.ToLocalTime();
@@ -54,7 +43,6 @@ public partial class TimeEntryEditViewModel : ObservableObject
     public TimeEntry Entry { get; }
 
     private Func<TimeEntryEditViewModel, Task> SaveAction { get; }
-    private Action CancelAction { get; }
 
     /// <summary>
     ///     Fills the project box; the same one as the timer bar's.
@@ -128,24 +116,15 @@ public partial class TimeEntryEditViewModel : ObservableObject
     /// <summary>
     ///     True when the date and both times can be read, see <see cref="Interval" />.
     /// </summary>
-    public bool CanSave => Interval is not null;
+    public override bool CanSave => Interval is not null;
 
     /// <summary>
     ///     The edited duration, hh:mm:ss. Empty while the times can't be read.
     /// </summary>
     public string Duration => Interval is { } i ? TimeEntryHistory.Format(i.Duration) : string.Empty;
 
-    private bool CanCancel => !SaveCommand.IsRunning;
-
-    [RelayCommand(CanExecute = nameof(CanSave))]
-    private Task SaveAsync()
+    protected override Task SaveImplAsync()
     {
         return SaveAction(this);
-    }
-
-    [RelayCommand(CanExecute = nameof(CanCancel))]
-    private void Cancel()
-    {
-        CancelAction();
     }
 }

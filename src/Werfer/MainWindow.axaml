@@ -24,8 +24,8 @@
         <KeyBinding Gesture="Ctrl+L" Command="{Binding ClearDescriptionCommand}" />
         <!-- "New": a blank, stopped timer -->
         <KeyBinding Gesture="Ctrl+N" Command="{Binding ResetCommand}" />
-        <!-- Closes the edit sheet, like its Cancel button. An open dropdown in the sheet gets Escape first -->
-        <KeyBinding Gesture="Escape" Command="{Binding Timer.CloseEditorCommand}" />
+        <!-- Closes the sheet, like its Cancel button. An open dropdown in the sheet gets Escape first -->
+        <KeyBinding Gesture="Escape" Command="{Binding Timer.CloseSheetCommand}" />
         <!-- Ctrl+, : the usual settings shortcut (VS Code, Teams, macOS) -->
         <KeyBinding
             Gesture="Ctrl+OemComma"

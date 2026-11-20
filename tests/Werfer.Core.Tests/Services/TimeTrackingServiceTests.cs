@@ -139,6 +139,50 @@ public class TimeTrackingServiceTests
         Assert.Equal("JIRA-2", request.Description);
     }
 
+    [Fact]
+    public async Task Split_ShortensTheEntryAndCreatesTheSecondHalf()
+    {
+        var (client, service) = await ConnectedWithRunningEntryAsync();
+        var end = Started.AddHours(1);
+        var at = Started.AddMinutes(20);
+
+        await service.SplitTimeEntryAsync(RunningEntry(end), at, TestContext.Current.CancellationToken);
+
+        // Both halves keep every field: Clockify's create and update would leave the missing ones empty
+        var second = Assert.Single(client.Creates);
+        Assert.Equal(at, second.Start);
+        Assert.Equal(end, second.End);
+        Assert.Equal("p1", second.ProjectId);
+        Assert.Equal("t1", second.TaskId);
+        Assert.Equal("JIRA-1", second.Description);
+        Assert.True(second.Billable);
+        Assert.Equal(["tag"], second.TagIds);
+
+        var (id, first) = Assert.Single(client.Updates);
+        Assert.Equal("e1", id);
+        Assert.Equal(Started, first.Start);
+        Assert.Equal(at, first.End);
+        Assert.Equal("JIRA-1", first.Description);
+        Assert.Equal(["tag"], first.TagIds);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(60)]
+    public async Task Split_OnTheEntryEdge_IsRefused(int minutes)
+    {
+        var (client, service) = await ConnectedWithRunningEntryAsync();
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => service.SplitTimeEntryAsync(
+            RunningEntry(Started.AddHours(1)),
+            Started.AddMinutes(minutes),
+            TestContext.Current.CancellationToken
+        ));
+
+        Assert.Empty(client.Creates);
+        Assert.Empty(client.Updates);
+    }
+
     [Theory]
     [InlineData("JIRA-1")]
     // Same once trimmed

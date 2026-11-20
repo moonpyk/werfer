@@ -18,14 +18,25 @@
             <timer:HistoryView Grid.Row="1" DataContext="{Binding History}" />
         </Grid>
 
-        <!-- Edit sheet, modal. Escape closes it, see the window's KeyBindings -->
+        <!--
+        Edit or split sheet, modal: the same buttons over each form's own view, picked by the DataTemplates. Escape closes
+        it, see the window's KeyBindings
+        -->
         <sheet:Sheet
-            IsOpen="{Binding IsEditorOpen}"
-            IsLightDismissEnabled="{Binding !IsSavingEdit}"
-            Content="{Binding Editor}">
+            IsOpen="{Binding IsSheetOpen}"
+            IsLightDismissEnabled="{Binding !IsSheetSaving}"
+            Content="{Binding SheetContent}">
+            <sheet:Sheet.DataTemplates>
+                <DataTemplate DataType="vm:TimeEntryEditViewModel">
+                    <edit:TimeEntryEditView />
+                </DataTemplate>
+                <DataTemplate DataType="vm:TimeEntrySplitViewModel">
+                    <edit:TimeEntrySplitView />
+                </DataTemplate>
+            </sheet:Sheet.DataTemplates>
             <sheet:Sheet.ContentTemplate>
-                <DataTemplate x:DataType="vm:TimeEntryEditViewModel">
-                    <!-- Enter saves, except in the description, which takes it as a new line -->
+                <DataTemplate x:DataType="vm:SheetFormViewModel">
+                    <!-- Enter saves, except in a multiline description, which takes it as a new line -->
                     <DockPanel>
                         <DockPanel.KeyBindings>
                             <KeyBinding Gesture="Enter" Command="{Binding SaveCommand}" />
@@ -47,7 +58,8 @@
                                 MinWidth="96"
                                 Command="{Binding SaveCommand}" />
                         </StackPanel>
-                        <edit:TimeEntryEditView />
+                        <!-- The form itself, from the DataTemplates above -->
+                        <ContentControl Content="{Binding}" />
                     </DockPanel>
                 </DataTemplate>
             </sheet:Sheet.ContentTemplate>

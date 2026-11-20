@@ -44,14 +44,24 @@ public abstract partial class TimeEntryItemViewModelBase(
         Timer.Edit(this, TimeEntries[0]);
     }
 
+    // Opens the split sheet of the timer page, one entry at a time like Edit
+    [RelayCommand(CanExecute = nameof(CanEdit))]
+    private void Split()
+    {
+        Timer.Split(this, TimeEntries[0]);
+    }
+
     [RelayCommand]
     private async Task DeleteAsync()
     {
-        if (await ConfirmDeleteAsync(TimeEntries.Count > 1
-                ? $"Delete {TimeEntries.Count} entries?"
-                : "Delete this entry?"))
+        var confirmed = await ConfirmDeleteAsync(TimeEntries.Count > 1
+            ? $"Delete {TimeEntries.Count} entries?"
+            : "Delete this entry?"
+        );
+
+        // Failures are reported by the view model's WithBusyIndicator
+        if (confirmed)
         {
-            // Failures are reported by the view model's WithBusyIndicator
             await Timer.DeleteAsync(
                 [.. TimeEntries.Select(e => e.Id)]
             );

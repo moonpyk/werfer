@@ -58,6 +58,77 @@ public class TimeEntryHistoryTests
         Assert.False(TimeEntryHistory.TryParseTimeOfDay(typed, out _));
     }
 
+    [Theory]
+    // 15:16:23 to 16:04:10: 15:17 to 16:04
+    [InlineData(
+        "2026-04-01T13:16:23Z",
+        "2026-04-01T14:04:10Z",
+        "15:17",
+        "16:04"
+    )]
+    // On whole minutes, 15:16 to 16:04: neither the start nor the end, 15:17 to 16:03
+    [InlineData(
+        "2026-04-01T13:16:00Z",
+        "2026-04-01T14:04:00Z",
+        "15:17",
+        "16:03"
+    )]
+    public void SplitBounds_WholeMinutesStrictlyInside(string start, string end, string first, string last)
+    {
+        var bounds = TimeEntryHistory.SplitBounds(
+            DateTimeOffset.Parse(start),
+            DateTimeOffset.Parse(end)
+        );
+
+        var firstDt = TimeOnly.FromDateTime(
+            TimeZoneInfo.ConvertTime(bounds.First, Paris).DateTime
+        );
+        Assert.Equal(
+            first,
+            firstDt.ToString("HH:mm")
+        );
+        var lastDt = TimeOnly.FromDateTime(
+            TimeZoneInfo.ConvertTime(bounds.Last, Paris).DateTime
+        );
+        Assert.Equal(
+            last,
+            lastDt.ToString("HH:mm"));
+    }
+
+    [Fact]
+    public void SplitBounds_TooShort_LastBeforeFirst()
+    {
+        // 15:16:23 to 15:16:50: no whole minute inside
+        var (first, last) = TimeEntryHistory.SplitBounds(
+            DateTimeOffset.Parse("2026-04-01T13:16:23Z"),
+            DateTimeOffset.Parse("2026-04-01T13:16:50Z")
+        );
+
+        Assert.True(last < first);
+    }
+
+    [Theory]
+    // 15:16:23 to 16:04:10 in Paris
+    [InlineData("2026-04-01T13:16:23Z", "2026-04-01T14:04:10Z", 15, 40, "2026-04-01T15:40:00+02:00")]
+    // The start's own minute and the end's minute aren't inside
+    [InlineData("2026-04-01T13:16:23Z", "2026-04-01T14:04:00Z", 15, 16, null)]
+    [InlineData("2026-04-01T13:16:23Z", "2026-04-01T14:04:00Z", 16, 4, null)]
+    // Outside the entry
+    [InlineData("2026-04-01T13:16:23Z", "2026-04-01T14:04:10Z", 10, 0, null)]
+    // 23:30 to 01:00, past midnight: 00:15 is the next day
+    [InlineData("2026-04-01T21:30:00Z", "2026-04-01T23:00:00Z", 0, 15, "2026-04-02T00:15:00+02:00")]
+    public void SplitTime_InsideTheEntryOnly(string start, string end, int hour, int minute, string? expected)
+    {
+        var at = TimeEntryHistory.SplitTime(
+            DateTimeOffset.Parse(start),
+            DateTimeOffset.Parse(end),
+            new TimeOnly(hour, minute),
+            Paris
+        );
+
+        Assert.Equal(expected is null ? null : DateTimeOffset.Parse(expected), at);
+    }
+
     [Fact]
     public void EditedInterval_Unchanged_KeepsTheSeconds()
     {

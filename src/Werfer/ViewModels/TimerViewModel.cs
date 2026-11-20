@@ -10,7 +10,8 @@ using Werfer.Services;
 namespace Werfer.ViewModels;
 
 /// <summary>
-///     Main page: the timer bar and the week's history (each has its own view model), and the edit sheet over them.
+///     Main page: the timer bar and the week's history (each has its own view model), and the sheet over them, to edit
+///     or split an entry.
 ///     Handles what links them: loading on connection, a finished entry added to the history, the week's total
 ///     including the running entry, a history line continued in the bar, and the shortcuts disabled while the sheet
 ///     is open.
@@ -18,7 +19,7 @@ namespace Werfer.ViewModels;
 [UsedImplicitly]
 public partial class TimerViewModel : ViewModelBase
 {
-    // The item open in the edit sheet, highlighted in the history while the sheet is open
+    // The item open in the sheet, highlighted in the history while the sheet is open
     private TimeEntryItemViewModelBase? _editedItem;
 
     /// <summary>
@@ -64,13 +65,15 @@ public partial class TimerViewModel : ViewModelBase
     public HistoryViewModel History { get; }
 
     /// <summary>
-    ///     The form in the edit sheet. Kept after the sheet closes, replaced by <see cref="Edit" />
+    ///     The form in the sheet: a <see cref="TimeEntryEditViewModel" /> or a <see cref="TimeEntrySplitViewModel" />,
+    ///     each with its own view under the same buttons. Kept after the sheet closes, replaced by <see cref="Edit" /> and
+    ///     <see cref="Split" />
     /// </summary>
     [ObservableProperty]
-    public partial TimeEntryEditViewModel? Editor { get; private set; }
+    public partial SheetFormViewModel? SheetContent { get; private set; }
 
     /// <summary>
-    ///     True while the edit sheet is open. Bound both ways: the sheet closes itself on a click outside
+    ///     True while the sheet is open. Bound both ways: the sheet closes itself on a click outside
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(
@@ -80,35 +83,35 @@ public partial class TimerViewModel : ViewModelBase
     )]
     [NotifyCanExecuteChangedFor(
         nameof(RefreshCommand),
-        nameof(CloseEditorCommand)
+        nameof(CloseSheetCommand)
     )]
-    public partial bool IsEditorOpen { get; set; }
+    public partial bool IsSheetOpen { get; set; }
 
     /// <summary>
-    ///     True while the edit sheet's changes are being sent. The sheet can't be closed then: closing wouldn't stop the
+    ///     True while the sheet's changes are being sent. The sheet can't be closed then: closing wouldn't stop the
     ///     request
     /// </summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(CloseEditorCommand))]
-    public partial bool IsSavingEdit { get; private set; }
+    [NotifyCanExecuteChangedFor(nameof(CloseSheetCommand))]
+    public partial bool IsSheetSaving { get; private set; }
 
     /// <summary>
-    ///     Ctrl+Space, see the window's KeyBindings: the timer bar's Toggle. Null while the edit sheet is open.
+    ///     Ctrl+Space, see the window's KeyBindings: the timer bar's Toggle. Null while the sheet is open.
     /// </summary>
-    public ICommand? ToggleCommand => IsEditorOpen ? null : Player.ToggleCommand;
+    public ICommand? ToggleCommand => IsSheetOpen ? null : Player.ToggleCommand;
 
     /// <summary>
-    ///     Ctrl+L: the timer bar's ClearDescription. Null while the edit sheet is open.
+    ///     Ctrl+L: the timer bar's ClearDescription. Null while the sheet is open.
     /// </summary>
-    public ICommand? ClearDescriptionCommand => IsEditorOpen ? null : Player.ClearDescriptionCommand;
+    public ICommand? ClearDescriptionCommand => IsSheetOpen ? null : Player.ClearDescriptionCommand;
 
     /// <summary>
-    ///     Ctrl+N: the timer bar's Reset. Null while the edit sheet is open.
+    ///     Ctrl+N: the timer bar's Reset. Null while the sheet is open.
     /// </summary>
-    public ICommand? ResetCommand => IsEditorOpen ? null : Player.ResetCommand;
+    public ICommand? ResetCommand => IsSheetOpen ? null : Player.ResetCommand;
 
-    private bool CanRefresh => !IsEditorOpen;
-    private bool CanCloseEditor => IsEditorOpen && !IsSavingEdit;
+    private bool CanRefresh => !IsSheetOpen;
+    private bool CanCloseSheet => IsSheetOpen && !IsSheetSaving;
 
     /// <summary>
     ///     Reloads the running entry and the week's history from Clockify: they may have changed in another app.
@@ -148,26 +151,41 @@ public partial class TimerViewModel : ViewModelBase
     {
         SetEditedItem(item);
 
-        Editor = new TimeEntryEditViewModel(
+        SheetContent = new TimeEntryEditViewModel(
             entry,
             item.Choice,
             Player.ProjectChoicesPopulator,
             SaveEditAsync,
-            CloseEditor
+            CloseSheet
         );
-        IsEditorOpen = true;
+        IsSheetOpen = true;
     }
 
     /// <summary>
-    ///     Closes the edit sheet without saving, for Cancel and Escape. A click outside closes it through the IsEditorOpen
+    ///     Opens the sheet to split a history entry in two.
+    /// </summary>
+    public void Split(TimeEntryItemViewModelBase item, TimeEntry entry)
+    {
+        SetEditedItem(item);
+
+        SheetContent = new TimeEntrySplitViewModel(
+            entry,
+            SplitAsync,
+            CloseSheet
+        );
+        IsSheetOpen = true;
+    }
+
+    /// <summary>
+    ///     Closes the sheet without saving, for Cancel and Escape. A click outside closes it through the IsSheetOpen
     ///     binding.
     /// </summary>
-    [RelayCommand(CanExecute = nameof(CanCloseEditor))]
-    public void CloseEditor()
+    [RelayCommand(CanExecute = nameof(CanCloseSheet))]
+    private void CloseSheet()
     {
-        if (!IsSavingEdit)
+        if (!IsSheetSaving)
         {
-            IsEditorOpen = false;
+            IsSheetOpen = false;
         }
     }
 
@@ -185,30 +203,50 @@ public partial class TimerViewModel : ViewModelBase
             return Task.CompletedTask;
         }
 
+        // No project picked (an archived one isn't in the list): keep the entry's own project and task
+        return SaveSheetAsync(() => TimeTracking.UpdateTimeEntryAsync(
+            form.Entry,
+            range,
+            form.SelectedChoice?.Project.Id ?? form.Entry.ProjectId,
+            form.SelectedChoice?.Task.Id ?? form.Entry.TaskId,
+            form.Description
+        ));
+    }
+
+    private Task SplitAsync(TimeEntrySplitViewModel form)
+    {
+        return form.SplitTime is { } at
+            ? SaveSheetAsync(() => TimeTracking.SplitTimeEntryAsync(form.Entry, at))
+            : Task.CompletedTask;
+    }
+
+    // Sends the sheet's changes, then closes it and reloads the history
+    private Task SaveSheetAsync(Func<Task> send)
+    {
         return WithBusyIndicator(async () =>
         {
-            IsSavingEdit = true;
+            IsSheetSaving = true;
+            var saved = false;
 
             try
             {
-                // No project picked (an archived one isn't in the list): keep the entry's own project and task
-                await TimeTracking.UpdateTimeEntryAsync(
-                    form.Entry,
-                    range,
-                    form.SelectedChoice?.Project.Id ?? form.Entry.ProjectId,
-                    form.SelectedChoice?.Task.Id ?? form.Entry.TaskId,
-                    form.Description
-                );
+                await send();
+                saved = true;
             }
             finally
             {
-                IsSavingEdit = false;
-            }
+                IsSheetSaving = false;
 
-            // Closed only once saved: if saving fails (WithBusyIndicator reports it), the sheet stays open and nothing
-            // typed is lost
-            CloseEditor();
-            await History.LoadImplAsync();
+                // Closed only once saved: if saving fails (WithBusyIndicator reports it), the sheet stays open and
+                // nothing typed is lost
+                if (saved)
+                {
+                    CloseSheet();
+                }
+
+                // Reloaded after a failure too: a split may have half happened, the history must show it
+                await History.LoadImplAsync();
+            }
         });
     }
 
@@ -239,7 +277,7 @@ public partial class TimerViewModel : ViewModelBase
         }
     }
 
-    partial void OnIsEditorOpenChanged(bool value)
+    partial void OnIsSheetOpenChanged(bool value)
     {
         if (!value)
         {

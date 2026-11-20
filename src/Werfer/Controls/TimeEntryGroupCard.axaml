@@ -21,6 +21,14 @@
             </MenuItem>
             <MenuItem
                 x:DataType="vm:TimeEntryItemViewModelBase"
+                Header="Split"
+                Command="{Binding SplitCommand}">
+                <MenuItem.Icon>
+                    <ui:FASymbolIcon Symbol="Cut" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem
+                x:DataType="vm:TimeEntryItemViewModelBase"
                 Header="Delete"
                 Command="{Binding DeleteCommand}">
                 <MenuItem.Icon>

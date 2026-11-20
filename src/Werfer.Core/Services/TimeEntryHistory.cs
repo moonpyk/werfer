@@ -80,9 +80,9 @@ public static class TimeEntryHistory
     ///     <paramref name="kept" /> itself is returned, seconds included.
     /// </summary>
     public static DateTimeOffset EditedTime(
-        DateOnly date, 
-        TimeOnly time, 
-        DateTimeOffset? kept, 
+        DateOnly date,
+        TimeOnly time,
+        DateTimeOffset? kept,
         TimeZoneInfo zone
     )
     {
@@ -99,6 +99,45 @@ public static class TimeEntryHistory
         }
 
         return new DateTimeOffset(local, zone.GetUtcOffset(local));
+    }
+
+    /// <summary>
+    ///     The whole minutes strictly inside an entry, where it can be split: the first one after its start and the last
+    ///     one before its end. Last is before First when the entry is too short to split.
+    /// </summary>
+    public static (DateTimeOffset First, DateTimeOffset Last) SplitBounds(DateTimeOffset start, DateTimeOffset end)
+    {
+        var first = ToMinute(start).AddMinutes(1);
+        var last = ToMinute(end.AddTicks(-1));
+        return (first, last);
+
+        static DateTimeOffset ToMinute(DateTimeOffset time)
+        {
+            return time.AddTicks(-(time.Ticks % TimeSpan.TicksPerMinute));
+        }
+    }
+
+    /// <summary>
+    ///     Where an entry is split at a time of day in <paramref name="zone" />: on the day it starts, or the next one
+    ///     for an entry running past midnight. Null when that falls outside the entry, its start and end included.
+    /// </summary>
+    public static DateTimeOffset? SplitTime(
+        DateTimeOffset start,
+        DateTimeOffset end,
+        TimeOnly time,
+        TimeZoneInfo zone
+    )
+    {
+        var day = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(start, zone).DateTime);
+        var at = EditedTime(day, time, null, zone);
+
+        // A time before the start is on the next day, with that day's own offset
+        if (at <= start)
+        {
+            at = EditedTime(day.AddDays(1), time, null, zone);
+        }
+
+        return at < end ? at : null;
     }
 
     /// <summary>
