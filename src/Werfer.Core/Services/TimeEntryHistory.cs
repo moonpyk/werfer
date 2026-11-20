@@ -69,27 +69,36 @@ public static class TimeEntryHistory
     )
     {
         return new TimeRange(
-            At(day, start, original.Start),
+            EditedTime(day, start, original.Start, zone),
             // shortcut: an end before the start only means the next day, entries of 24 h or more can't be entered
-            At(end < start ? day.AddDays(1) : day, end, original.End)
+            EditedTime(end < start ? day.AddDays(1) : day, end, original.End, zone)
         );
+    }
 
-        DateTimeOffset At(DateOnly date, TimeOnly time, DateTimeOffset? kept)
+    /// <summary>
+    ///     A day and a time of day in <paramref name="zone" />. When it is <paramref name="kept" /> shown to the minute,
+    ///     <paramref name="kept" /> itself is returned, seconds included.
+    /// </summary>
+    public static DateTimeOffset EditedTime(
+        DateOnly date, 
+        TimeOnly time, 
+        DateTimeOffset? kept, 
+        TimeZoneInfo zone
+    )
+    {
+        var local = date.ToDateTime(time);
+
+        // ReSharper disable once InvertIf : Leads to code duplication
+        if (kept is { } k)
         {
-            var local = date.ToDateTime(time);
-
-            // ReSharper disable once InvertIf : Leads to code duplication
-            if (kept is { } k)
+            var shown = TimeZoneInfo.ConvertTime(k, zone).DateTime;
+            if (shown.AddTicks(-(shown.Ticks % TimeSpan.TicksPerMinute)) == local)
             {
-                var shown = TimeZoneInfo.ConvertTime(k, zone).DateTime;
-                if (shown.AddTicks(-(shown.Ticks % TimeSpan.TicksPerMinute)) == local)
-                {
-                    return k;
-                }
+                return k;
             }
-
-            return new DateTimeOffset(local, zone.GetUtcOffset(local));
         }
+
+        return new DateTimeOffset(local, zone.GetUtcOffset(local));
     }
 
     /// <summary>

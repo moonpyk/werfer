@@ -23,7 +23,7 @@ public class TimerDraft
     ///     Creates the draft. It takes the values of each new running entry from then on.
     /// </summary>
     public TimerDraft(
-        TimeTrackingService timeTracking, 
+        TimeTrackingService timeTracking,
         IApplicationSettings settings
     )
     {
@@ -175,6 +175,19 @@ public class TimerDraft
         {
             await StopAsync(ctk);
         }
+
+        Choice = null;
+        Description = null;
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    ///     Deletes the running entry and empties the draft: what was typed belonged to that entry. If the delete fails,
+    ///     the draft is kept.
+    /// </summary>
+    public async Task DeleteRunningAsync(CancellationToken ctk = default)
+    {
+        await Service.DeleteRunningEntryAsync(ctk);
 
         Choice = null;
         Description = null;

@@ -126,6 +126,13 @@ public partial class TimerPlayerViewModel : ViewModelBase
     [ObservableProperty]
     public partial TimeSpan RunningElapsed { get; private set; }
 
+    /// <summary>
+    ///     The running entry's start time as typed in the stop button's flyout, see
+    ///     <see cref="TimeEntryHistory.TryParseTimeOfDay" />. Sent to Clockify by <see cref="ChangeStartCommand" />.
+    /// </summary>
+    [ObservableProperty]
+    public partial string? StartTime { get; set; }
+
     private bool CanToggle => !IsBusy;
 
     /// <summary>
@@ -184,6 +191,63 @@ public partial class TimerPlayerViewModel : ViewModelBase
     private Task StopAsync()
     {
         return WithBusyIndicator(() => Draft.StopAsync());
+    }
+
+    /// <summary>
+    ///     Puts the running entry's start back in <see cref="StartTime" />, dropping an edit never applied.
+    /// </summary>
+    public void ResetStartTime()
+    {
+        StartTime = TimeTracking.RunningEntry?.TimeInterval?.Start is { } start
+            ? TimeEntryHistory.FormatTimeOfDay(TimeOnly.FromDateTime(start.ToLocalTime().DateTime))
+            : null;
+    }
+
+    /// <summary>
+    ///     Moves the running entry's start to <see cref="StartTime" />, on the day it started. A time that can't be read,
+    ///     or in the future, is refused.
+    /// </summary>
+    [RelayCommand]
+    private Task ChangeStartAsync()
+    {
+        if (TimeTracking.RunningEntry?.TimeInterval?.Start is not { } current)
+        {
+            return Task.CompletedTask;
+        }
+
+        if (!TimeEntryHistory.TryParseTimeOfDay(StartTime, out var time))
+        {
+            FlashMessages.Push(WellKnownMessages.InvalidStartTime);
+            return Task.CompletedTask;
+        }
+
+        // The time unchanged gives the start back with its seconds, so the service sends nothing
+        var start = TimeEntryHistory.EditedTime(
+            DateOnly.FromDateTime(current.ToLocalTime().DateTime),
+            time,
+            current,
+            TimeZoneInfo.Local
+        );
+
+        if (start > DateTimeOffset.Now)
+        {
+            FlashMessages.Push(WellKnownMessages.InvalidStartTime);
+            return Task.CompletedTask;
+        }
+
+        return WithBusyIndicator(() => TimeTracking.UpdateRunningEntryStartAsync(start));
+    }
+
+    /// <summary>
+    ///     Deletes the running entry once confirmed, and empties the bar. See <see cref="TimerDraft.DeleteRunningAsync" />.
+    /// </summary>
+    [RelayCommand]
+    private async Task DeleteAsync()
+    {
+        if (await TimeEntryItemViewModelBase.ConfirmDeleteAsync("Delete the running entry?"))
+        {
+            await WithBusyIndicator(() => Draft.DeleteRunningAsync());
+        }
     }
 
     /// <summary>

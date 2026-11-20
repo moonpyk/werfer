@@ -47,25 +47,36 @@ public abstract partial class TimeEntryItemViewModelBase(
     [RelayCommand]
     private async Task DeleteAsync()
     {
-        // Deleting can't be undone, so ask first. The buttons follow the web convention, as Clockify does, NOT Fluent's
-        // (action left, Cancel right and default): Cancel on the left, Delete on the right and default (accented,
-        // pressed by Enter). FAContentDialog sends Enter to the default button whatever has the focus, and ignores
-        // arrow keys: with Cancel as default, moving to Delete with the arrows then pressing Enter cancelled.
-        // Delete is the secondary button, not the close one: Escape and the close button both return None, which
-        // must not be taken for Delete
+        if (await ConfirmDeleteAsync(TimeEntries.Count > 1
+                ? $"Delete {TimeEntries.Count} entries?"
+                : "Delete this entry?"))
+        {
+            // Failures are reported by the view model's WithBusyIndicator
+            await Timer.DeleteAsync(
+                [.. TimeEntries.Select(e => e.Id)]
+            );
+        }
+    }
+
+    /// <summary>
+    ///     Asks before deleting, which can't be undone. True when Delete was pressed.
+    /// </summary>
+    public static async Task<bool> ConfirmDeleteAsync(string title)
+    {
+        // The buttons follow the web convention, as Clockify does, NOT Fluent's (action left, Cancel right and
+        // default): Cancel on the left, Delete on the right and default (accented, pressed by Enter). FAContentDialog
+        // sends Enter to the default button whatever has the focus, and ignores arrow keys: with Cancel as default,
+        // moving to Delete with the arrows then pressing Enter cancelled. Delete is the secondary button, not the close
+        // one: Escape and the close button both return None, which must not be taken for Delete
         var dialog = new FAContentDialog
         {
-            Title = TimeEntries.Count > 1 ? $"Delete {TimeEntries.Count} entries?" : "Delete this entry?",
+            Title = title,
             Content = "This can't be undone.",
             PrimaryButtonText = "Cancel",
             SecondaryButtonText = "Delete",
             DefaultButton = FAContentDialogButton.Secondary
         };
 
-        if (await dialog.ShowAsync() == FAContentDialogResult.Secondary)
-        {
-            // Failures are reported by the view model's WithBusyIndicator
-            await Timer.DeleteAsync([.. TimeEntries.Select(e => e.Id)]);
-        }
+        return await dialog.ShowAsync() == FAContentDialogResult.Secondary;
     }
 }

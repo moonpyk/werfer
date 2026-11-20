@@ -48,4 +48,12 @@ public static class WellKnownMessages
         "The default project and task can't be started anymore, pick one",
         Severity: FAInfoBarSeverity.Warning
     );
+
+    /// <summary>
+    ///     The running entry's new start can't be read, or is in the future.
+    /// </summary>
+    public static FlashMessage InvalidStartTime { get; } = new(
+        "Type a start time such as 9:15, not in the future",
+        Severity: FAInfoBarSeverity.Warning
+    );
 }

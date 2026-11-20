@@ -125,7 +125,7 @@ public class TimeTrackingService(
         return Client.GetTimeEntriesForUserAsync(
             WorkspaceId,
             CurrentUser.Id,
-            start: start,
+            start,
             ctk: ctk
         );
     }
@@ -160,15 +160,40 @@ public class TimeTrackingService(
     }
 
     /// <summary>
+    ///     Deletes the running entry, does nothing when stopped.
+    /// </summary>
+    public Task DeleteRunningEntryAsync(CancellationToken ctk = default)
+    {
+        return ExclusiveAsync(async () =>
+        {
+            if (RunningEntry is not { } running)
+            {
+                return;
+            }
+
+            try
+            {
+                await Client.DeleteTimeEntryAsync(WorkspaceId, running.Id, ctk);
+            }
+            catch (ApiException e) when (e.StatusCode == HttpStatusCode.NotFound)
+            {
+                // Already deleted in another app: that's what we wanted
+            }
+
+            RunningEntry = null;
+        }, ctk);
+    }
+
+    /// <summary>
     ///     Lists the (project, task) pairs a time entry can be started on, active tasks of non-archived projects only.
     /// </summary>
     public async Task<List<ProjectTaskChoice>> GetProjectTasksAsync(CancellationToken ctk = default)
     {
         var projects = await Client.GetProjectsAsync(
             WorkspaceId,
-            archived: false,
-            hydrated: true,
-            ctk: ctk
+            false,
+            true,
+            ctk
         );
 
         return (
@@ -237,16 +262,38 @@ public class TimeTrackingService(
                 projectId,
                 taskId,
                 Normalize(description),
+                null,
                 ctk
             ),
             ctk
         );
     }
 
+    /// <summary>
+    ///     Moves the running entry's start, its other fields are kept. Does nothing when stopped or unchanged.
+    /// </summary>
+    public Task UpdateRunningEntryStartAsync(DateTimeOffset start, CancellationToken ctk = default)
+    {
+        return ExclusiveAsync(
+            () => RunningEntry is { } running
+                ? UpdateRunningEntryCoreAsync(
+                    running.ProjectId,
+                    running.TaskId,
+                    Normalize(running.Description),
+                    start,
+                    ctk
+                )
+                : Task.CompletedTask,
+            ctk
+        );
+    }
+
+    // A null start keeps the running entry's start
     private async Task UpdateRunningEntryCoreAsync(
         string? projectId,
         string? taskId,
         string? description,
+        DateTimeOffset? start,
         CancellationToken ctk
     )
     {
@@ -254,7 +301,8 @@ public class TimeTrackingService(
         if (running is null
             // Normalized too: Clockify sends "" for no description, which mustn't count as a change
             || (running.ProjectId == projectId && running.TaskId == taskId &&
-                Normalize(running.Description) == description))
+                Normalize(running.Description) == description &&
+                (start is null || start == running.TimeInterval?.Start)))
         {
             return;
         }
@@ -282,7 +330,7 @@ public class TimeTrackingService(
         // customFieldValues if the workspace starts using them
         RunningEntry = await Client.UpdateTimeEntryAsync(WorkspaceId, current.Id, new CreateTimeEntryRequest
         {
-            Start = current.TimeInterval.Start,
+            Start = start ?? current.TimeInterval.Start,
             ProjectId = projectId,
             TaskId = taskId,
             Billable = current.Billable,

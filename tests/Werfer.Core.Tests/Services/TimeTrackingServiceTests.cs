@@ -57,6 +57,37 @@ public class TimeTrackingServiceTests
     }
 
     [Fact]
+    public async Task DeleteRunning_DeletesItAndClearsTheRunningEntry()
+    {
+        var (client, service) = await ConnectedWithRunningEntryAsync();
+
+        await service.DeleteRunningEntryAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(["e1"], client.Deletes);
+        Assert.Null(service.RunningEntry);
+    }
+
+    [Fact]
+    public async Task UpdateStart_MovesTheStartAndKeepsTheOtherFields()
+    {
+        var (client, service) = await ConnectedWithRunningEntryAsync();
+        var earlier = Started.AddMinutes(-15);
+
+        await service.UpdateRunningEntryStartAsync(earlier, TestContext.Current.CancellationToken);
+
+        var (id, request) = Assert.Single(client.Updates);
+        Assert.Equal("e1", id);
+        Assert.Equal(earlier, request.Start);
+        Assert.Null(request.End);
+        Assert.Equal("p1", request.ProjectId);
+        Assert.Equal("t1", request.TaskId);
+        Assert.Equal("JIRA-1", request.Description);
+        Assert.True(request.Billable);
+        Assert.Equal(["tag"], request.TagIds);
+        Assert.Equal(earlier, service.RunningEntry?.TimeInterval?.Start);
+    }
+
+    [Fact]
     public async Task Update_ResendsTheFieldsClockifyWouldClear()
     {
         var (client, service) = await ConnectedWithRunningEntryAsync();
@@ -97,6 +128,7 @@ public class TimeTrackingServiceTests
         );
 
         var (id, request) = Assert.Single(client.Updates);
+
         Assert.Equal("e1", id);
         Assert.Equal(Started, request.Start);
         Assert.Equal(end, request.End);

@@ -35,6 +35,11 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
     public List<CreateTimeEntryRequest> Creates { get; } = [];
 
     /// <summary>
+    ///     Ids of the deleted entries, in order.
+    /// </summary>
+    public List<string> Deletes { get; } = [];
+
+    /// <summary>
     ///     How many times the in-progress query was made: on connection, refresh, and before each update
     /// </summary>
     public int RunningReads { get; private set; }
@@ -166,7 +171,8 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
 
     public Task DeleteTimeEntryAsync(string workspaceId, string id, CancellationToken ctk = default)
     {
-        throw new NotSupportedException();
+        Deletes.Add(id);
+        return Task.CompletedTask;
     }
 
     // The given page of items, its size capped by MaxPageSize as Clockify does; 50 when none asked, Clockify's default
