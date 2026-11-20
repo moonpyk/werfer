@@ -10,7 +10,7 @@
         <sty:FluentAvaloniaTheme PreferSystemTheme="True" PreferUserAccentColor="True" />
         <!-- 
         No focus rectangle: it looks bad, and Avalonia's Control.OnGotFocus crashes when it adds one that is still 
-        attached ("already has a visual parent AdornerLayer") 
+        attached ("already has a visual parent AdornerLayer") (ref: https://github.com/AvaloniaUI/Avalonia/issues/22727)
         -->
         <Style Selector=":is(Control)">
             <Setter Property="FocusAdorner" Value="{x:Null}" />
