@@ -28,6 +28,8 @@
                 <TrayIcon.Menu>
                     <NativeMenu>
                         <NativeMenuItem Header="Show" Click="OnTrayShowClick" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Exit" Click="OnTrayExitClick" />
                     </NativeMenu>
                 </TrayIcon.Menu>
             </TrayIcon>

@@ -78,12 +78,7 @@ public class App : Application
 
         base.OnFrameworkInitializationCompleted();
     }
-
-    private void OnTrayShowClick(object? sender, EventArgs e)
-    {
-        Services?.GetService<MainWindow>()?.ShowFromTray();
-    }
-
+    
     private static ServiceProvider ConfigureServices()
     {
         var services = new ServiceCollection();
@@ -143,5 +138,28 @@ public class App : Application
                     .CreateLogger(),
                 /* dispose: */true
             );
+    }
+    
+    private void OnTrayShowClick(object? sender, EventArgs e)
+    {
+        Services?.GetService<MainWindow>()?.ShowFromTray();
+    }
+
+    // Through the window's own close: the confirmation and the window position saving still apply. Shown first only
+    // for the confirmation, a dialog can't open on a hidden window
+    private void OnTrayExitClick(object? sender, EventArgs e)
+    {
+        var window = Services?.GetService<MainWindow>();
+        if (window == null)
+        {
+            return;
+        }
+        
+        if (Services?.GetService<IApplicationSettings>()?.ConfirmClose == true)
+        {
+            window.ShowFromTray();
+        }
+
+        window.Close();
     }
 }
