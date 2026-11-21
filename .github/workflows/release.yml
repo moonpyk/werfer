@@ -57,14 +57,14 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           shopt -s nullglob
-          gh release create "$GITHUB_REF_NAME" \
+          gh release create "${GITHUB_REF_NAME}" \
             --verify-tag \
-            --title "Werfer $VERSION" \
+            --title "v${VERSION}" \
             --generate-notes \
             --draft \
             .publish/releases/werfer-win-Setup.exe \
             .publish/releases/werfer-win-Portable.zip \
-            .publish/releases/*-$VERSION-full.nupkg \
-            .publish/releases/*-$VERSION-delta.nupkg \
+            .publish/releases/*-${VERSION}-full.nupkg \
+            .publish/releases/*-${VERSION}-delta.nupkg \
             .publish/releases/releases.win.json \
             .publish/releases/RELEASES
