@@ -19,13 +19,6 @@ Werfer was born out of frustration. Hopefully it makes the people who use it a l
 The description being typed is saved first, so `Ctrl+Space` right after typing keeps it. The same list is on the
 About page, in the `…` menu.
 
-## Future work
-
-- **CI: track known NativeAOT trim warnings.** The AOT publish (`task publish-aot`, run with
-  `TrimmerSingleWarn=false`) reports known, accepted warnings, e.g. Serilog's IL2072 in
-  `PropertyValueConverter.CreatePropertyValue` (`{@Object}` destructuring, unused here). The CI should
-  compare them against a committed baseline and fail on any new one, instead of hiding them.
-
 ## Out of scope
 
 Werfer starts and stops entries, nothing more. These will not be added, whatever other desktop clients do:
@@ -42,6 +35,13 @@ Werfer starts and stops entries, nothing more. These will not be added, whatever
 ## Pronunciation
 
 The app name comes from the German word _Werfer_ (as in _Flammenwerfer_), which is pronounced _verfeur_ in French.
+
+## Future work
+
+- **CI: track known NativeAOT trim warnings.** The AOT publish (`task publish-aot`, run with
+  `TrimmerSingleWarn=false`) reports known, accepted warnings, e.g. Serilog's IL2072 in
+  `PropertyValueConverter.CreatePropertyValue` (`{@Object}` destructuring, unused here). The CI should
+  compare them against a committed baseline and fail on any new one, instead of hiding them.
 
 ## Sponsor
 
