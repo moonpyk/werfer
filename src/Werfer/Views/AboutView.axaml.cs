@@ -23,12 +23,15 @@ public partial class AboutView : UserControl
             AssetLoader.Open(new Uri("avares://Werfer/Assets/Thanks.txt"))
         );
 
+        var lines = reader
+            .ReadToEnd()
+            .Split('\n')
+            .Select(line => line.TrimEnd('\r'))
+            .Where(line => !line.TrimStart().StartsWith('#'));
+
         return string.Join(
             '\n',
-            reader.ReadToEnd()
-                .Split('\n')
-                .Select(line => line.TrimEnd('\r'))
-                .Where(line => !line.TrimStart().StartsWith('#'))
+            lines
         ).Trim();
     }
 }
