@@ -52,9 +52,9 @@ public partial class UpdateViewModel : ViewModelBase
     public partial bool IsDownloaded { get; private set; }
 
     /// <summary>
-    ///     The version of <see cref="Available" />, for the menu: "Download 0.7.0".
+    ///     The version of <see cref="Available" />, "v" included, as the About page shows its own: "Download v0.7.0".
     /// </summary>
-    public string? AvailableVersion => Available?.TargetFullRelease.Version.ToString();
+    public string? AvailableVersion => Available is { } update ? $"v{update.TargetFullRelease.Version}" : null;
 
     /// <summary>
     ///     True while no update is known: the menu shows "Check for updates".
@@ -136,7 +136,7 @@ public partial class UpdateViewModel : ViewModelBase
         }
 
         FlashMessages.Push(new FlashMessage(
-            $"Werfer {AvailableVersion} is available, download it from the … menu",
+            $"Werfer {AvailableVersion} is available, download it from the menu",
             "Update available"
         ));
 
