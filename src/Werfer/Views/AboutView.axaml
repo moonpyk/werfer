@@ -1,0 +1,109 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:werfer="clr-namespace:Werfer;assembly=Werfer.Core"
+             x:Class="Werfer.Views.AboutView">
+    <UserControl.Styles>
+        <!-- Section titles, as in the settings page -->
+        <Style Selector="TextBlock.section">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,16,0,4" />
+        </Style>
+        <!-- A key, drawn as a small key cap -->
+        <Style Selector="Border.key">
+            <Setter Property="Padding" Value="6,1" />
+            <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+        <Style Selector="Border.key TextBlock">
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style Selector="Grid.shortcuts > TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <StackPanel Margin="12,0,12,12" Spacing="6">
+            <!-- Who and which version on the left, the colored logo top right: the icon's 256 px image, extracted from Werfer.ico, scaled down -->
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <StackPanel Grid.Column="0" Spacing="6">
+                    <TextBlock Classes="section SubtitleTextBlockStyle" Text="Werfer" />
+                    <TextBlock
+                        FontSize="12"
+                        Text="{x:Static werfer:Version.Display}"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <TextBlock
+                        Text="Brought to you by Clément Bourgeois, helped by:"
+                        TextWrapping="Wrap" />
+                    <!-- Assets/Thanks.txt as written, hidden while it holds only comments, see AboutView.axaml.cs -->
+                    <TextBlock
+                        x:Name="ThanksText"
+                        FontSize="12"
+                        TextWrapping="Wrap"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <HyperlinkButton
+                        Padding="2"
+                        Content="github.com/moonpyk/werfer"
+                        NavigateUri="https://github.com/moonpyk/werfer" />
+                </StackPanel>
+                <Image
+                    Grid.Column="1"
+                    Width="128"
+                    Height="128"
+                    Margin="0,16,0,0"
+                    VerticalAlignment="Top"
+                    RenderOptions.BitmapInterpolationMode="HighQuality"
+                    Source="avares://Werfer/Assets/Werfer256.png" />
+            </Grid>
+
+            <TextBlock Classes="section" Text="Keyboard shortcuts" />
+            <!-- Same shortcuts as the window's KeyBindings and the README: keep the three in step -->
+            <Grid
+                Classes="shortcuts"
+                ColumnDefinitions="Auto,*"
+                RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                ColumnSpacing="12"
+                RowSpacing="8">
+                <TextBlock Text="Ctrl+Space" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="Start the timer, or stop it when it runs" />
+
+                <Border Grid.Row="1" Grid.Column="0" Classes="key">
+                    <TextBlock Text="F5" />
+                </Border>
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="Fetch the running entry and the history from Clockify" />
+
+                <Border Grid.Row="2" Grid.Column="0" Classes="key">
+                    <TextBlock Text="Ctrl+L" />
+                </Border>
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="Clear the description" />
+
+                <Border Grid.Row="3" Grid.Column="0" Classes="key">
+                    <TextBlock Text="Ctrl+N" />
+                </Border>
+                <TextBlock Grid.Row="3" Grid.Column="1"
+                           Text="New blank entry: stop the timer, clear the description and the project" />
+
+                <Border Grid.Row="4" Grid.Column="0" Classes="key">
+                    <TextBlock Text="Ctrl+," />
+                </Border>
+                <TextBlock Grid.Row="4" Grid.Column="1" Text="Open the settings" />
+
+                <Border Grid.Row="5" Grid.Column="0" Classes="key">
+                    <TextBlock Text="Enter" />
+                </Border>
+                <TextBlock Grid.Row="5" Grid.Column="1"
+                           Text="New line in the description; saves an edit or a split, applies a new start time" />
+
+                <Border Grid.Row="6" Grid.Column="0" Classes="key">
+                    <TextBlock Text="Escape" />
+                </Border>
+                <TextBlock Grid.Row="6" Grid.Column="1" Text="Close an edit or a split without saving" />
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,7 @@
+# Shown as written on the About page, under "Brought to you by". Lines starting with # are left out
+Fabien Ménager
+Tristan Humeau
+Mathieu René
+Olivier Gaillot
+Gaëtan Pueo
+Some bloke named Claude 

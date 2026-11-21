@@ -85,7 +85,7 @@
             SelectionChanged="OnNavigationSelectionChanged"
             ItemInvoked="OnNavigationItemInvoked">
             <!--
-            Both pages stay alive, the one not shown is only hidden. A page view removed from the window loses its data
+            Every page stays alive, the ones not shown are only hidden. A page view removed from the window loses its data
             context on the way out, and the project box then cleared its pick in the view model
             -->
             <ui:FANavigationView.Content>
@@ -97,6 +97,10 @@
                     <Panel
                         IsVisible="{Binding Page, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:AppPageEnum.Settings}}">
                         <views:SettingsView DataContext="{Binding Settings}" />
+                    </Panel>
+                    <Panel
+                        IsVisible="{Binding Page, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:AppPageEnum.About}}">
+                        <views:AboutView />
                     </Panel>
                 </Panel>
             </ui:FANavigationView.Content>
@@ -161,6 +165,14 @@
                                 Click="OnMorePageClick">
                                 <MenuItem.Icon>
                                     <ui:FASymbolIcon Symbol="Settings" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem
+                                Header="About"
+                                Tag="{x:Static vm:AppPageEnum.About}"
+                                Click="OnMorePageClick">
+                                <MenuItem.Icon>
+                                    <ui:FASymbolIcon Symbol="Help" />
                                 </MenuItem.Icon>
                             </MenuItem>
                         </MenuFlyout>

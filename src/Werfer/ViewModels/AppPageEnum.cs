@@ -13,5 +13,10 @@ public enum AppPageEnum
     /// <summary>
     ///     The API key and preferences, opened from the More menu.
     /// </summary>
-    Settings
+    Settings,
+
+    /// <summary>
+    ///     The version and the keyboard shortcuts, opened from the More menu.
+    /// </summary>
+    About
 }
