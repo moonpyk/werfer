@@ -102,6 +102,39 @@ public static class TimeEntryHistory
     }
 
     /// <summary>
+    ///     The running entry's start moved to a time of day in <paramref name="zone" />: its latest occurrence not after
+    ///     <paramref name="now" />, so 00:15 typed for a timer started yesterday at 23:30 is today's. Null when that falls
+    ///     before the day <paramref name="start" /> is on, a time in the future for a timer started today. The time
+    ///     unchanged gives <paramref name="start" /> back, seconds included.
+    /// </summary>
+    public static DateTimeOffset? MovedStart(
+        DateTimeOffset start,
+        TimeOnly time,
+        DateTimeOffset now,
+        TimeZoneInfo zone
+    )
+    {
+        var startDay = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(start, zone).DateTime);
+
+        // Checked first: for a timer running over 24 h, today's or yesterday's occurrence would move it
+        if (EditedTime(startDay, time, start, zone) == start)
+        {
+            return start;
+        }
+
+        var day =DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, zone).DateTime);
+        var at = EditedTime(day, time, start, zone);
+
+        if (at > now)
+        {
+            day = day.AddDays(-1);
+            at = EditedTime(day, time, start, zone);
+        }
+
+        return day >= startDay ? at : null;
+    }
+
+    /// <summary>
     ///     The whole minutes strictly inside an entry, where it can be split: the first one after its start and the last
     ///     one before its end. Last is before First when the entry is too short to split.
     /// </summary>

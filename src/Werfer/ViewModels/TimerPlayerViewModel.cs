@@ -204,8 +204,8 @@ public partial class TimerPlayerViewModel : ViewModelBase
     }
 
     /// <summary>
-    ///     Moves the running entry's start to <see cref="StartTime" />, on the day it started. A time that can't be read,
-    ///     or in the future, is refused.
+    ///     Moves the running entry's start to <see cref="StartTime" />, its latest occurrence so far, see
+    ///     <see cref="TimeEntryHistory.MovedStart" />. A time that can't be read, or in the future, is refused.
     /// </summary>
     [RelayCommand]
     private Task ChangeStartAsync()
@@ -222,20 +222,15 @@ public partial class TimerPlayerViewModel : ViewModelBase
         }
 
         // The time unchanged gives the start back with its seconds, so the service sends nothing
-        var start = TimeEntryHistory.EditedTime(
-            DateOnly.FromDateTime(current.ToLocalTime().DateTime),
-            time,
-            current,
-            TimeZoneInfo.Local
-        );
-
-        if (start > DateTimeOffset.Now)
+        if (TimeEntryHistory.MovedStart(current, time, DateTimeOffset.Now, TimeZoneInfo.Local) is not { } start)
         {
             FlashMessages.Push(WellKnownMessages.InvalidStartTime);
             return Task.CompletedTask;
         }
 
-        return WithBusyIndicator(() => TimeTracking.UpdateRunningEntryStartAsync(start));
+        return WithBusyIndicator(
+            () => TimeTracking.UpdateRunningEntryStartAsync(start)
+        );
     }
 
     /// <summary>

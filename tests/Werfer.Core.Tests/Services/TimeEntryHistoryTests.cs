@@ -59,6 +59,37 @@ public class TimeEntryHistoryTests
     }
 
     [Theory]
+    // Started yesterday 23:30 in Paris, now 00:20: 00:15 is today's, not yesterday's
+    [InlineData("2026-03-31T21:30:00Z", "2026-03-31T22:20:00Z", 0, 15, "2026-04-01T00:15:00+02:00")]
+    // Same timer, 23:40: today's would be in the future, so yesterday's
+    [InlineData("2026-03-31T21:30:00Z", "2026-03-31T22:20:00Z", 23, 40, "2026-03-31T23:40:00+02:00")]
+    // Started today 09:00, now 10:00: an earlier time is today's
+    [InlineData("2026-04-01T07:00:00Z", "2026-04-01T08:00:00Z", 8, 0, "2026-04-01T08:00:00+02:00")]
+    // Same timer, 11:00 is in the future, and yesterday's is before the start day: refused
+    [InlineData("2026-04-01T07:00:00Z", "2026-04-01T08:00:00Z", 11, 0, null)]
+    // Unchanged, shown to the minute: the start itself, seconds included
+    [InlineData("2026-04-01T07:05:42Z", "2026-04-01T08:00:00Z", 9, 5, "2026-04-01T07:05:42Z")]
+    // Unchanged on a timer running for 25 h: still the start, not today's 09:00
+    [InlineData("2026-03-31T07:00:00Z", "2026-04-01T08:00:00Z", 9, 0, "2026-03-31T07:00:00Z")]
+    public void MovedStart_LatestOccurrenceSinceTheStartDay(
+        string start,
+        string now,
+        int hour,
+        int minute,
+        string? expected
+    )
+    {
+        var moved = TimeEntryHistory.MovedStart(
+            DateTimeOffset.Parse(start),
+            new TimeOnly(hour, minute),
+            DateTimeOffset.Parse(now),
+            Paris
+        );
+
+        Assert.Equal(expected is null ? null : DateTimeOffset.Parse(expected), moved);
+    }
+
+    [Theory]
     // 15:16:23 to 16:04:10: 15:17 to 16:04
     [InlineData(
         "2026-04-01T13:16:23Z",
