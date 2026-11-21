@@ -24,7 +24,7 @@ public class App : Application
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "werfer"
 #if DEBUG
-        , "debug"
+        + "-debug"
 #endif
     );
 
