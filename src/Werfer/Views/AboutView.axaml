@@ -120,8 +120,7 @@
                 Text="Sponsor" />
             <Border 
                 Background="#EEFFFFFF" 
-                CornerRadius="{DynamicResource ControlCornerRadius}" 
-                Cursor="Hand">
+                CornerRadius="{DynamicResource ControlCornerRadius}">
                 <HyperlinkButton HorizontalAlignment="Center" NavigateUri="https://www.repply.fr">
                     <!-- A logo, not a text link: no background behind it on hover or press -->
                     <HyperlinkButton.Resources>
