@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
@@ -293,23 +292,18 @@ public partial class ApplicationSettings : IApplicationSettings
         public byte[]? CryptedApiKey { get; set; }
 
         [JsonPropertyName("projects:max_choices")]
-        [DefaultValue(10)]
         public int MaxProjectChoices { get; set; } = 10;
 
         [JsonPropertyName("window:topmost")]
-        [DefaultValue(false)]
         public bool Topmost { get; set; }
 
         [JsonPropertyName("window:confirm_close")]
-        [DefaultValue(true)]
         public bool ConfirmClose { get; set; } = true;
 
         [JsonPropertyName("window:tray_minimize")]
-        [DefaultValue(true)]
         public bool MinimizeToTray { get; set; } = false;
 
         [JsonPropertyName("timer:default_enabled")]
-        [DefaultValue(false)]
         public bool DefaultChoiceEnabled { get; set; }
 
         // Both null: the last used project and task
