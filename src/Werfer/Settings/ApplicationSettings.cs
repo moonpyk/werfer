@@ -170,24 +170,31 @@ public partial class ApplicationSettings : IApplicationSettings
             ));
             sb.AppendLine();
 
+            // Written aside, then moved over the file: a crash during the write leaves the previous settings whole, not
+            // a truncated file that would load as defaults, without the API key
+            var tempPath = FilePath + ".tmp";
+
             if (!OperatingSystem.IsWindows())
             {
                 // Outside Windows the API key is stored in clear: only the user may read the file. Set before the
-                // first write, so the key never sits in a file others can read
-                if (!File.Exists(FilePath))
-                {
-                    File.Create(FilePath).Dispose();
-                }
+                // write, so the key never sits in a file others can read; the move keeps the mode
+                File.Create(tempPath).Dispose();
 
                 File.SetUnixFileMode(
-                    FilePath, 
+                    tempPath,
                     UnixFileMode.UserRead | UnixFileMode.UserWrite
                 );
             }
 
             File.WriteAllText(
-                FilePath,
+                tempPath,
                 sb.ToString()
+            );
+
+            File.Move(
+                tempPath,
+                FilePath,
+                true
             );
 
             return true;
