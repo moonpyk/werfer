@@ -7,9 +7,15 @@
              x:DataType="vm:TimeEntryEditViewModel">
     <!-- Layout: the day, start and end with the duration, the description, then the project and task -->
     <StackPanel Spacing="8">
-        <CalendarDatePicker SelectedDate="{Binding Day}" HorizontalAlignment="Stretch" />
+        <!-- A group: how many entries, instead of the day and times each entry keeps -->
+        <TextBlock Text="{Binding GroupTitle}" FontWeight="SemiBold" IsVisible="{Binding IsGroup}" />
 
-        <Grid ColumnDefinitions="96,Auto,96,*">
+        <CalendarDatePicker
+            SelectedDate="{Binding Day}"
+            HorizontalAlignment="Stretch"
+            IsVisible="{Binding !IsGroup}" />
+
+        <Grid ColumnDefinitions="96,Auto,96,*" IsVisible="{Binding !IsGroup}">
             <ctl:TimeOfDayBox Grid.Column="0" Text="{Binding Start}" />
             <ui:FASymbolIcon Grid.Column="1" Symbol="ChevronRight" FontSize="12" Margin="8,0" />
             <ctl:TimeOfDayBox Grid.Column="2" Text="{Binding End}" />

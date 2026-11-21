@@ -32,20 +32,20 @@ public abstract partial class TimeEntryItemViewModelBase(
     protected abstract IReadOnlyList<TimeEntry> TimeEntries { get; }
 
     /// <summary>
-    ///     True when the item can be edited. Entries are edited one at a time: a group of several is edited through its
-    ///     expanded lines.
+    ///     True when the item is a single entry: a group of several is split through its expanded lines.
     /// </summary>
-    public bool CanEdit => TimeEntries.Count == 1;
+    public bool CanSplit => TimeEntries.Count == 1;
 
-    // Opens the edit sheet of the timer page
-    [RelayCommand(CanExecute = nameof(CanEdit))]
+    // Opens the edit sheet of the timer page: every field of a single entry, or only the shared project, task and
+    // description of a group of several
+    [RelayCommand]
     private void Edit()
     {
-        Timer.Edit(this, TimeEntries[0]);
+        Timer.Edit(this, TimeEntries);
     }
 
-    // Opens the split sheet of the timer page, one entry at a time like Edit
-    [RelayCommand(CanExecute = nameof(CanEdit))]
+    // Opens the split sheet of the timer page
+    [RelayCommand(CanExecute = nameof(CanSplit))]
     private void Split()
     {
         Timer.Split(this, TimeEntries[0]);

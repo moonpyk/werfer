@@ -5,24 +5,26 @@ using Werfer.Services;
 namespace Werfer.ViewModels;
 
 /// <summary>
-///     The edit form of one finished entry, in local time.
+///     The edit form of one finished entry, in local time, or of a history group of several: then only their shared
+///     project, task and description, each entry keeping its own times.
 /// </summary>
 public partial class TimeEntryEditViewModel : SheetFormViewModel
 {
     /// <summary>
-    ///     Fills the form from a finished entry, in local time, with its times cut to the minute (see
-    ///     <see cref="TimeEntryHistory.EditedInterval" />). The timer page saves and closes the form through the given
-    ///     callbacks.
+    ///     Fills the form from finished entries, in local time, with the first one's times cut to the minute (see
+    ///     <see cref="TimeEntryHistory.EditedInterval" />); a group's entries share the rest. The timer page saves and
+    ///     closes the form through the given callbacks.
     /// </summary>
     public TimeEntryEditViewModel(
-        TimeEntry entry,
+        IReadOnlyList<TimeEntry> entries,
         ProjectTaskViewModel? choice,
         Func<string?, CancellationToken, Task<IEnumerable<object>>> projectChoicesPopulator,
         Func<TimeEntryEditViewModel, Task> save,
         Action cancel
     ) : base(cancel)
     {
-        Entry = entry;
+        Entries = entries;
+        var entry = entries[0];
         ProjectChoicesPopulator = projectChoicesPopulator;
         SaveAction = save;
 
@@ -38,9 +40,19 @@ public partial class TimeEntryEditViewModel : SheetFormViewModel
     }
 
     /// <summary>
-    ///     The entry edited, as it was when the form opened.
+    ///     The entries edited, as they were when the form opened: one, or a whole history group.
     /// </summary>
-    public TimeEntry Entry { get; }
+    public IReadOnlyList<TimeEntry> Entries { get; }
+
+    /// <summary>
+    ///     True for a group of several entries: the day and times are hidden, each entry keeps its own.
+    /// </summary>
+    public bool IsGroup => Entries.Count > 1;
+
+    /// <summary>
+    ///     "3 entries", shown above a group's form: what Save changes.
+    /// </summary>
+    public string GroupTitle => $"{Entries.Count} entries";
 
     private Func<TimeEntryEditViewModel, Task> SaveAction { get; }
 
@@ -98,25 +110,27 @@ public partial class TimeEntryEditViewModel : SheetFormViewModel
     public partial ProjectTaskViewModel? SelectedChoice { get; set; }
 
     /// <summary>
-    ///     The edited start and end. Null while the date is cleared or a time can't be read, see <see cref="CanSave" />
+    ///     The edited start and end. Null while the date is cleared or a time can't be read, see <see cref="CanSave" />,
+    ///     and for a group, whose times aren't edited
     /// </summary>
     public TimeRange? Interval =>
-        Day is { } day
+        !IsGroup
+        && Day is { } day
         && TimeEntryHistory.TryParseTimeOfDay(Start, out var start)
         && TimeEntryHistory.TryParseTimeOfDay(End, out var end)
             ? TimeEntryHistory.EditedInterval(
                 DateOnly.FromDateTime(day),
                 start,
                 end,
-                Entry.TimeInterval!,
+                Entries[0].TimeInterval!,
                 TimeZoneInfo.Local
             )
             : null;
 
     /// <summary>
-    ///     True when the date and both times can be read, see <see cref="Interval" />.
+    ///     True when the date and both times can be read, see <see cref="Interval" />. Always for a group.
     /// </summary>
-    public override bool CanSave => Interval is not null;
+    public override bool CanSave => IsGroup || Interval is not null;
 
     /// <summary>
     ///     The edited duration, hh:mm:ss. Empty while the times can't be read.

@@ -145,14 +145,14 @@ public partial class TimerViewModel : ViewModelBase
     }
 
     /// <summary>
-    ///     Opens the edit sheet on a history entry.
+    ///     Opens the edit sheet on a history entry, or on a group of several, see <see cref="TimeEntryEditViewModel" />.
     /// </summary>
-    public void Edit(TimeEntryItemViewModelBase item, TimeEntry entry)
+    public void Edit(TimeEntryItemViewModelBase item, IReadOnlyList<TimeEntry> entries)
     {
         SetEditedItem(item);
 
         SheetContent = new TimeEntryEditViewModel(
-            entry,
+            entries,
             item.Choice,
             Player.ProjectChoicesPopulator,
             SaveEditAsync,
@@ -198,19 +198,28 @@ public partial class TimerViewModel : ViewModelBase
 
     private Task SaveEditAsync(TimeEntryEditViewModel form)
     {
-        if (form.Interval is not { } range)
+        if (!form.CanSave)
         {
             return Task.CompletedTask;
         }
 
-        // No project picked (an archived one isn't in the list): keep the entry's own project and task
-        return SaveSheetAsync(() => TimeTracking.UpdateTimeEntryAsync(
-            form.Entry,
-            range,
-            form.SelectedChoice?.Project.Id ?? form.Entry.ProjectId,
-            form.SelectedChoice?.Task.Id ?? form.Entry.TaskId,
-            form.Description
-        ));
+        // One update per entry: a single entry gets its edited times, a group's entries keep their own. Clockify has no
+        // bulk update: a failure leaves the earlier ones changed, which the history reloaded by SaveSheetAsync shows.
+        // Saving again sends the same values, so it finishes the job
+        return SaveSheetAsync(async () =>
+        {
+            foreach (var entry in form.Entries)
+            {
+                // No project picked (an archived one isn't in the list): keep the entry's own project and task
+                await TimeTracking.UpdateTimeEntryAsync(
+                    entry,
+                    form.Interval ?? new TimeRange(entry.TimeInterval!.Start, entry.TimeInterval.End!.Value),
+                    form.SelectedChoice?.Project.Id ?? entry.ProjectId,
+                    form.SelectedChoice?.Task.Id ?? entry.TaskId,
+                    form.Description
+                );
+            }
+        });
     }
 
     private Task SplitAsync(TimeEntrySplitViewModel form)

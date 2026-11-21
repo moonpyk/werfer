@@ -58,8 +58,8 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="Transparent" />
         </Style>
-        <!-- A click on the background edits the entry (see OnEntryPointerReleased). Not for a group of several entries, edited line by line -->
-        <Style Selector="Border.entryCard.editable, Border.entryLine.editable">
+        <!-- A click on the background edits the entry, or the group's shared fields (see OnEntryPointerReleased) -->
+        <Style Selector="Border.entryCard, Border.entryLine">
             <Setter Property="Cursor" Value="Hand" />
         </Style>
         <!-- The entry being edited, see IsEditing -->
@@ -104,7 +104,7 @@
         </Style>
     </UserControl.Styles>
 
-    <Border Classes="entryCard" Classes.editing="{Binding IsEditing}" Classes.editable="{Binding CanEdit}"
+    <Border Classes="entryCard" Classes.editing="{Binding IsEditing}"
             ContextFlyout="{StaticResource EntryMenu}" PointerReleased="OnEntryPointerReleased">
         <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto"
               RowDefinitions="Auto,Auto">
@@ -204,7 +204,6 @@
                         x:DataType="vm:TimeEntryLineViewModel">
                         <Border
                             Classes.editing="{Binding IsEditing}"
-                            Classes.editable="{Binding CanEdit}"
                             Classes="entryLine"
                             ContextFlyout="{StaticResource EntryMenu}"
                             PointerReleased="OnEntryPointerReleased">
