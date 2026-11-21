@@ -175,6 +175,29 @@
                                     <ui:FASymbolIcon Symbol="Help" />
                                 </MenuItem.Icon>
                             </MenuItem>
+                            <!-- Updates, only for an installed app: check, or download the release found -->
+                            <Separator IsVisible="{Binding Update.IsInstalled}" />
+                            <MenuItem
+                                Header="Check for updates"
+                                IsVisible="{Binding Update.CanCheck}"
+                                Command="{Binding Update.CheckCommand}">
+                                <MenuItem.Icon>
+                                    <ui:FASymbolIcon Symbol="CloudSync" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem
+                                Header="{Binding Update.AvailableVersion, StringFormat='Download {0}'}"
+                                IsVisible="{Binding Update.CanDownload}"
+                                Command="{Binding Update.DownloadCommand}">
+                                <MenuItem.Icon>
+                                    <ui:FASymbolIcon Symbol="Download" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <!-- Downloaded: a reminder only, the update installs when the app closes -->
+                            <MenuItem
+                                Header="{Binding Update.AvailableVersion, StringFormat='{}{0} installs at next restart'}"
+                                IsVisible="{Binding Update.IsDownloaded}"
+                                IsEnabled="False" />
                         </MenuFlyout>
                     </FlyoutBase.AttachedFlyout>
                     <ui:FANavigationViewItem.IconSource>

@@ -7,6 +7,8 @@ using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Velopack;
+using Velopack.Sources;
 using Werfer.DataProtection;
 using Werfer.Services;
 using Werfer.Settings;
@@ -67,6 +69,9 @@ public class App : Application
         {
             desktop.MainWindow = Services.GetRequiredService<MainWindow>();
 
+            // In the background: a newer release is announced, never downloaded without asking
+            _ = Services.GetRequiredService<UpdateViewModel>().CheckAtStartupAsync();
+
             if (TrayIcon.GetIcons(this) is [var tray])
             {
                 tray.FollowTaskbarTheme(
@@ -78,7 +83,22 @@ public class App : Application
 
         base.OnFrameworkInitializationCompleted();
     }
-    
+
+    // The stable releases of the GitHub repository. WERFER_UPDATE_SOURCE, a folder or URL of Velopack releases (vpk
+    // pack's output), replaces them: to try an update locally, without publishing a release
+    private static UpdateManager CreateUpdateManager(ILogger<App> logger)
+    {
+        var source = Environment.GetEnvironmentVariable("WERFER_UPDATE_SOURCE");
+
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return new UpdateManager(new GithubSource("https://github.com/moonpyk/werfer", null, false));
+        }
+
+        logger.LogInformation("Updates from {Source}, set by WERFER_UPDATE_SOURCE", source);
+        return new UpdateManager(source);
+    }
+
     private static ServiceProvider ConfigureServices()
     {
         var services = new ServiceCollection();
@@ -99,6 +119,7 @@ public class App : Application
                     .WithDataProtectionProvider(sp.GetRequiredService<IDataProtectionProvider>())
                     .Load()
             )
+            .AddSingleton(sp => CreateUpdateManager(sp.GetRequiredService<ILogger<App>>()))
             .RegisterServices()
             .AddLogging(ConfigureLogging)
             .AddHttpClient()
@@ -107,6 +128,7 @@ public class App : Application
             // ViewModels
             .AddSingleton<TimerViewModel>()
             .AddSingleton<SettingsViewModel>()
+            .AddSingleton<UpdateViewModel>()
             .AddSingleton<MainWindowViewModel>()
             // Windows
             .AddSingleton<MainWindow>()
@@ -139,7 +161,7 @@ public class App : Application
                 /* dispose: */true
             );
     }
-    
+
     private void OnTrayShowClick(object? sender, EventArgs e)
     {
         Services?.GetService<MainWindow>()?.ShowFromTray();
@@ -154,7 +176,7 @@ public class App : Application
         {
             return;
         }
-        
+
         if (Services?.GetService<IApplicationSettings>()?.ConfirmClose == true)
         {
             window.ShowFromTray();

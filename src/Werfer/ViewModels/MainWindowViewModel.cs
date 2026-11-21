@@ -25,9 +25,11 @@ public partial class MainWindowViewModel : ViewModelBase
         TimeTrackingService timeTracking,
         TimerViewModel timer,
         SettingsViewModel settings,
+        UpdateViewModel update,
         IHttpClientFactory httpClientFactory
     ) : base(logger, flashMessages)
     {
+        Update = update;
         HttpClientFactory = httpClientFactory;
         TimeTracking = timeTracking;
         ApplicationSettings = applicationSettings;
@@ -41,6 +43,7 @@ public partial class MainWindowViewModel : ViewModelBase
         timer.Player.PropertyChanged += OnPagePropertyChanged;
         timer.History.PropertyChanged += OnPagePropertyChanged;
         settings.PropertyChanged += OnPagePropertyChanged;
+        update.PropertyChanged += OnPagePropertyChanged;
 
         // With an API key saved before, connect right away; the timer page fills in once connected
         // This is the only message not caused by a user action: without a valid key the app can't do anything
@@ -59,6 +62,11 @@ public partial class MainWindowViewModel : ViewModelBase
     ///     setting the window must follow live goes through <see cref="SettingsViewModel" />, like Topmost
     /// </summary>
     public IApplicationSettings ApplicationSettings { get; }
+
+    /// <summary>
+    ///     The update entries of the More menu, see <see cref="UpdateViewModel" />.
+    /// </summary>
+    public UpdateViewModel Update { get; }
 
     /// <summary>
     ///     The main page, see <see cref="TimerViewModel" />.
@@ -170,7 +178,11 @@ public partial class MainWindowViewModel : ViewModelBase
         switch (e.PropertyName)
         {
             case nameof(IsBusy):
-                IsAnyPageBusy = Timer.IsBusy || Timer.Player.IsBusy || Timer.History.IsBusy || Settings.IsBusy;
+                IsAnyPageBusy = Timer.IsBusy
+                                || Timer.Player.IsBusy
+                                || Timer.History.IsBusy
+                                || Settings.IsBusy
+                                || Update.IsBusy;
                 break;
 
             // The timer page's shortcuts change when its edit sheet opens or closes, see TimerViewModel
