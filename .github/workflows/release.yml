@@ -1,0 +1,70 @@
+# Builds the Windows installer with Velopack and creates a GitHub release from it, when a v<version> tag is pushed.
+# The tag must match the version in src/Directory.Build.props
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  # Creating the release
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # Task 3.x, for the Taskfile
+      - uses: go-task/setup-task@v2
+
+      # vpk, from dotnet-tools.json
+      - run: dotnet tool restore
+
+      # A tag pushed without bumping the version would ship the previous version's number under a new tag
+      - name: Check the tag against the version
+        id: version
+        shell: bash
+        run: |
+          version=$(dotnet msbuild src/Werfer -getProperty:Version)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match the version $version in src/Directory.Build.props"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Test
+        run: dotnet test
+
+      - name: Publish and pack
+        run: task publish-win:velopack
+        env:
+          # For the download of the previous release, see the task
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+      # Fails if the tag already has a release: before running the workflow again for the same tag, delete the draft a
+      # failed run left behind
+      - name: Create the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          shopt -s nullglob
+          gh release create "$GITHUB_REF_NAME" \
+            --verify-tag \
+            --title "Werfer $VERSION" \
+            --generate-notes \
+            --draft \
+            .publish/releases/werfer-win-Setup.exe \
+            .publish/releases/werfer-win-Portable.zip \
+            .publish/releases/*-$VERSION-full.nupkg \
+            .publish/releases/*-$VERSION-delta.nupkg \
+            .publish/releases/releases.win.json \
+            .publish/releases/RELEASES

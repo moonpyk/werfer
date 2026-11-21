@@ -23,6 +23,38 @@ tasks:
       -p:TrimmerSingleWarn=false
       -o .publish/{{.DOTNET_WINDOWS_RID}}-aot
 
+  publish-win:velopack:
+    desc: Publishes the classic version, then packs it with Velopack (installer, portable zip, update packages)
+    vars:
+      # The one version, from src/Directory.Build.props
+      VERSION:
+        sh: dotnet msbuild src/Werfer -getProperty:Version
+      # Velopack installs to %LOCALAPPDATA%\<id>, deleted on uninstall. "werfer" is also the settings and logs folder
+      # (case doesn't matter on Windows), on purpose: uninstalling leaves nothing behind
+      VELOPACK_ID: '{{.VELOPACK_ID | default "werfer"}}'
+    cmds:
+      - task: publish-win:classic
+      # vpk refuses a version already in the folder, and keeps older ones there to build delta updates from
+      - rm -rf .publish/releases
+      # The latest published release, if any, so the pack adds a delta update from it: users then download only what
+      # changed. Nothing published yet is not an error; no network only costs the delta. GITHUB_TOKEN, when set (the
+      # release workflow does), lifts GitHub's 60 requests an hour for anonymous calls, shared on CI runners
+      - cmd: dotnet vpk download github
+          --repoUrl https://github.com/moonpyk/werfer
+          ${GITHUB_TOKEN:+--token $GITHUB_TOKEN}
+          --outputDir .publish/releases
+        ignore_error: true
+      - dotnet vpk pack
+        --packId {{.VELOPACK_ID}}
+        --packVersion {{.VERSION}}
+        --packTitle Werfer
+        --packDir .publish/{{.DOTNET_WINDOWS_RID}}
+        --mainExe Werfer.exe
+        --icon src/Werfer/Assets/Werfer.ico
+        --framework net10.0-x64-desktop
+        --runtime {{.DOTNET_WINDOWS_RID}}
+        --outputDir .publish/releases
+
   clean-pdb:
     desc: Cleans PDBs from publish directories
     cmds:

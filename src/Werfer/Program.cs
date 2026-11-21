@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Velopack;
 
 namespace Werfer;
 
@@ -10,6 +11,10 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // First thing: Velopack's installer and updater start the app with their own arguments (install, update,
+        // uninstall hooks), handled here before anything else runs. Does nothing on a normal start
+        VelopackApp.Build().Run();
+
         BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
     }
