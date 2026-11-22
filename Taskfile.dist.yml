@@ -32,10 +32,17 @@ tasks:
       # Velopack installs to %LOCALAPPDATA%\<id>, deleted on uninstall. "werfer" is also the settings and logs folder
       # (case doesn't matter on Windows), on purpose: uninstalling leaves nothing behind
       VELOPACK_ID: '{{.VELOPACK_ID | default "werfer"}}'
-      # Signed when both SIGN_PFX_PATH (a .pfx) and SIGN_PFX_PASSWORD are set, unsigned otherwise. vpk signs everything
-      # it ships, its own Update.exe and Setup.exe included. Timestamped, so the signature outlives the certificate.
-      # The password stays a shell variable, so Task prints $SIGN_PFX_PASSWORD with the command, not its value
-      VPK_SIGN_ARGS: '{{if and .SIGN_PFX_PATH .SIGN_PFX_PASSWORD}}--signParams "/fd sha256 /tr http://timestamp.digicert.com /td sha256 /f \"{{.SIGN_PFX_PATH}}\" /p $SIGN_PFX_PASSWORD"{{end}}'
+      # Signed with the certificate of SIGN_CERT_THUMBPRINT, in the user's certificate store, or else with
+      # SIGN_PFX_PATH (a .pfx) and SIGN_PFX_PASSWORD; unsigned when neither is set. vpk signs everything it ships, its
+      # own Update.exe and Setup.exe included. Timestamped, so the signature outlives the certificate.
+      # The thumbprint suits any password: through the .pfx, the password goes through Task's shell, vpk and signtool,
+      # and quotes, spaces or %^&! in it get mangled on the way. It stays a shell variable, so Task prints
+      # $SIGN_PFX_PASSWORD with the command, not its value
+      VPK_SIGN_PARAMS: /fd sha256 /tr http://timestamp.digicert.com /td sha256
+      VPK_SIGN_ARGS: >-
+        {{if .SIGN_CERT_THUMBPRINT}}--signParams "{{.VPK_SIGN_PARAMS}} /sha1 {{.SIGN_CERT_THUMBPRINT}}"
+        {{- else if and .SIGN_PFX_PATH .SIGN_PFX_PASSWORD}}--signParams "{{.VPK_SIGN_PARAMS}} /f \"{{.SIGN_PFX_PATH}}\" /p $SIGN_PFX_PASSWORD"
+        {{- end}}
     cmds:
       - task: publish-win:classic
       # vpk refuses a version already in the folder, and keeps older ones there to build delta updates from

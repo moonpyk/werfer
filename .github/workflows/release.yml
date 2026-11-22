@@ -42,8 +42,10 @@ jobs:
       - name: Test
         run: dotnet test
 
-      # The .pfx is stored base64 in a secret; written to the runner's temp folder, dropped with the runner
-      - name: Write the signing certificate
+      # The .pfx is stored base64 in a secret. Imported into the runner user's certificate store, dropped with the
+      # runner: signtool then finds it by thumbprint, the password never goes through a command line, which would
+      # mangle its special characters
+      - name: Import the signing certificate
         shell: pwsh
         env:
           SIGN_PFX_CONTENT: ${{ secrets.SIGN_PFX_CONTENT }}
@@ -55,16 +57,27 @@ jobs:
           }
           $path = Join-Path $env:RUNNER_TEMP "werfer.pfx"
           [IO.File]::WriteAllBytes($path, [Convert]::FromBase64String($env:SIGN_PFX_CONTENT))
-          "SIGN_PFX_PATH=$path" >> $env:GITHUB_ENV
+          $password = ConvertTo-SecureString $env:SIGN_PFX_PASSWORD -AsPlainText -Force
+          # The .pfx may hold the issuers' chain too: the signing certificate is the one with the private key
+          $cert = Import-PfxCertificate -FilePath $path -CertStoreLocation Cert:\CurrentUser\My -Password $password |
+            Where-Object HasPrivateKey | Select-Object -First 1
+          Remove-Item $path
+          if (-not $cert) { throw "The .pfx holds no certificate with a private key" }
+          "SIGN_CERT_THUMBPRINT=$($cert.Thumbprint)" >> $env:GITHUB_ENV
 
       - name: Publish and pack
         run: task publish-win:velopack
         env:
           # For the download of the previous release, see the task
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # With SIGN_PFX_PATH, set above: the task signs the binaries
-          SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
-        
+
+      # GitHub's runners are thrown away after the job, but the certificate leaves as soon as signing is done, even on
+      # failure: a self-hosted runner would otherwise keep it for the next jobs
+      - name: Remove the signing certificate
+        if: always() && env.SIGN_CERT_THUMBPRINT != ''
+        shell: pwsh
+        run: Remove-Item "Cert:\CurrentUser\My\$env:SIGN_CERT_THUMBPRINT"
+
       # Fails if the tag already has a release: before running the workflow again for the same tag, delete the draft a
       # failed run left behind
       - name: Create the release
