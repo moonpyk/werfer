@@ -160,6 +160,14 @@ public partial class ApplicationSettings : IApplicationSettings
     }
 
     /// <inheritdoc />
+    public string[] StrippedDescriptionPrefixes
+    {
+        // Null when the file holds null for it, the [] default only covers a missing key
+        get => _persisted.StrippedDescriptionPrefixes ?? [];
+        set => _persisted.StrippedDescriptionPrefixes = value;
+    }
+
+    /// <inheritdoc />
     public bool TrySave()
     {
         try
@@ -286,7 +294,7 @@ public partial class ApplicationSettings : IApplicationSettings
         public bool ConfirmClose { get; set; } = true;
 
         [JsonPropertyName("window:tray_minimize")]
-        public bool MinimizeToTray { get; set; } = false;
+        public bool MinimizeToTray { get; set; }
 
         [JsonPropertyName("timer:default_enabled")]
         public bool DefaultChoiceEnabled { get; set; }
@@ -313,6 +321,9 @@ public partial class ApplicationSettings : IApplicationSettings
         // Null until the user picks a day in the settings; until then the culture's first day is used, even if it changes
         [JsonPropertyName("history:week_start")]
         public DayOfWeek? WeekStart { get; set; }
+
+        [JsonPropertyName("description:strip_prefixes")]
+        public string[] StrippedDescriptionPrefixes { get; set; } = [];
     }
 
     // Nested, so it can access the private PersistedSettings. Source-generated, because NativeAOT has no reflection-based JSON

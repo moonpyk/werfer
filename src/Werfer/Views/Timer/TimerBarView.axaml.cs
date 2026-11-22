@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Werfer.ViewModels;
 
@@ -19,6 +20,41 @@ public partial class TimerBarView : UserControl
     private void OnDescriptionLostFocus(object? sender, RoutedEventArgs e)
     {
         _ = (DataContext as TimerPlayerViewModel)?.SaveDraftAsync();
+    }
+
+    // The settings' prefixes are removed from the pasted text: the box's own paste is cancelled, the text inserted here
+    private async void OnDescriptionPasting(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not TextBox box || DataContext is not TimerPlayerViewModel
+            {
+                HasDescriptionPrefixes: true
+            } player)
+        {
+            return;
+        }
+
+        var clipboard = TopLevel.GetTopLevel(box)?.Clipboard;
+
+        if (clipboard is null)
+        {
+            return;
+        }
+
+        e.Handled = true;
+
+        try
+        {
+            var pasted = await clipboard.TryGetTextAsync();
+
+            if (!string.IsNullOrEmpty(pasted))
+            {
+                box.SelectedText = player.StripDescriptionPrefixes(pasted).ReplaceLineEndings(box.NewLine);
+            }
+        }
+        catch (Exception)
+        {
+            // The clipboard can be held by another application: the paste is lost, as with a failed native paste
+        }
     }
 
     // Shows the current start each time, an edit left unapplied is dropped

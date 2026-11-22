@@ -160,6 +160,31 @@ public partial class SettingsViewModel : ViewModelBase
         ];
 
     /// <summary>
+    ///     Prefixes removed from a text pasted in the timer's description, one per line. The box binds it on lost focus,
+    ///     so it is saved once, not at each key
+    /// </summary>
+    public string DescriptionPrefixes
+    {
+        get => string.Join('\n', ApplicationSettings.StrippedDescriptionPrefixes);
+        set
+        {
+            string[] prefixes =
+            [
+                .. value.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            ];
+
+            if (prefixes.SequenceEqual(ApplicationSettings.StrippedDescriptionPrefixes))
+            {
+                return;
+            }
+
+            ApplicationSettings.StrippedDescriptionPrefixes = prefixes;
+            OnPropertyChanged();
+            Save();
+        }
+    }
+
+    /// <summary>
     ///     Asks for confirmation before closing the window. Saved as soon as it changes. The dialog's "Don't ask again"
     ///     also turns it off
     /// </summary>

@@ -18,6 +18,7 @@ internal sealed class FakeApplicationSettings : IApplicationSettings
     public double? WindowWidth { get; set; }
     public double? WindowHeight { get; set; }
     public DayOfWeek WeekStart { get; set; } = DayOfWeek.Monday;
+    public string[] StrippedDescriptionPrefixes { get; set; } = [];
 
     public bool TrySave()
     {

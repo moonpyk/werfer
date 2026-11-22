@@ -30,6 +30,7 @@
                 Grid.Row="1"
                 Text="{Binding Description}"
                 LostFocus="OnDescriptionLostFocus"
+                PastingFromClipboard="OnDescriptionPasting"
                 PlaceholderText="What are you working on?"
                 AcceptsReturn="True"
                 NewLine="&#10;"

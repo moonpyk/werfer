@@ -67,6 +67,11 @@ public interface IApplicationSettings
     DayOfWeek WeekStart { get; set; }
 
     /// <summary>
+    ///     Gets or sets the literal prefixes removed from a text pasted in the timer's description
+    /// </summary>
+    string[] StrippedDescriptionPrefixes { get; set; }
+
+    /// <summary>
     ///     Attempts to persist the current application settings.
     /// </summary>
     /// <remarks>

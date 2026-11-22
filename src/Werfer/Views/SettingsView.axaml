@@ -85,6 +85,23 @@
                 </ui:FASettingsExpanderItem>
             </ui:FASettingsExpander>
 
+            <ui:FASettingsExpander
+                Header="Prefixes removed on paste"
+                Description="Removed from the start of a text pasted in the description, one per line, case ignored">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="Clipboard" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpanderItem>
+                    <TextBox
+                        Text="{Binding DescriptionPrefixes, UpdateSourceTrigger=LostFocus}"
+                        PlaceholderText="https://your-company.atlassian.net/browse/"
+                        AcceptsReturn="True"
+                        NewLine="&#10;"
+                        MinHeight="80"
+                        VerticalContentAlignment="Top" />
+                </ui:FASettingsExpanderItem>
+            </ui:FASettingsExpander>
+
             <TextBlock Classes="section" Text="Window" />
             <ui:FASettingsExpander
                 Header="Always on top"

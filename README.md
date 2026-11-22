@@ -19,6 +19,13 @@ Werfer was born out of frustration. Hopefully it makes the people who use it a l
 The description being typed is saved first, so `Ctrl+Space` right after typing keeps it. The same list is on the
 About page, in the `…` menu.
 
+## Prefixes removed on paste
+
+The settings list prefixes, one per line, removed from the start of a text pasted in the timer's description. Case
+is ignored and they are plain text, not patterns. Handy to paste a Jira ticket URL and keep only its key: with
+`https://your-company.atlassian.net/browse/` in the list, pasting
+`https://your-company.atlassian.net/browse/PROJ-123` writes `PROJ-123`.
+
 ## Out of scope
 
 Werfer starts and stops entries, nothing more. These will not be added, whatever other desktop clients do:

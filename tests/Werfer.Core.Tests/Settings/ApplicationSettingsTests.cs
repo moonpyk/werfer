@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using Werfer.DataProtection;
@@ -19,6 +18,7 @@ public class ApplicationSettingsTests
             saved.MaxProjectChoices = 25;
             saved.DefaultProjectId = "p1";
             saved.DefaultTaskId = "t1";
+            saved.StrippedDescriptionPrefixes = ["PROJ-12 -", "[Feature]"];
 
             Assert.True(saved.TrySave());
 
@@ -29,10 +29,11 @@ public class ApplicationSettingsTests
             Assert.Equal(25, loaded.MaxProjectChoices);
             Assert.Equal("p1", loaded.DefaultProjectId);
             Assert.Equal("t1", loaded.DefaultTaskId);
+            Assert.Equal(["PROJ-12 -", "[Feature]"], loaded.StrippedDescriptionPrefixes);
             // Base64 in the file, so decoded: what was written must be the protected bytes, not the key's own
             using var file = JsonDocument.Parse(File.ReadAllText(Path.Combine(folder, "config.json")));
             Assert.NotEqual(
-                Encoding.UTF8.GetBytes("the-api-key"),
+                [.. "the-api-key"u8],
                 file.RootElement.GetProperty("api_key").GetBytesFromBase64()
             );
         }

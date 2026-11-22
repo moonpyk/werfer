@@ -144,6 +144,11 @@ public partial class TimerPlayerViewModel : ViewModelBase
     }
 
     /// <summary>
+    ///     True when the settings list prefixes to remove from a text pasted in the description.
+    /// </summary>
+    public bool HasDescriptionPrefixes => ApplicationSettings.StrippedDescriptionPrefixes.Length > 0;
+
+    /// <summary>
     ///     Indicates whether a time tracking entry is currently running.
     /// </summary>
     [ObservableProperty]
@@ -169,6 +174,14 @@ public partial class TimerPlayerViewModel : ViewModelBase
     public partial string? StartTime { get; set; }
 
     private bool CanToggle => !IsBusy;
+
+    /// <summary>
+    ///     Removes the settings' prefixes from a text pasted in the description, see <see cref="DescriptionPrefixes" />.
+    /// </summary>
+    public string StripDescriptionPrefixes(string pasted)
+    {
+        return DescriptionPrefixes.Strip(pasted, ApplicationSettings.StrippedDescriptionPrefixes);
+    }
 
     /// <summary>
     ///     Raised when the running entry has finished, stopped here or in another app. The history then reloads to show it.
