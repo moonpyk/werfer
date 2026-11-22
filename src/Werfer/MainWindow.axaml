@@ -91,15 +91,24 @@
             <ui:FANavigationView.Content>
                 <Panel>
                     <Panel
-                        IsVisible="{Binding Page, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:AppPageEnum.Timer}}">
+                        IsVisible="{Binding Page, 
+                        Converter={x:Static ObjectConverters.Equal}, 
+                        ConverterParameter={x:Static vm:AppPageEnum.Timer}
+                    }">
                         <views:TimerView DataContext="{Binding Timer}" />
                     </Panel>
                     <Panel
-                        IsVisible="{Binding Page, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:AppPageEnum.Settings}}">
+                        IsVisible="{Binding Page, 
+                        Converter={x:Static ObjectConverters.Equal}, 
+                        ConverterParameter={x:Static vm:AppPageEnum.Settings}
+                    }">
                         <views:SettingsView DataContext="{Binding Settings}" />
                     </Panel>
                     <Panel
-                        IsVisible="{Binding Page, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:AppPageEnum.About}}">
+                        IsVisible="{Binding Page, 
+                        Converter={x:Static ObjectConverters.Equal}, 
+                        ConverterParameter={x:Static vm:AppPageEnum.About}
+                    }">
                         <views:AboutView />
                     </Panel>
                 </Panel>
