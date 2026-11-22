@@ -11,7 +11,10 @@ namespace Werfer.Clockify;
 /// </summary>
 internal sealed class FakeClockifyApiClient : IClockifyApiClient
 {
-    public User User { get; } = new() { Id = "u1", ActiveWorkspace = "w1" };
+    /// <summary>
+    ///     The user the API key belongs to; replace it to connect another account
+    /// </summary>
+    public User User { get; set; } = new() { Id = "u1", ActiveWorkspace = "w1" };
 
     /// <summary>
     ///     What the in-progress query returns, null when nothing runs

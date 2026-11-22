@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Options;
 using Werfer.Clockify;
 using Werfer.Clockify.Models;
-using Werfer.Clockify.ViewModels;
 
 namespace Werfer.Services;
 
@@ -141,6 +140,70 @@ public class TimerDraftTests
 
         Assert.NotNull(draft.Choice);
         Assert.Equal("t1", draft.Choice.Task.Id);
+    }
+
+    [Fact]
+    public async Task Connect_AnotherAccount_DraftReadsEmptyAndStartsNothing()
+    {
+        var (client, service, draft) = await StoppedWithChoicesAsync(new FakeApplicationSettings());
+        draft.Choice = draft.Choices[0];
+        draft.Description = "JIRA-1";
+
+        // Another account, no timer running: what was picked and typed belonged to the previous one
+        client.User = new User { Id = "u2", ActiveWorkspace = "w2" };
+        await service.ConnectAsync("other-key", TestContext.Current.CancellationToken);
+
+        Assert.Null(draft.Choice);
+        Assert.Null(draft.Description);
+        Assert.False(await draft.StartAsync(TestContext.Current.CancellationToken));
+        Assert.Empty(client.Creates);
+    }
+
+    [Fact]
+    public async Task Connect_AnotherAccount_PickingAProject_DoesNotBringBackTheOldDescription()
+    {
+        var (client, service, draft) = await StoppedWithChoicesAsync(new FakeApplicationSettings());
+        draft.Description = "JIRA-1";
+
+        client.User = new User { Id = "u2", ActiveWorkspace = "w2" };
+        await service.ConnectAsync("other-key", TestContext.Current.CancellationToken);
+        draft.Choice = draft.Choices[0];
+
+        Assert.Null(draft.Description);
+    }
+
+    [Fact]
+    public async Task Connect_BackToTheFirstAccount_TakesItsRunningEntryAgain()
+    {
+        var (client, service, draft) = await ConnectedAsync(RunningEntry());
+        var first = client.User;
+        var running = client.Running;
+
+        // To another account, with nothing running, where something is typed
+        client.User = new User { Id = "u2", ActiveWorkspace = "w2" };
+        client.Running = null;
+        await service.ConnectAsync("other-key", TestContext.Current.CancellationToken);
+        draft.Description = "typed on the second account";
+
+        // Back to the first one, its entry still running: left empty, the next save would erase its description
+        client.User = first;
+        client.Running = running;
+        await service.ConnectAsync("api-key", TestContext.Current.CancellationToken);
+
+        Assert.Equal("JIRA-1", draft.Description);
+    }
+
+    [Fact]
+    public async Task Start_PickAfterReconnectingTheSameAccount_StartsIt()
+    {
+        var (client, service, draft) = await StoppedWithChoicesAsync(new FakeApplicationSettings());
+        draft.Choice = draft.Choices[1];
+
+        // Same account: the new session has the same pairs, the pick still stands
+        await service.ConnectAsync("api-key", TestContext.Current.CancellationToken);
+
+        Assert.True(await draft.StartAsync(TestContext.Current.CancellationToken));
+        Assert.Equal("t2", Assert.Single(client.Creates).TaskId);
     }
 
     [Fact]

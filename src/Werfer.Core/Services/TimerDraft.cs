@@ -19,6 +19,9 @@ public class TimerDraft
     // Id of the entry the draft last took its values from: the same id again means no reload
     private string? _loadedEntryId;
 
+    // Id of the user the draft's values were set for
+    private string? _ownerId;
+
     /// <summary>
     ///     Creates the draft. It takes the values of each new running entry from then on.
     /// </summary>
@@ -32,7 +35,9 @@ public class TimerDraft
 
         Service.RunningEntryChanged += (_, _) =>
         {
-            if (Service.RunningEntry is { } running && running.Id != _loadedEntryId)
+            // Also when the draft isn't this user's: back on a previous account, its entry may still be the one loaded
+            // last, but the draft was emptied for the other account since
+            if (Service.RunningEntry is { } running && (running.Id != _loadedEntryId || !IsOwned))
             {
                 Load(running);
             }
@@ -50,14 +55,50 @@ public class TimerDraft
 
     /// <summary>
     ///     The project and task picked. Null when the running entry's are not in <see cref="Choices" /> (archived
-    ///     project, no task); a save then leaves the entry's project and task unchanged.
+    ///     project, no task); a save then leaves the entry's project and task unchanged. Belongs to the user connected
+    ///     when it was set, see <see cref="Own" />.
     /// </summary>
-    public ProjectTaskChoice? Choice { get; set; }
+    public ProjectTaskChoice? Choice
+    {
+        get => IsOwned ? field : null;
+        set
+        {
+            Own();
+            field = value;
+        }
+    }
 
     /// <summary>
-    ///     Free text, usually a Jira ticket key.
+    ///     Free text, usually a Jira ticket key. Belongs to the user connected when it was set, see <see cref="Own" />.
     /// </summary>
-    public string? Description { get; set; }
+    public string? Description
+    {
+        get => IsOwned ? field : null;
+        set
+        {
+            Own();
+            field = value;
+        }
+    }
+
+    // False once another user is connected: the values were another account's, they read as empty
+    private bool IsOwned => _ownerId == Service.User?.Id;
+
+    /// <summary>
+    ///     Gives the draft to the user connected now, before a value is set. When that is another user, the previous
+    ///     user's values are dropped first: none of them may be shown, saved or started for this account.
+    /// </summary>
+    private void Own()
+    {
+        if (IsOwned)
+        {
+            return;
+        }
+
+        _ownerId = Service.User?.Id;
+        Choice = null;
+        Description = null;
+    }
 
     /// <summary>
     ///     Raised when the draft changes its values by itself: a running entry loaded, cleared, continued. Not raised

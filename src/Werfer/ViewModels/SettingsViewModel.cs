@@ -213,6 +213,8 @@ public partial class SettingsViewModel : ViewModelBase
     {
         return WithBusyIndicator(async () =>
         {
+            var previousUserId = TimeTracking.User?.Id;
+
             try
             {
                 await TimeTracking.ConnectAsync(ApiKey);
@@ -226,6 +228,15 @@ public partial class SettingsViewModel : ViewModelBase
             NeedsAttention = false;
 
             ApplicationSettings.ApiKey = ApiKey;
+
+            // Another account: the default project was the previous one's, back to the last used project and task
+            if (previousUserId is not null && previousUserId != TimeTracking.User?.Id)
+            {
+                ApplicationSettings.DefaultProjectId = null;
+                ApplicationSettings.DefaultTaskId = null;
+                OnPropertyChanged(nameof(DefaultChoice));
+            }
+
             Save();
         });
     }

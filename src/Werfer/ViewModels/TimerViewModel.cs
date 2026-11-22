@@ -263,6 +263,8 @@ public partial class TimerViewModel : ViewModelBase
     // loading
     private void OnConnected(object? sender, EventArgs e)
     {
+        // An edit or split left open (Ctrl+, reaches the settings over it) may hold another account's entry
+        CloseSheet();
         _ = History.LoadAsync();
     }
 

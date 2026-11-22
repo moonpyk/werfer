@@ -14,11 +14,11 @@ namespace Werfer.ViewModels;
 /// </summary>
 public partial class TimerPlayerViewModel : ViewModelBase
 {
-    // Id of the running entry we last saw. When it changes, that entry has finished: see EntryFinished
-    private string? _runningId;
-
     // The session ProjectChoices was built from, see ProjectChoices
     private Session? _choicesSession;
+
+    // Id of the running entry we last saw. When it changes, that entry has finished: see EntryFinished
+    private string? _runningId;
     private IDisposable? _ticker;
 
     /// <summary>
@@ -39,11 +39,12 @@ public partial class TimerPlayerViewModel : ViewModelBase
         Draft.Changed += (_, _) => OnDraftChanged();
         // The running entry can also change from another screen: the bar updates with it
         TimeTracking.RunningEntryChanged += (_, _) => OnRunningEntryChanged();
-        // A new session, new projects: the bindings read the list again, which rebuilds it
+        // A new session, new projects: the bindings read the list again, which rebuilds it. The fields too: for
+        // another account, the draft reads as empty
         TimeTracking.Connected += (_, _) =>
         {
             OnPropertyChanged(nameof(ProjectChoices));
-            OnPropertyChanged(nameof(SelectedChoice));
+            OnDraftChanged();
         };
     }
 
@@ -245,8 +246,7 @@ public partial class TimerPlayerViewModel : ViewModelBase
             return Task.CompletedTask;
         }
 
-        return WithBusyIndicator(
-            () => TimeTracking.UpdateRunningEntryStartAsync(start)
+        return WithBusyIndicator(() => TimeTracking.UpdateRunningEntryStartAsync(start)
         );
     }
 

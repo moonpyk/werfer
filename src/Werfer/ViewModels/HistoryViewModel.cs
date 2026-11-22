@@ -16,6 +16,9 @@ public partial class HistoryViewModel : ViewModelBase
     // Incremented by each load, so only the latest load shows its result, see LoadImplAsync
     private int _loadGeneration;
 
+    // Id of the user whose entries Days shows, see LoadImplAsync
+    private string? _shownUserId;
+
     private TimeSpan _weekFinished;
 
     /// <summary>
@@ -118,6 +121,16 @@ public partial class HistoryViewModel : ViewModelBase
         if (Page.Player.ProjectChoices is not { } choices)
         {
             return;
+        }
+
+        // Another account: the lines shown are the previous one's, emptied before the request so none can be
+        // continued, edited or deleted while this account's entries load
+        if (TimeTracking.User?.Id != _shownUserId)
+        {
+            _shownUserId = TimeTracking.User?.Id;
+            Days = null;
+            _weekFinished = TimeSpan.Zero;
+            UpdateWeekTotal();
         }
 
         var zone = TimeZoneInfo.Local;
