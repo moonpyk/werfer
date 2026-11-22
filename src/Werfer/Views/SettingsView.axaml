@@ -34,16 +34,14 @@
                                 Grid.Column="0"
                                 NavigateUri="https://app.clockify.me/manage-api-keys"
                                 VerticalAlignment="Center"
-                                Content="Get an API key"
-                                />
+                                Content="Get an API key" />
                             <Panel Grid.Column="1" />
                             <Button
                                 Grid.Column="2"
                                 Command="{Binding ConnectCommand}"
                                 IsEnabled="{Binding !IsBusy}"
-                                IsDefault="True" 
-                                Content="Save and connect">
-                            </Button>
+                                IsDefault="True"
+                                Content="Save and connect" />
                         </Grid>
                     </StackPanel>
                 </ui:FASettingsExpanderItem>
@@ -100,7 +98,7 @@
             </ui:FASettingsExpander>
             <ui:FASettingsExpander
                 Header="Ask before closing"
-                Description="A description still being typed may not reach Clockify">
+                Description="Avoids quitting Werfer by accident">
                 <ui:FASettingsExpander.IconSource>
                     <ui:FASymbolIconSource Symbol="Dismiss" />
                 </ui:FASettingsExpander.IconSource>

@@ -14,8 +14,6 @@ namespace Werfer;
 
 public partial class MainWindow : FAAppWindow
 {
-    private IApplicationSettings Settings { get; } = null!;
-
     // True once the user clicked Quit in the confirmation dialog, see ConfirmCloseAsync
     private bool _closeConfirmed;
 
@@ -54,8 +52,10 @@ public partial class MainWindow : FAAppWindow
         );
     }
 
+    private IApplicationSettings Settings { get; } = null!;
+
     private MainWindowViewModel? ViewModel { get; }
-    
+
     private void Initialize()
     {
         InitializeComponent();
@@ -65,7 +65,7 @@ public partial class MainWindow : FAAppWindow
         // Same page as the one MainWindowViewModel starts on
         Navigation.SelectedItem = TimerItem;
     }
-    
+
     public void ShowFromTray()
     {
         Show();
@@ -84,7 +84,7 @@ public partial class MainWindow : FAAppWindow
         base.OnPropertyChanged(change);
 
         if (
-            change.Property == WindowStateProperty && 
+            change.Property == WindowStateProperty &&
             WindowState == WindowState.Minimized &&
             Settings.MinimizeToTray
         )
@@ -96,13 +96,15 @@ public partial class MainWindow : FAAppWindow
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         // Our own flag, not e.IsProgrammatic: FAAppWindow's close button also calls Close() from code.
-        // No dialog when Windows shuts down, it must not wait
-        if (ViewModel is { ApplicationSettings.ConfirmClose: true }
+        // No dialog and no draft save when Windows shuts down, it must not wait
+        if (ViewModel is not null
             && !_closeConfirmed
             && e.CloseReason != WindowCloseReason.OSShutdown)
         {
             e.Cancel = true;
-            _ = ConfirmCloseAsync(ViewModel.ApplicationSettings);
+            _ = ViewModel.ApplicationSettings.ConfirmClose
+                ? ConfirmCloseAsync(ViewModel.ApplicationSettings)
+                : SaveDraftAndCloseAsync(ViewModel);
             return;
         }
 
@@ -124,7 +126,7 @@ public partial class MainWindow : FAAppWindow
         base.OnClosing(e);
     }
 
-    // Opening the dialog takes the focus away from the description box, which sends any description being typed
+    // Guards against closing by accident. Quit still sends the description being typed, see SaveDraftAndCloseAsync
     private async Task ConfirmCloseAsync(IApplicationSettings settings)
     {
         var dontAskAgain = new CheckBox
@@ -141,7 +143,7 @@ public partial class MainWindow : FAAppWindow
                 Spacing = 12,
                 Children =
                 {
-                    new TextBlock { Text = "A description still being typed may not reach Clockify." },
+                    new TextBlock { Text = "A running timer keeps running on Clockify." },
                     dontAskAgain
                 }
             },
@@ -160,7 +162,26 @@ public partial class MainWindow : FAAppWindow
             settings.ConfirmClose = false;
         }
 
-        // Close again: OnClosing sees the flag, saves the window and settings, and doesn't ask
+        if (ViewModel is not null)
+        {
+            await SaveDraftAndCloseAsync(ViewModel);
+        }
+    }
+
+    // Sends a description still being typed before the process exits and cuts the request. Capped, so a slow
+    // network doesn't keep the window open; errors are already shown and logged by SaveDraftAsync
+    private async Task SaveDraftAndCloseAsync(MainWindowViewModel vm)
+    {
+        try
+        {
+            await vm.Timer.Player.SaveDraftAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        catch (TimeoutException)
+        {
+            // Closes anyway, the description may not reach Clockify
+        }
+
+        // Close again: OnClosing sees the flag, saves the window and settings, and doesn't wait again
         _closeConfirmed = true;
         Close();
     }
