@@ -266,6 +266,50 @@ public class TimeTrackingServiceTests
     }
 
     [Fact]
+    public async Task Connect_PublishesTheProjectsActiveTasks()
+    {
+        var client = new FakeClockifyApiClient();
+        client.Projects.Add(new Project
+        {
+            Id = "p1",
+            Tasks =
+            [
+                new ProjectTask { Id = "t1", Status = "ACTIVE" },
+                new ProjectTask { Id = "t2", Status = "DONE" }
+            ]
+        });
+        var service = new TimeTrackingService(client, Options.Create(new ClockifyOptions()));
+
+        await service.ConnectAsync("api-key", TestContext.Current.CancellationToken);
+
+        Assert.NotNull(service.Session);
+        Assert.Equal("w1", service.Session.WorkspaceId);
+        Assert.Equal("t1", Assert.Single(service.Session.Choices).Task.Id);
+    }
+
+    [Fact]
+    public async Task Connect_ProjectsFail_KeepsThePreviousSession()
+    {
+        var (client, service) = await ConnectedWithRunningEntryAsync();
+        var session = service.Session;
+        var running = service.RunningEntry;
+        var connected = 0;
+        service.Connected += (_, _) => connected++;
+
+        // The user is found, then the network drops: no half-connected state with a user but no projects
+        client.ProjectsException = new HttpRequestException("Network down");
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => service.ConnectAsync(
+            "other-key",
+            TestContext.Current.CancellationToken
+        ));
+
+        Assert.Same(session, service.Session);
+        Assert.Same(running, service.RunningEntry);
+        Assert.Equal(0, connected);
+    }
+
+    [Fact]
     public async Task GetTimeEntriesSince_PageSizeCapped_ReadsEveryPage()
     {
         var (client, service) = await ConnectedWithRunningEntryAsync();

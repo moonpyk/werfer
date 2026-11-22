@@ -259,16 +259,11 @@ public partial class TimerViewModel : ViewModelBase
         });
     }
 
-    // Connected, at startup or from the settings page: load the projects first, then the history, which needs
-    // their names
+    // Connected, at startup or from the settings page: the session came with its projects, the history only needs
+    // loading
     private void OnConnected(object? sender, EventArgs e)
     {
-        _ = WithBusyIndicator(async () =>
-        {
-            await Player.LoadProjectChoicesAsync();
-            History.Choices = Player.ProjectChoices;
-            await History.LoadImplAsync();
-        });
+        _ = History.LoadAsync();
     }
 
     // An entry finished, stopped here or in another app: reload the history to show it

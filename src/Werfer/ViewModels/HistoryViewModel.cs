@@ -53,11 +53,6 @@ public partial class HistoryViewModel : ViewModelBase
     private TimerViewModel Page { get; }
 
     /// <summary>
-    ///     Every project and task, to show the names of the entries' ones. Null until connected; nothing loads until then
-    /// </summary>
-    public List<ProjectTaskViewModel>? Choices { get; set; }
-
-    /// <summary>
     ///     Finished entries of the current week by day, null until loaded
     /// </summary>
     [ObservableProperty]
@@ -119,7 +114,8 @@ public partial class HistoryViewModel : ViewModelBase
     /// </summary>
     public async Task LoadImplAsync()
     {
-        if (Choices is null)
+        // The timer bar's projects, to show the names of the entries' ones. Null until connected; nothing loads until then
+        if (Page.Player.ProjectChoices is not { } choices)
         {
             return;
         }
@@ -148,7 +144,7 @@ public partial class HistoryViewModel : ViewModelBase
         [
             .. entries
                 .GroupBy(zone)
-                .Select(d => new TimeEntryDayViewModel(d, today, Choices, Page))
+                .Select(d => new TimeEntryDayViewModel(d, today, choices, Page))
         ];
 
         _weekFinished = entries.Sum();

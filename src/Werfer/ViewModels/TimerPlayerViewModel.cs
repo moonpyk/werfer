@@ -16,6 +16,9 @@ public partial class TimerPlayerViewModel : ViewModelBase
 {
     // Id of the running entry we last saw. When it changes, that entry has finished: see EntryFinished
     private string? _runningId;
+
+    // The session ProjectChoices was built from, see ProjectChoices
+    private Session? _choicesSession;
     private IDisposable? _ticker;
 
     /// <summary>
@@ -36,6 +39,12 @@ public partial class TimerPlayerViewModel : ViewModelBase
         Draft.Changed += (_, _) => OnDraftChanged();
         // The running entry can also change from another screen: the bar updates with it
         TimeTracking.RunningEntryChanged += (_, _) => OnRunningEntryChanged();
+        // A new session, new projects: the bindings read the list again, which rebuilds it
+        TimeTracking.Connected += (_, _) =>
+        {
+            OnPropertyChanged(nameof(ProjectChoices));
+            OnPropertyChanged(nameof(SelectedChoice));
+        };
     }
 
     private IApplicationSettings ApplicationSettings { get; }
@@ -47,10 +56,32 @@ public partial class TimerPlayerViewModel : ViewModelBase
     public TimerDraft Draft { get; }
 
     /// <summary>
-    ///     Every project and task the user can pick. Null until connected; the timer bar is disabled until then.
+    ///     Every project and task the user can pick, the session's, with their colors. Null until connected; the timer
+    ///     bar is disabled until then. Built from the current session on read, so it never lags behind it, whatever
+    ///     order the session's events are handled in.
     /// </summary>
-    [ObservableProperty]
-    public partial List<ProjectTaskViewModel>? ProjectChoices { get; private set; }
+    public List<ProjectTaskViewModel>? ProjectChoices
+    {
+        get
+        {
+            if (!ReferenceEquals(TimeTracking.Session, _choicesSession))
+            {
+                _choicesSession = TimeTracking.Session;
+                field = _choicesSession is null
+                    ? null
+                    :
+                    [
+                        .. _choicesSession.Choices
+                            .Select(pt => new ProjectTaskViewModel(pt))
+                            // Projects sharing a color end up next to each other in the list
+                            .OrderBy(c => c.Project.Color, StringComparer.InvariantCultureIgnoreCase)
+                            .ThenBy(c => c.ToString(), StringComparer.CurrentCultureIgnoreCase)
+                    ];
+            }
+
+            return field;
+        }
+    }
 
     /// <summary>
     ///     Fills the project box with the matches of what is typed. Limited by the MaxProjectChoices setting, because the
@@ -69,10 +100,13 @@ public partial class TimerPlayerViewModel : ViewModelBase
     /// </summary>
     public ProjectTaskViewModel? SelectedChoice
     {
-        get => Draft.Choice as ProjectTaskViewModel;
+        // Looked up by id: the draft holds the session's plain choices, the box this list's view models
+        get => Draft.Choice is { } choice
+            ? ProjectChoices?.Find(c => c.Project.Id == choice.Project.Id && c.Task.Id == choice.Task.Id)
+            : null;
         set
         {
-            if (Equals(Draft.Choice, value))
+            if (Equals(SelectedChoice, value))
             {
                 return;
             }
@@ -139,23 +173,6 @@ public partial class TimerPlayerViewModel : ViewModelBase
     ///     Raised when the running entry has finished, stopped here or in another app. The history then reloads to show it.
     /// </summary>
     public event EventHandler? EntryFinished;
-
-    /// <summary>
-    ///     Loads every project and task the user can pick. The draft then finds the running entry's project and task in it.
-    /// </summary>
-    public async Task LoadProjectChoicesAsync()
-    {
-        ProjectChoices =
-        [
-            .. (await TimeTracking.GetProjectTasksAsync())
-            .Select(pt => new ProjectTaskViewModel(pt))
-            // Projects sharing a color end up next to each other in the list
-            .OrderBy(c => c.Project.Color, StringComparer.InvariantCultureIgnoreCase)
-            .ThenBy(c => c.ToString(), StringComparer.CurrentCultureIgnoreCase)
-        ];
-
-        Draft.Choices = ProjectChoices;
-    }
 
     /// <summary>
     ///     Sends the fields to the running entry, with the busy indicator. See <see cref="TimerDraft.SaveAsync" />.

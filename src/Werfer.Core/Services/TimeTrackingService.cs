@@ -5,7 +5,6 @@ using Refit;
 using Werfer.Clockify;
 using Werfer.Clockify.Models;
 using Werfer.Clockify.Requests;
-using Werfer.Clockify.ViewModels;
 
 namespace Werfer.Services;
 
@@ -28,13 +27,16 @@ public class TimeTrackingService(
     private IClockifyApiClient Client { get; } = client;
     private IOptions<ClockifyOptions> Options { get; } = options;
 
-    public User? User { get; private set; }
+    /// <summary>
+    ///     What the last successful connection loaded, null until then. Replaced whole by each connection, see
+    ///     <see cref="Session" />.
+    /// </summary>
+    public Session? Session { get; private set; }
 
     /// <summary>
-    ///     The unique identifier for the active workspace, representing the context in which
-    ///     time entries and projects are managed.
+    ///     The connected user, null until connected.
     /// </summary>
-    public string WorkspaceId { get; private set; } = string.Empty;
+    public User? User => Session?.User;
 
     /// <summary>
     ///     The entry currently being timed, null when the timer is stopped.
@@ -49,7 +51,7 @@ public class TimeTrackingService(
         }
     }
 
-    private User CurrentUser => User ?? throw new InvalidOperationException("Not connected to Clockify");
+    private Session CurrentSession => Session ?? throw new InvalidOperationException("Not connected to Clockify");
 
     /// <summary>
     ///     Raised whenever <see cref="RunningEntry" /> is replaced, started, updated or stopped.
@@ -57,12 +59,14 @@ public class TimeTrackingService(
     public event EventHandler? RunningEntryChanged;
 
     /// <summary>
-    ///     Raised after a successful <see cref="ConnectAsync" />, once the user, workspace and running entry are known.
+    ///     Raised after a successful <see cref="ConnectAsync" />, once <see cref="Session" /> and the running entry are
+    ///     published.
     /// </summary>
     public event EventHandler? Connected;
 
     /// <summary>
-    ///     Applies the API key, loads the user and picks up a time entry already running on Clockify.
+    ///     Applies the API key, loads the user, the projects and the entry already running on Clockify, then publishes
+    ///     them. If any of it fails, nothing is published: the previous session, its key and its running entry stay.
     /// </summary>
     public Task<User> ConnectAsync(string apiKey, CancellationToken ctk = default)
     {
@@ -72,24 +76,28 @@ public class TimeTrackingService(
             var previousKey = Options.Value.ApiKey;
             Options.Value.ApiKey = apiKey.Trim();
 
+            Session session;
+            TimeEntry? running;
+
             try
             {
-                User = await Client.GetCurrentUserAsync(ctk);
+                session = await Session.LoadAsync(Client, ctk);
+                running = await GetRunningEntryAsync(session, ctk);
             }
             catch
             {
-                // A rejected key must not replace the key the current session (and its running timer) uses
+                // A failed connection must not replace the key the current session (and its running timer) uses
                 Options.Value.ApiKey = previousKey;
                 throw;
             }
 
-            WorkspaceId = User.ActiveWorkspace ?? User.DefaultWorkspace ?? string.Empty;
-
-            await LoadRunningEntryAsync(ctk);
+            // Session first: whoever handles RunningEntryChanged finds the new session's projects
+            Session = session;
+            RunningEntry = running;
 
             Connected?.Invoke(this, EventArgs.Empty);
 
-            return User;
+            return session.User;
         }, ctk);
     }
 
@@ -98,22 +106,25 @@ public class TimeTrackingService(
     /// </summary>
     public Task RefreshRunningEntryAsync(CancellationToken ctk = default)
     {
-        return ExclusiveAsync(() => LoadRunningEntryAsync(ctk), ctk);
+        return ExclusiveAsync(async () =>
+        {
+            RunningEntry = await GetRunningEntryAsync(CurrentSession, ctk);
+        }, ctk);
     }
 
-    private async Task LoadRunningEntryAsync(CancellationToken ctk)
+    private async Task<TimeEntry?> GetRunningEntryAsync(Session session, CancellationToken ctk)
     {
         // Asks for the in-progress entry only: the latest entry by start time may be a finished one added by hand
         var last = (
             await Client.GetTimeEntriesForUserAsync(
-                WorkspaceId,
-                CurrentUser.Id,
+                session.WorkspaceId,
+                session.User.Id,
                 inProgress: true,
                 ctk: ctk
             )
         ).FirstOrDefault();
 
-        RunningEntry = last?.TimeInterval is { End: null } ? last : null;
+        return last?.TimeInterval is { End: null } ? last : null;
     }
 
     /// <summary>
@@ -123,8 +134,8 @@ public class TimeTrackingService(
     {
         // Read only, so no lock: it would wait behind a start or stop for no reason
         return Client.GetTimeEntriesForUserAsync(
-            WorkspaceId,
-            CurrentUser.Id,
+            CurrentSession.WorkspaceId,
+            CurrentSession.User.Id,
             start,
             ctk: ctk
         );
@@ -137,8 +148,8 @@ public class TimeTrackingService(
     {
         // One page of one entry: Clockify serves the most recent first
         using var response = await Client.GetRawTimeEntriesForUserAsync(
-            WorkspaceId,
-            CurrentUser.Id,
+            CurrentSession.WorkspaceId,
+            CurrentSession.User.Id,
             page: 1,
             pageSize: 1,
             ctk: ctk
@@ -155,7 +166,7 @@ public class TimeTrackingService(
     {
         foreach (var id in ids)
         {
-            await Client.DeleteTimeEntryAsync(WorkspaceId, id, ctk);
+            await Client.DeleteTimeEntryAsync(CurrentSession.WorkspaceId, id, ctk);
         }
     }
 
@@ -173,7 +184,7 @@ public class TimeTrackingService(
 
             try
             {
-                await Client.DeleteTimeEntryAsync(WorkspaceId, running.Id, ctk);
+                await Client.DeleteTimeEntryAsync(CurrentSession.WorkspaceId, running.Id, ctk);
             }
             catch (ApiException e) when (e.StatusCode == HttpStatusCode.NotFound)
             {
@@ -182,26 +193,6 @@ public class TimeTrackingService(
 
             RunningEntry = null;
         }, ctk);
-    }
-
-    /// <summary>
-    ///     Lists the (project, task) pairs a time entry can be started on, active tasks of non-archived projects only.
-    /// </summary>
-    public async Task<List<ProjectTaskChoice>> GetProjectTasksAsync(CancellationToken ctk = default)
-    {
-        var projects = await Client.GetProjectsAsync(
-            WorkspaceId,
-            false,
-            true,
-            ctk
-        );
-
-        return (
-            from p in projects
-            from pt in p.Tasks ?? []
-            where pt.Status == "ACTIVE"
-            select new ProjectTaskChoice(p, pt)
-        ).ToList();
     }
 
     /// <summary>
@@ -216,7 +207,7 @@ public class TimeTrackingService(
     {
         return ExclusiveAsync(async () =>
         {
-            RunningEntry = await Client.CreateTimeEntryAsync(WorkspaceId, new CreateTimeEntryRequest
+            RunningEntry = await Client.CreateTimeEntryAsync(CurrentSession.WorkspaceId, new CreateTimeEntryRequest
             {
                 Start = DateTimeOffset.UtcNow,
                 ProjectId = projectId,
@@ -232,10 +223,12 @@ public class TimeTrackingService(
         {
             try
             {
-                await Client.StopActiveTimeEntryAsync(WorkspaceId, CurrentUser.Id, new StopTimeEntryRequest
-                {
-                    End = DateTimeOffset.UtcNow
-                }, ctk);
+                await Client.StopActiveTimeEntryAsync(
+                    CurrentSession.WorkspaceId,
+                    CurrentSession.User.Id,
+                    new StopTimeEntryRequest { End = DateTimeOffset.UtcNow },
+                    ctk
+                );
             }
             catch (ApiException e) when (e.StatusCode == HttpStatusCode.NotFound)
             {
@@ -309,14 +302,7 @@ public class TimeTrackingService(
 
         // Read it again: it may have been stopped or edited in another app, and a PUT without an end would restart it.
         // Through the in-progress query, not GET /time-entries/{id}: Clockify answered that one with 403 Forbidden
-        var current = (
-            await Client.GetTimeEntriesForUserAsync(
-                WorkspaceId,
-                CurrentUser.Id,
-                inProgress: true,
-                ctk: ctk
-            )
-        ).FirstOrDefault();
+        var current = await GetRunningEntryAsync(CurrentSession, ctk);
 
         // Nothing runs anymore, or another entry was started since
         if (current?.Id != running.Id || current.TimeInterval is not { End: null })
@@ -328,15 +314,20 @@ public class TimeTrackingService(
         // Clockify's update is a full replace, so every field we know about is resent
         // shortcut: custom field values aren't read nor resent, so an update clears them; read and resend Clockify's
         // customFieldValues if the workspace starts using them
-        RunningEntry = await Client.UpdateTimeEntryAsync(WorkspaceId, current.Id, new CreateTimeEntryRequest
-        {
-            Start = start ?? current.TimeInterval.Start,
-            ProjectId = projectId,
-            TaskId = taskId,
-            Billable = current.Billable,
-            TagIds = current.TagIds,
-            Description = description
-        }, ctk);
+        RunningEntry = await Client.UpdateTimeEntryAsync(
+            CurrentSession.WorkspaceId,
+            current.Id,
+            new CreateTimeEntryRequest
+            {
+                Start = start ?? current.TimeInterval.Start,
+                ProjectId = projectId,
+                TaskId = taskId,
+                Billable = current.Billable,
+                TagIds = current.TagIds,
+                Description = description
+            },
+            ctk
+        );
     }
 
     /// <summary>
@@ -352,16 +343,21 @@ public class TimeTrackingService(
     )
     {
         // Clockify's update is a full replace, see UpdateRunningEntryCoreAsync
-        return ExclusiveAsync(() => Client.UpdateTimeEntryAsync(WorkspaceId, entry.Id, new CreateTimeEntryRequest
-        {
-            Start = range.Start,
-            End = range.End,
-            ProjectId = projectId,
-            TaskId = taskId,
-            Billable = entry.Billable,
-            TagIds = entry.TagIds,
-            Description = Normalize(description)
-        }, ctk), ctk);
+        return ExclusiveAsync(() => Client.UpdateTimeEntryAsync(
+            CurrentSession.WorkspaceId,
+            entry.Id,
+            new CreateTimeEntryRequest
+            {
+                Start = range.Start,
+                End = range.End,
+                ProjectId = projectId,
+                TaskId = taskId,
+                Billable = entry.Billable,
+                TagIds = entry.TagIds,
+                Description = Normalize(description)
+            },
+            ctk
+        ), ctk);
     }
 
     /// <summary>
@@ -385,8 +381,9 @@ public class TimeTrackingService(
         // created twice
         return ExclusiveAsync(async () =>
         {
-            await Client.UpdateTimeEntryAsync(WorkspaceId, entry.Id, CopyOf(entry, interval.Start, at), ctk);
-            await Client.CreateTimeEntryAsync(WorkspaceId, CopyOf(entry, at, end), ctk);
+            var workspaceId = CurrentSession.WorkspaceId;
+            await Client.UpdateTimeEntryAsync(workspaceId, entry.Id, CopyOf(entry, interval.Start, at), ctk);
+            await Client.CreateTimeEntryAsync(workspaceId, CopyOf(entry, at, end), ctk);
         }, ctk);
     }
 

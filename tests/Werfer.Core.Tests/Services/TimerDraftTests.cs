@@ -117,15 +117,30 @@ public class TimerDraftTests
 
     // The draft exists before connecting, as in the app: connecting loads the running entry into it
     private static async Task<(FakeClockifyApiClient Client, TimeTrackingService Service, TimerDraft Draft)>
-        ConnectedAsync(TimeEntry? running, FakeApplicationSettings? settings = null)
+        ConnectedAsync(
+            TimeEntry? running,
+            FakeApplicationSettings? settings = null,
+            params Project[] projects
+        )
     {
         var client = new FakeClockifyApiClient { Running = running };
+        client.Projects.AddRange(projects);
         var service = new TimeTrackingService(client, Options.Create(new ClockifyOptions()));
         var draft = new TimerDraft(service, settings ?? new FakeApplicationSettings());
 
         await service.ConnectAsync("api-key", TestContext.Current.CancellationToken);
 
         return (client, service, draft);
+    }
+
+    [Fact]
+    public async Task Connect_RunningEntry_FindsItsProjectAndTask()
+    {
+        // The running entry is published after the session's projects: its project and task are found at once
+        var (_, _, draft) = await ConnectedAsync(RunningEntry(), null, Project("p1", "t1"));
+
+        Assert.NotNull(draft.Choice);
+        Assert.Equal("t1", draft.Choice.Task.Id);
     }
 
     [Fact]
@@ -211,15 +226,16 @@ public class TimerDraftTests
     private static async Task<(FakeClockifyApiClient Client, TimeTrackingService Service, TimerDraft Draft)>
         StoppedWithChoicesAsync(FakeApplicationSettings settings)
     {
-        var connected = await ConnectedAsync(null, settings);
-        connected.Draft.Choices = [Choice("p1", "t1"), Choice("p2", "t2")];
-
-        return connected;
+        return await ConnectedAsync(null, settings, Project("p1", "t1"), Project("p2", "t2"));
     }
 
-    private static ProjectTaskChoice Choice(string projectId, string taskId)
+    private static Project Project(string projectId, string taskId)
     {
-        return new ProjectTaskChoice(new Project { Id = projectId }, new ProjectTask { Id = taskId });
+        return new Project
+        {
+            Id = projectId,
+            Tasks = [new ProjectTask { Id = taskId, Status = "ACTIVE" }]
+        };
     }
 
     private static TimeEntry Entry(string id, string projectId, string taskId)

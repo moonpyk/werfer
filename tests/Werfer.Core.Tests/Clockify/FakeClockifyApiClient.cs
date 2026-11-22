@@ -61,6 +61,11 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
     public List<Project> Projects { get; } = [];
 
     /// <summary>
+    ///     When set, loading the projects fails with it, e.g. the network dropping during a connection
+    /// </summary>
+    public Exception? ProjectsException { get; set; }
+
+    /// <summary>
     ///     Page size actually served, whatever size is asked: Clockify also caps it without an error
     /// </summary>
     public int MaxPageSize { get; set; } = int.MaxValue;
@@ -146,7 +151,9 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
         CancellationToken ctk = default
     )
     {
-        return PageOf(Projects, page, pageSize);
+        return ProjectsException is null
+            ? PageOf(Projects, page, pageSize)
+            : Task.FromException<IApiResponse<List<Project>>>(ProjectsException);
     }
 
     public Task<TimeEntry> CreateTimeEntryAsync(

@@ -43,23 +43,10 @@ public class TimerDraft
     private IApplicationSettings Settings { get; }
 
     /// <summary>
-    ///     Every project and task the user can pick. The running entry's project and task are looked up here.
+    ///     Every project and task the user can pick, the session's. The running entry's project and task are looked up
+    ///     here.
     /// </summary>
-    public IReadOnlyList<ProjectTaskChoice> Choices
-    {
-        get;
-        set
-        {
-            field = value;
-
-            // On connection, the running entry arrives before this list: look up its project and task again
-            if (Service.RunningEntry is { } running)
-            {
-                Choice = FindChoice(running);
-                Changed?.Invoke(this, EventArgs.Empty);
-            }
-        }
-    } = [];
+    public IReadOnlyList<ProjectTaskChoice> Choices => Service.Session?.Choices ?? [];
 
     /// <summary>
     ///     The project and task picked. Null when the running entry's are not in <see cref="Choices" /> (archived
