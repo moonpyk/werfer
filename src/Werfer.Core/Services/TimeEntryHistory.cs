@@ -114,17 +114,23 @@ public static class TimeEntryHistory
         TimeZoneInfo zone
     )
     {
-        var startDay = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(start, zone).DateTime);
+        var startDay = DateOnly.FromDateTime(
+            TimeZoneInfo.ConvertTime(start, zone).DateTime
+        );
 
         // Checked first: for a timer running over 24 h, today's or yesterday's occurrence would move it
+        // To be honest, I consider a time entry >4h an anomaly, users are supposed to sleep and eat
         if (EditedTime(startDay, time, start, zone) == start)
         {
             return start;
         }
 
-        var day =DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, zone).DateTime);
+        var day = DateOnly.FromDateTime(
+            TimeZoneInfo.ConvertTime(now, zone).DateTime
+        );
         var at = EditedTime(day, time, start, zone);
 
+        // ReSharper disable once InvertIf : Leads to code duplication
         if (at > now)
         {
             day = day.AddDays(-1);
@@ -161,7 +167,9 @@ public static class TimeEntryHistory
         TimeZoneInfo zone
     )
     {
-        var day = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(start, zone).DateTime);
+        var day = DateOnly.FromDateTime(
+            TimeZoneInfo.ConvertTime(start, zone).DateTime
+        );
         var at = EditedTime(day, time, null, zone);
 
         // A time before the start is on the next day, with that day's own offset
