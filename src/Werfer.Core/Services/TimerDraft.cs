@@ -56,27 +56,28 @@ public class TimerDraft
     /// <summary>
     ///     The project and task picked. Null when the running entry's are not in <see cref="Choices" /> (archived
     ///     project, no task); a save then leaves the entry's project and task unchanged. Belongs to the user connected
-    ///     when it was set, see <see cref="Own" />.
+    ///     when it was set, see <see cref="ClearIfAccountChanged" />.
     /// </summary>
     public ProjectTaskChoice? Choice
     {
         get => IsOwned ? field : null;
         set
         {
-            Own();
+            ClearIfAccountChanged();
             field = value;
         }
     }
 
     /// <summary>
-    ///     Free text, usually a Jira ticket key. Belongs to the user connected when it was set, see <see cref="Own" />.
+    ///     Free text, usually a Jira ticket key. Belongs to the user connected when it was set, see
+    ///     <see cref="ClearIfAccountChanged" />.
     /// </summary>
     public string? Description
     {
         get => IsOwned ? field : null;
         set
         {
-            Own();
+            ClearIfAccountChanged();
             field = value;
         }
     }
@@ -85,10 +86,10 @@ public class TimerDraft
     private bool IsOwned => _ownerId == Service.User?.Id;
 
     /// <summary>
-    ///     Gives the draft to the user connected now, before a value is set. When that is another user, the previous
-    ///     user's values are dropped first: none of them may be shown, saved or started for this account.
+    ///     Called before each value is set. If another account is connected since the draft was last filled, clears
+    ///     the draft first, so the previous account's description and project never end up on this account.
     /// </summary>
-    private void Own()
+    private void ClearIfAccountChanged()
     {
         if (IsOwned)
         {
