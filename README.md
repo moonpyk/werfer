@@ -26,6 +26,11 @@ is ignored and they are plain text, not patterns. Handy to paste a Jira ticket U
 `https://your-company.atlassian.net/browse/` in the list, pasting
 `https://your-company.atlassian.net/browse/PROJ-123` writes `PROJ-123`.
 
+## Code signing
+
+Releases are signed. The certificate, and how to trust it across a domain, are in
+[docs/code-signing.md](docs/code-signing.md).
+
 ## Out of scope
 
 Werfer starts and stops entries, nothing more. These will not be added, whatever other desktop clients do:
