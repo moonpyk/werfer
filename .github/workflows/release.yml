@@ -42,11 +42,28 @@ jobs:
       - name: Test
         run: dotnet test
 
+      # The .pfx is stored base64 in a secret; written to the runner's temp folder, dropped with the runner
+      - name: Write the signing certificate
+        shell: pwsh
+        env:
+          SIGN_PFX_CONTENT: ${{ secrets.SIGN_PFX_CONTENT }}
+          SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
+        run: |
+          # Without them the task packs unsigned, silently
+          if (-not $env:SIGN_PFX_CONTENT -or -not $env:SIGN_PFX_PASSWORD) {
+            throw "The SIGN_PFX_CONTENT or SIGN_PFX_PASSWORD secret is missing: the release would ship unsigned"
+          }
+          $path = Join-Path $env:RUNNER_TEMP "werfer.pfx"
+          [IO.File]::WriteAllBytes($path, [Convert]::FromBase64String($env:SIGN_PFX_CONTENT))
+          "SIGN_PFX_PATH=$path" >> $env:GITHUB_ENV
+
       - name: Publish and pack
         run: task publish-win:velopack
         env:
           # For the download of the previous release, see the task
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # With SIGN_PFX_PATH, set above: the task signs the binaries
+          SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
         
       # Fails if the tag already has a release: before running the workflow again for the same tag, delete the draft a
       # failed run left behind

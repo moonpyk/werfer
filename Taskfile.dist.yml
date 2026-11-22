@@ -32,6 +32,10 @@ tasks:
       # Velopack installs to %LOCALAPPDATA%\<id>, deleted on uninstall. "werfer" is also the settings and logs folder
       # (case doesn't matter on Windows), on purpose: uninstalling leaves nothing behind
       VELOPACK_ID: '{{.VELOPACK_ID | default "werfer"}}'
+      # Signed when both SIGN_PFX_PATH (a .pfx) and SIGN_PFX_PASSWORD are set, unsigned otherwise. vpk signs everything
+      # it ships, its own Update.exe and Setup.exe included. Timestamped, so the signature outlives the certificate.
+      # The password stays a shell variable, so Task prints $SIGN_PFX_PASSWORD with the command, not its value
+      VPK_SIGN_ARGS: '{{if and .SIGN_PFX_PATH .SIGN_PFX_PASSWORD}}--signParams "/fd sha256 /tr http://timestamp.digicert.com /td sha256 /f \"{{.SIGN_PFX_PATH}}\" /p $SIGN_PFX_PASSWORD"{{end}}'
     cmds:
       - task: publish-win:classic
       # vpk refuses a version already in the folder, and keeps older ones there to build delta updates from
@@ -45,6 +49,7 @@ tasks:
           --outputDir .publish/releases
         ignore_error: true
       - dotnet vpk pack
+        {{.VPK_SIGN_ARGS}}
         --packId {{.VELOPACK_ID}}
         --packVersion {{.VERSION}}
         --packTitle Werfer
