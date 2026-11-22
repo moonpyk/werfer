@@ -58,6 +58,12 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
     public List<TimeEntry> Entries { get; } = [];
 
     /// <summary>
+    ///     Each entries query (not in-progress) waits for the next gate, while there are some: lets a test answer
+    ///     overlapping loads in any order
+    /// </summary>
+    public Queue<TaskCompletionSource> EntriesGates { get; } = [];
+
+    /// <summary>
     ///     What the projects query serves, a page at a time, whatever the filters. Give the projects tasks, or nothing
     ///     can be started
     /// </summary>
@@ -96,7 +102,9 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
             return Page<TimeEntry>(Running is null ? [] : [Running], true);
         }
 
-        return PageOf(Entries, page, pageSize);
+        return EntriesGates.TryDequeue(out var gate)
+            ? EntriesAfterAsync(gate.Task, page, pageSize)
+            : PageOf(Entries, page, pageSize);
     }
 
     public Task<TimeEntry> UpdateTimeEntryAsync(
@@ -183,6 +191,12 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
     {
         Deletes.Add(id);
         return Task.CompletedTask;
+    }
+
+    private async Task<IApiResponse<List<TimeEntry>>> EntriesAfterAsync(Task gate, int? page, int? pageSize)
+    {
+        await gate;
+        return await PageOf(Entries, page, pageSize);
     }
 
     // The given page of items, its size capped by MaxPageSize as Clockify does; 50 when none asked, Clockify's default

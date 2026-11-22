@@ -13,12 +13,6 @@ public partial class HistoryViewModel : ViewModelBase
     // Day the history was last loaded for
     private DateOnly _date;
 
-    // Incremented by each load, so only the latest load shows its result, see LoadImplAsync
-    private int _loadGeneration;
-
-    // Id of the user whose entries Days shows, see LoadImplAsync
-    private string? _shownUserId;
-
     private TimeSpan _weekFinished;
 
     /// <summary>
@@ -32,8 +26,8 @@ public partial class HistoryViewModel : ViewModelBase
         TimerViewModel page
     ) : base(logger, flashMessages)
     {
-        ApplicationSettings = applicationSettings;
         TimeTracking = timeTracking;
+        Loader = new WeekHistoryLoader(timeTracking, applicationSettings);
         Page = page;
         WeekTotal = "00:00:00";
 
@@ -49,8 +43,10 @@ public partial class HistoryViewModel : ViewModelBase
         }, TimeSpan.FromMinutes(1));
     }
 
-    private IApplicationSettings ApplicationSettings { get; }
     private TimeTrackingService TimeTracking { get; }
+
+    // Keeps only the latest load's result, and tells when the account changed
+    private WeekHistoryLoader Loader { get; }
 
     // The timer page: the history's lines call it to continue, edit or delete an entry
     private TimerViewModel Page { get; }
@@ -125,9 +121,8 @@ public partial class HistoryViewModel : ViewModelBase
 
         // Another account: the lines shown are the previous one's, emptied before the request so none can be
         // continued, edited or deleted while this account's entries load
-        if (TimeTracking.User?.Id != _shownUserId)
+        if (Loader.IsAnotherAccount)
         {
-            _shownUserId = TimeTracking.User?.Id;
             Days = null;
             _weekFinished = TimeSpan.Zero;
             UpdateWeekTotal();
@@ -140,15 +135,8 @@ public partial class HistoryViewModel : ViewModelBase
         // Set before the request, so a failed load is reported once, not retried every minute by the midnight check
         _date = today;
 
-        var load = Interlocked.Increment(ref _loadGeneration);
-
-        var entries = await TimeTracking.GetTimeEntriesSinceAsync(
-            TimeEntryHistory.StartOfWeek(now, ApplicationSettings.WeekStart, zone)
-        );
-
-        // Several loads can run at once (a stop, F5, a save). Only the last one started shows its result: the last one
-        // to answer may have started before a save, and would show the entry unchanged
-        if (load != _loadGeneration)
+        // Null when a later load started meanwhile: that one shows its result
+        if (await Loader.LoadAsync(now, zone) is not { } entries)
         {
             return;
         }
