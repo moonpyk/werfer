@@ -52,7 +52,7 @@ tasks:
       # release workflow does), lifts GitHub's 60 requests an hour for anonymous calls, shared on CI runners
       - cmd: dotnet vpk download github
           --repoUrl https://github.com/moonpyk/werfer
-          ${GITHUB_TOKEN:+--token $GITHUB_TOKEN}
+          {{if .GITHUB_TOKEN}}--token $GITHUB_TOKEN{{end}}
           --outputDir .publish/releases
         ignore_error: true
       - dotnet vpk pack
