@@ -114,10 +114,11 @@ public class App : Application
                 : DefaultTaskbarThemeProvider.Instance
             )
             .AddSingleton<IApplicationSettings>(sp =>
-                ApplicationSettings.Current
-                    .WithLogger(sp.GetRequiredService<ILogger<ApplicationSettings>>())
-                    .WithDataProtectionProvider(sp.GetRequiredService<IDataProtectionProvider>())
-                    .Load()
+                new ApplicationSettings(
+                    ApplicationPath,
+                    sp.GetRequiredService<IDataProtectionProvider>(),
+                    sp.GetRequiredService<ILogger<ApplicationSettings>>()
+                ).Load()
             )
             .AddSingleton(sp => CreateUpdateManager(sp.GetRequiredService<ILogger<App>>()))
             .RegisterServices()

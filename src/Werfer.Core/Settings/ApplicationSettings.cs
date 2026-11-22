@@ -3,7 +3,6 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Werfer.DataProtection;
 
 namespace Werfer.Settings;
@@ -21,26 +20,33 @@ public partial class ApplicationSettings : IApplicationSettings
         "ccgbwerfer2026"u8
     ];
 
-    private ILogger _logger = NullLogger.Instance;
     private PersistedSettings _persisted = new();
 
-    private ApplicationSettings()
+    /// <summary>
+    ///     Creates the settings stored in <paramref name="folder" />, at their defaults until <see cref="Load" />.
+    /// </summary>
+    /// <param name="folder">The folder of the settings file, created on the first save if missing.</param>
+    /// <param name="dataProtectionProvider">Encrypts the API key in the file, and decrypts it on load.</param>
+    /// <param name="logger">Logs the save and load failures, which aren't thrown.</param>
+    public ApplicationSettings(
+        string folder,
+        IDataProtectionProvider dataProtectionProvider,
+        ILogger<ApplicationSettings> logger
+    )
     {
-        // Intentionally left empty
+        Folder = folder;
+        FilePath = Path.Combine(folder, SaveFileName);
+        DataProtectionProvider = dataProtectionProvider;
+        Logger = logger;
     }
 
-    private static string FilePath { get; } = Path.Combine(
-        App.ApplicationPath,
-        SaveFileName
-    );
+    private string Folder { get; }
 
-    /// <summary>
-    ///     Provides a singleton instance of the <see cref="ApplicationSettings" /> class.
-    ///     This instance is used to access and manage global application settings in a centralized way.
-    /// </summary>
-    public static ApplicationSettings Current { get; } = new();
+    private string FilePath { get; }
 
-    private IDataProtectionProvider DataProtectionProvider { get; set; } = PassThroughDataProtectionProvider.Instance;
+    private IDataProtectionProvider DataProtectionProvider { get; }
+
+    private ILogger Logger { get; }
 
     /// <inheritdoc />
     public string? ApiKey
@@ -159,7 +165,7 @@ public partial class ApplicationSettings : IApplicationSettings
         try
         {
             Directory.CreateDirectory(
-                App.ApplicationPath
+                Folder
             );
 
             var sb = new StringBuilder();
@@ -200,7 +206,7 @@ public partial class ApplicationSettings : IApplicationSettings
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Could not save settings to {FilePath}", FilePath);
+            Logger.LogError(e, "Could not save settings to {FilePath}", FilePath);
         }
 
         return false;
@@ -235,18 +241,9 @@ public partial class ApplicationSettings : IApplicationSettings
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "While loading settings");
+            Logger.LogError(e, "While loading settings");
             return this;
         }
-    }
-
-    /// <summary>
-    ///     Sets the logger used from now on, call it before Load so load errors are logged.
-    /// </summary>
-    public ApplicationSettings WithLogger(ILogger logger)
-    {
-        _logger = logger;
-        return this;
     }
 
     /// <summary>
@@ -270,18 +267,6 @@ public partial class ApplicationSettings : IApplicationSettings
             );
         }
 
-        return this;
-    }
-
-    /// <summary>
-    ///     Configures the application settings to use the specified data protection provider.
-    /// </summary>
-    /// <exception cref="ArgumentNullException">
-    ///     Thrown when the <paramref name="provider" /> parameter is null.
-    /// </exception>
-    public ApplicationSettings WithDataProtectionProvider(IDataProtectionProvider provider)
-    {
-        DataProtectionProvider = provider ?? throw new ArgumentNullException(nameof(provider));
         return this;
     }
 
