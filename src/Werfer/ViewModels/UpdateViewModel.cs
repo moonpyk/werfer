@@ -118,7 +118,7 @@ public partial class UpdateViewModel : ViewModelBase
             );
             IsDownloaded = true;
 
-            FlashMessages.Push(new FlashMessage(
+            FlashMessages.ReplaceWith(new FlashMessage(
                 $"Werfer {AvailableVersion} will be installed at the next restart",
                 "Update downloaded"
             ));
