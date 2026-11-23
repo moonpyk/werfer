@@ -155,6 +155,7 @@ public partial class HistoryViewModel : ViewModelBase
     private void UpdateWeekTotal()
     {
         // shortcut: an entry started before the week counts whole, split it at the week start if that ever matters
+        // it shouldn't : users are supposed to eat and sleep not let task run for days
         WeekTotal = TimeEntryHistory.Format(_weekFinished + RunningElapsed);
     }
 }
