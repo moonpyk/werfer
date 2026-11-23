@@ -5,6 +5,11 @@ namespace Werfer.DataProtection;
 ///     interface, where data protection and unprotection operations simply pass data through
 ///     without applying any transformations or security mechanisms.
 /// </summary>
+/// <remarks>
+///     shortcut: outside Windows the API key is stored in clear, protected only by file mode 600, since every Linux
+///     distribution/desktop environment protects secrets its own way; use the desktop's keyring (Secret Service on
+///     Linux, Keychain on macOS) if users ask for it.
+/// </remarks>
 public class PassThroughDataProtectionProvider : IDataProtectionProvider
 {
     private PassThroughDataProtectionProvider()

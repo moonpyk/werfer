@@ -18,6 +18,7 @@ namespace Werfer.Controls.Sheet;
 
 /// <summary>
 ///     A modal sheet docked to the top or bottom edge of its parent, sliding in over a dimmed backdrop.
+///     This control will be extracted of Werfer at some point and offered as a standalone control.
 /// </summary>
 /// <remarks>
 ///     <para>
