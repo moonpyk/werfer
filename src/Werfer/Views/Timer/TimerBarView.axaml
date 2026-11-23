@@ -84,8 +84,10 @@
             <SplitButton.Flyout>
                 <Flyout Placement="BottomEdgeAlignedRight" Opening="OnStartFlyoutOpening">
                     <StackPanel Spacing="8" Margin="2">
+                        <!-- Foreground reset, otherwise it inherits the stop button's white -->
                         <TextBlock
                             Text="Started at"
+                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                             FontWeight="SemiBold" />
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <ctl:TimeOfDayBox
