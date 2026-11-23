@@ -49,6 +49,15 @@ public partial class TimerViewModel : ViewModelBase
 
         timeTracking.Connected += OnConnected;
         Player.EntryFinished += OnEntryFinished;
+        
+        // The running entry isn't in the history: nothing to highlight
+        Player.SplitRequested += (_, _) =>
+        {
+            if (TimeTracking.RunningEntry is { } running)
+            {
+                Split(null, running);
+            }
+        };
         Player.PropertyChanged += OnPlayerPropertyChanged;
     }
 
@@ -162,9 +171,9 @@ public partial class TimerViewModel : ViewModelBase
     }
 
     /// <summary>
-    ///     Opens the sheet to split a history entry in two.
+    ///     Opens the sheet to split an entry in two: a history one, with its item, or the running one, without.
     /// </summary>
-    public void Split(TimeEntryItemViewModelBase item, TimeEntry entry)
+    public void Split(TimeEntryItemViewModelBase? item, TimeEntry entry)
     {
         SetEditedItem(item);
 
@@ -224,9 +233,14 @@ public partial class TimerViewModel : ViewModelBase
 
     private Task SplitAsync(TimeEntrySplitViewModel form)
     {
-        return form.SplitTime is { } at
-            ? SaveSheetAsync(() => TimeTracking.SplitTimeEntryAsync(form.Entry, at))
-            : Task.CompletedTask;
+        if (form.SplitTime is not { } at)
+        {
+            return Task.CompletedTask;
+        }
+
+        return form.Entry.TimeInterval?.End is null
+            ? SaveSheetAsync(() => TimeTracking.SplitRunningEntryAsync(form.Entry, at))
+            : SaveSheetAsync(() => TimeTracking.SplitTimeEntryAsync(form.Entry, at));
     }
 
     // Sends the sheet's changes, then closes it and reloads the history

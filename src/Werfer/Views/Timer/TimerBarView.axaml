@@ -97,6 +97,11 @@
                                 Content="Apply"
                                 Click="OnStartApplyClick" />
                             <Button
+                                ToolTip.Tip="Split the running entry"
+                                Click="OnSplitClick">
+                                <ui:FASymbolIcon Symbol="Cut" />
+                            </Button>
+                            <Button
                                 ToolTip.Tip="Delete the running entry"
                                 Click="OnDeleteClick">
                                 <ui:FASymbolIcon Symbol="Delete" />

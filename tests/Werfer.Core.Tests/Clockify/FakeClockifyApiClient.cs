@@ -38,6 +38,11 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
     public List<CreateTimeEntryRequest> Creates { get; } = [];
 
     /// <summary>
+    ///     The stop requests that went through, in order.
+    /// </summary>
+    public List<StopTimeEntryRequest> Stops { get; } = [];
+
+    /// <summary>
     ///     Ids of the deleted entries, in order.
     /// </summary>
     public List<string> Deletes { get; } = [];
@@ -150,6 +155,7 @@ internal sealed class FakeClockifyApiClient : IClockifyApiClient
             throw StopException;
         }
 
+        Stops.Add(request);
         return Running ?? new TimeEntry();
     }
 

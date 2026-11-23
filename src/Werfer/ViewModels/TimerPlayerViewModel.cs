@@ -189,6 +189,19 @@ public partial class TimerPlayerViewModel : ViewModelBase
     public event EventHandler? EntryFinished;
 
     /// <summary>
+    ///     Raised by <see cref="RequestSplit" />: the timer page opens its split sheet on the running entry.
+    /// </summary>
+    public event EventHandler? SplitRequested;
+
+    /// <summary>
+    ///     Asks for the split sheet on the running entry, see <see cref="SplitRequested" />.
+    /// </summary>
+    public void RequestSplit()
+    {
+        SplitRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
     ///     Sends the fields to the running entry, with the busy indicator. See <see cref="TimerDraft.SaveAsync" />.
     /// </summary>
     public Task SaveDraftAsync()

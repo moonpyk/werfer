@@ -387,8 +387,51 @@ public class TimeTrackingService(
         }, ctk);
     }
 
-    // The entry's fields between other times. Clockify's update is a full replace, see UpdateRunningEntryCoreAsync
-    private static CreateTimeEntryRequest CopyOf(TimeEntry entry, DateTimeOffset start, DateTimeOffset end)
+    /// <summary>
+    ///     Cuts the running entry in two at <paramref name="at" />, between its start and now: it stops there, and a copy
+    ///     of it, same project, task, description, billable flag and tags, runs from there.
+    /// </summary>
+    public Task SplitRunningEntryAsync(TimeEntry entry, DateTimeOffset at, CancellationToken ctk = default)
+    {
+        if (entry.TimeInterval is not { End: null } interval || at <= interval.Start || at >= DateTimeOffset.UtcNow)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(at),
+                at,
+                "The split must fall strictly between the running entry's start and now"
+            );
+        }
+
+        // Stopped first: after a failed start, the first half is safe and nothing runs, where a first half created
+        // first would be created twice by a retry
+        return ExclusiveAsync(async () =>
+        {
+            // Read it again, see UpdateRunningEntryCoreAsync: the stop would otherwise land on another client's entry
+            var current = await GetRunningEntryAsync(CurrentSession, ctk);
+
+            if (current?.Id != entry.Id || current.TimeInterval is not { End: null })
+            {
+                RunningEntry = null;
+                throw new InvalidOperationException("The timer was stopped from another client, entry not split");
+            }
+
+            await Client.StopActiveTimeEntryAsync(
+                CurrentSession.WorkspaceId,
+                CurrentSession.User.Id,
+                new StopTimeEntryRequest { End = at },
+                ctk
+            );
+            RunningEntry = null;
+
+            // shortcut: if this create fails, nothing runs and Save again reports the timer stopped from another
+            // client; report the half-done split itself if users get lost there
+            RunningEntry = await Client.CreateTimeEntryAsync(CurrentSession.WorkspaceId, CopyOf(current, at, null), ctk);
+        }, ctk);
+    }
+
+    // The entry's fields between other times, a null end for a running one. Clockify's update is a full replace, see
+    // UpdateRunningEntryCoreAsync
+    private static CreateTimeEntryRequest CopyOf(TimeEntry entry, DateTimeOffset start, DateTimeOffset? end)
     {
         return new CreateTimeEntryRequest
         {

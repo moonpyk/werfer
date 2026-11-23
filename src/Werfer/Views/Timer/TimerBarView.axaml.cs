@@ -88,6 +88,13 @@ public partial class TimerBarView : UserControl
         (DataContext as TimerPlayerViewModel)?.DeleteCommand.Execute(null);
     }
 
+    // The flyout closes first, the split sheet opens in its place
+    private void OnSplitClick(object? sender, RoutedEventArgs e)
+    {
+        StopButton.Flyout?.Hide();
+        (DataContext as TimerPlayerViewModel)?.RequestSplit();
+    }
+
     private void ApplyStart()
     {
         (DataContext as TimerPlayerViewModel)?.ChangeStartCommand.Execute(null);

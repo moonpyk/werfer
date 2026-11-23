@@ -183,6 +183,45 @@ public class TimeTrackingServiceTests
         Assert.Empty(client.Updates);
     }
 
+    [Fact]
+    public async Task SplitRunning_StopsAtTheSplitAndRestartsACopy()
+    {
+        var (client, service) = await ConnectedWithRunningEntryAsync();
+        var at = Started.AddMinutes(20);
+
+        await service.SplitRunningEntryAsync(service.RunningEntry!, at, TestContext.Current.CancellationToken);
+
+        Assert.Equal(at, Assert.Single(client.Stops).End);
+
+        var second = Assert.Single(client.Creates);
+        Assert.Equal(at, second.Start);
+        Assert.Null(second.End);
+        Assert.Equal("p1", second.ProjectId);
+        Assert.Equal("t1", second.TaskId);
+        Assert.Equal("JIRA-1", second.Description);
+        Assert.True(second.Billable);
+        Assert.Equal(["tag"], second.TagIds);
+        Assert.Equal(at, service.RunningEntry?.TimeInterval?.Start);
+    }
+
+    [Fact]
+    public async Task SplitRunning_StoppedElsewhere_SendsNothing()
+    {
+        var (client, service) = await ConnectedWithRunningEntryAsync();
+        var running = service.RunningEntry!;
+        client.Running = null;
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.SplitRunningEntryAsync(
+            running,
+            Started.AddMinutes(20),
+            TestContext.Current.CancellationToken
+        ));
+
+        Assert.Empty(client.Stops);
+        Assert.Empty(client.Creates);
+        Assert.Null(service.RunningEntry);
+    }
+
     [Theory]
     [InlineData("JIRA-1")]
     // Same once trimmed

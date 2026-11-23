@@ -5,14 +5,14 @@ using Werfer.Services;
 namespace Werfer.ViewModels;
 
 /// <summary>
-///     The split form of one finished entry, in local time: a time typed or picked on a slider, on a whole minute strictly
-///     inside the entry.
+///     The split form of one entry, finished or running, in local time: a time typed or picked on a slider, on a whole
+///     minute strictly inside the entry. A running entry ends, for the form, when it opens.
 /// </summary>
 public partial class TimeEntrySplitViewModel : SheetFormViewModel
 {
     /// <summary>
-    ///     Fills the form from a finished entry, split in its middle. The timer page splits and closes the form through
-    ///     the given callbacks.
+    ///     Fills the form from an entry, split in its middle. The timer page splits and closes the form through the given
+    ///     callbacks.
     /// </summary>
     public TimeEntrySplitViewModel(
         TimeEntry entry,
@@ -24,7 +24,7 @@ public partial class TimeEntrySplitViewModel : SheetFormViewModel
         SplitAction = split;
 
         Start = entry.TimeInterval!.Start.ToLocalTime();
-        End = entry.TimeInterval.End!.Value.ToLocalTime();
+        End = (entry.TimeInterval.End ?? DateTimeOffset.Now).ToLocalTime();
 
         var (first, last) = TimeEntryHistory.SplitBounds(
             Start, 
