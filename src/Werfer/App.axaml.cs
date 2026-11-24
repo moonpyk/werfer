@@ -163,6 +163,11 @@ public class App : Application
             );
     }
 
+    private void OnTrayIconClick(object? sender, EventArgs e)
+    {
+        Services?.GetService<MainWindow>()?.ToggleFromTray();
+    }
+
     private void OnTrayShowClick(object? sender, EventArgs e)
     {
         Services?.GetService<MainWindow>()?.ShowFromTray();

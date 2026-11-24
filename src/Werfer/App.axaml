@@ -24,7 +24,7 @@
                 Icon="/Assets/Werfer.ico" 
                 ToolTipText="Werfer"
                 IsVisible="{Binding MinimizeToTray}"
-                Clicked="OnTrayShowClick">
+                Clicked="OnTrayIconClick">
                 <TrayIcon.Menu>
                     <NativeMenu>
                         <NativeMenuItem Header="Show" Click="OnTrayShowClick" />

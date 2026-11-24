@@ -66,6 +66,9 @@ public partial class MainWindow : FAAppWindow
         Navigation.SelectedItem = TimerItem;
     }
 
+    /// <summary>
+    ///     Brings the window back from the tray, or from the taskbar when it is minimized there.
+    /// </summary>
     public void ShowFromTray()
     {
         Show();
@@ -76,6 +79,20 @@ public partial class MainWindow : FAAppWindow
         }
 
         Activate();
+    }
+
+    /// <summary>
+    ///     Shows the window when it is minimized, else minimizes it, which hides it in the tray.
+    /// </summary>
+    public void ToggleFromTray()
+    {
+        if (WindowState == WindowState.Minimized)
+        {
+            ShowFromTray();
+            return;
+        }
+
+        WindowState = WindowState.Minimized;
     }
 
     // Minimize to tray: a minimized window leaves the taskbar, the tray icon of App brings it back
