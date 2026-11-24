@@ -1,7 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
-             xmlns:controls="clr-namespace:Werfer.Controls"
              x:Class="Werfer.Controls.TimeOfDayBox">
     <UserControl.Styles>
         <!-- Small chevrons stacked inside the box's right edge, flat until hovered -->
@@ -24,7 +23,7 @@
     <!-- A text box rather than a TimePicker, whose flyout can't be typed in. No input mask: the hour's leading 0 is optional.
          The chevrons change the time by one minute (their Tag), and repeat while held -->
     <TextBox
-        Text="{Binding $parent[controls:TimeOfDayBox].Text}"
+        x:Name="Box"
         MaxLength="5"
         MinWidth="0">
         <TextBox.InnerRightContent>

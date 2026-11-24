@@ -19,6 +19,9 @@ public partial class TimeOfDayBox : UserControl
     public TimeOfDayBox()
     {
         InitializeComponent();
+
+        // Bound here rather than in the XAML, see AGENTS.md
+        Box[!!TextBox.TextProperty] = this[!!TextProperty];
     }
 
     public string? Text

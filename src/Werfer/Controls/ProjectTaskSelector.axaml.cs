@@ -29,6 +29,11 @@ public partial class ProjectTaskSelector : UserControl
     public ProjectTaskSelector()
     {
         InitializeComponent();
+
+        // The box shows this control's properties. Bound here rather than in the XAML, see AGENTS.md
+        Box[!AutoCompleteBox.AsyncPopulatorProperty] = this[!AsyncPopulatorProperty];
+        Box[!!AutoCompleteBox.SelectedItemProperty] = this[!!SelectedItemProperty];
+        Box[!!AutoCompleteBox.TextProperty] = this[!!TextProperty];
     }
 
     /// <summary>

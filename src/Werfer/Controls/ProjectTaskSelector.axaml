@@ -3,7 +3,6 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="clr-namespace:Werfer.ViewModels"
              xmlns:cv="clr-namespace:Werfer.Converters"
-             xmlns:ctl="clr-namespace:Werfer.Controls"
              x:Class="Werfer.Controls.ProjectTaskSelector">
     <!-- The suggestions, one template per kind of item: the dropdown picks it by the item's type -->
     <UserControl.DataTemplates>
@@ -34,9 +33,7 @@
     </UserControl.DataTemplates>
 
     <AutoCompleteBox
-        AsyncPopulator="{Binding $parent[ctl:ProjectTaskSelector].AsyncPopulator}"
-        SelectedItem="{Binding $parent[ctl:ProjectTaskSelector].SelectedItem, Mode=TwoWay}"
-        Text="{Binding $parent[ctl:ProjectTaskSelector].Text, Mode=TwoWay}"
+        x:Name="Box"
         FilterMode="None"
         MinimumPrefixLength="3"
         PlaceholderText="Project / Task"
